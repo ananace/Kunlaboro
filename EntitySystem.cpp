@@ -48,12 +48,12 @@ EntityId EntitySystem::createEntity()
 void EntitySystem::destroyEntity(EntityId entity)
 {
     if (entity == 0 || entity > mEntities.size())
-        throw new std::runtime_error("Can't destroy a non-existant entity");
+        throw std::runtime_error("Can't destroy a non-existant entity");
 
     Entity* ent = mEntities[entity-1];
 
     if (ent == NULL)
-        throw new std::runtime_error("Can't destroy a non-existant entity");
+        throw std::runtime_error("Can't destroy a non-existant entity");
 
     if (isFrozen())
     {
@@ -86,12 +86,12 @@ void EntitySystem::destroyEntity(EntityId entity)
 void EntitySystem::finalizeEntity(EntityId entity)
 {
     if (entity == 0 || entity > mEntities.size())
-        throw new std::runtime_error("Can't finalize a non-existant entity");
+        throw std::runtime_error("Can't finalize a non-existant entity");
 
     Entity* ent = mEntities[entity-1];
 
     if (ent == NULL)
-        throw new std::runtime_error("Can't finalize a non-existant entity");
+        throw std::runtime_error("Can't finalize a non-existant entity");
 
     ent->finalised = true;
 
@@ -114,7 +114,7 @@ void EntitySystem::finalizeEntity(EntityId entity)
 void EntitySystem::registerComponent(const std::string& name, FactoryFunction func)
 {
     if (mRegisteredComponents.count(name) > 0)
-        throw new std::runtime_error("Registered components must have unique names");
+        throw std::runtime_error("Registered components must have unique names");
 
     mRegisteredComponents[name] = func;
 }
@@ -122,12 +122,12 @@ void EntitySystem::registerComponent(const std::string& name, FactoryFunction fu
 Component* EntitySystem::createComponent(const std::string& name)
 {
     if (mRegisteredComponents.count(name) == 0)
-        throw new std::runtime_error("Can't create a non-existant component");
+        throw std::runtime_error("Can't create a non-existant component");
 
     Component* comp = mRegisteredComponents[name]();
 
     if (comp->getName() != name)
-        throw new std::runtime_error("The factory function for " + name + " creates components of type " + comp->getName());
+        throw std::runtime_error("The factory function for " + name + " creates components of type " + comp->getName());
 
     comp->mEntitySystem = this;
     comp->mId = mComponentCounter++;
@@ -137,7 +137,7 @@ Component* EntitySystem::createComponent(const std::string& name)
 void EntitySystem::destroyComponent(Component* component)
 {
     if (!component->isValid())
-        throw new std::runtime_error("Can't destroy an invalid component");
+        throw std::runtime_error("Can't destroy an invalid component");
 
     if (isFrozen())
     {
@@ -221,15 +221,15 @@ void EntitySystem::destroyComponent(Component* component)
 void EntitySystem::addComponent(EntityId entity, Component* component)
 {
     if (component->getOwnerId() != 0)
-        throw new std::runtime_error("Can't add a component to several entities");
+        throw std::runtime_error("Can't add a component to several entities");
 
     if (entity == 0 || entity > mEntities.size())
-        throw new std::runtime_error("Can't add a component to a non-existant entity");
+        throw std::runtime_error("Can't add a component to a non-existant entity");
 
     Entity* ent = mEntities[entity-1];
     
     if (ent == NULL)
-        throw new std::runtime_error("Can't add a component to a non-existant entity");
+        throw std::runtime_error("Can't add a component to a non-existant entity");
 
     component->setOwner(entity);
     ent->components[component->getName()].push_back(component);
@@ -245,16 +245,20 @@ void EntitySystem::addComponent(EntityId entity, Component* component)
 
     freeze();
 
-    for (std::vector<ComponentRegistered>::iterator it = mGlobalRequests[entity].begin(); it != mGlobalRequests[entity].end(); ++it)
-    {
-        if (it->component->getId() != component->getId())
-            it->callback(msg);
-    }
+    if (mGlobalRequests.count(reqid) > 0)
+        for (std::vector<ComponentRegistered>::iterator it = mGlobalRequests[reqid].begin(); it != mGlobalRequests[reqid].end(); ++it)
+        {
+            if (it->component->getId() != component->getId())
+                it->callback(msg);
+        }
 
-    std::vector<ComponentRegistered>& regs = ent->localRequests[reqid];
-    for (unsigned int i = 0; i < regs.size(); i++)
+    if (ent->localRequests.count(reqid) > 0)
     {
-        regs[i].callback(msg);
+        std::vector<ComponentRegistered>& regs = ent->localRequests[reqid];
+        for (unsigned int i = 0; i < regs.size(); i++)
+        {
+            regs[i].callback(msg);
+        }
     }
 
     unfreeze();
@@ -263,19 +267,19 @@ void EntitySystem::addComponent(EntityId entity, Component* component)
 void EntitySystem::removeComponent(EntityId entity, Component* component)
 {
     if (entity == 0 || entity > mEntities.size())
-        throw new std::runtime_error("Can't remove a component from a non-existant entity");
+        throw std::runtime_error("Can't remove a component from a non-existant entity");
 
     Entity* ent = mEntities[entity-1];
     
     if (ent == NULL)
-        throw new std::runtime_error("Can't remove a component from a non-existant entity");
+        throw std::runtime_error("Can't remove a component from a non-existant entity");
 
     std::vector<Component*>::iterator found;
     std::vector<Component*>& comps = ent->components[component->getName()];
     found = std::find(comps.begin(), comps.end(), component);
 
     if (found == comps.end())
-        throw new std::runtime_error("Can't remove a component from an entity that doesn't contain it");
+        throw std::runtime_error("Can't remove a component from an entity that doesn't contain it");
 
     component->setOwner(0);
     ent->components[component->getName()].erase(found);
@@ -307,12 +311,12 @@ void EntitySystem::removeComponent(EntityId entity, Component* component)
 std::vector<Component*> EntitySystem::getAllComponentsOnEntity(EntityId entity, const std::string& name)
 {
     if (entity == 0 || entity > mEntities.size())
-        throw new std::runtime_error("Can't check for components on a non-existant entity");
+        throw std::runtime_error("Can't check for components on a non-existant entity");
 
     Entity* ent = mEntities[entity-1];
     
     if (ent == NULL)
-        throw new std::runtime_error("Can't check for components on a non-existant entity");
+        throw std::runtime_error("Can't check for components on a non-existant entity");
 
     if (name == "")
     {
@@ -340,7 +344,7 @@ RequestId EntitySystem::getMessageRequestId(MessageReason reason, const std::str
     if (reason == Reason_AllComponents)
         reason = Reason_Component;
 
-    if (mNameMap[reason].find(name) == mNameMap[reason].end())
+    if (mNameMap[reason].count(name) == 0)
     {
         mNameMap[reason][name] = mRequestCounter;
         mIdMap[reason][mRequestCounter] = name;
@@ -354,7 +358,7 @@ RequestId EntitySystem::getMessageRequestId(MessageReason reason, const std::str
 void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const ComponentRegistered& reg)
 {
     if (!reg.component->isValid())
-        throw new std::runtime_error("Can't register a request from an invalid component");
+        throw std::runtime_error("Can't register a request from an invalid component");
 
     if (isFrozen())
     {
@@ -445,7 +449,7 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
 void EntitySystem::sendGlobalMessage(RequestId reqid, const Message& msg)
 {
     if (msg.sender != 0 && !msg.sender->isValid())
-        throw new std::runtime_error("Invalid sender for global message");
+        throw std::runtime_error("Invalid sender for global message");
 
     freeze();
 
@@ -460,12 +464,12 @@ void EntitySystem::sendGlobalMessage(RequestId reqid, const Message& msg)
 void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, const Message& msg)
 {
     if (entity == 0 || entity > mEntities.size())
-        throw new std::runtime_error("Can't send a message to a non-existant entity");
+        throw std::runtime_error("Can't send a message to a non-existant entity");
 
     Entity* ent = mEntities[entity-1];
     
     if (ent == NULL)
-        throw new std::runtime_error("Can't send a message to a non-existant entity");
+        throw std::runtime_error("Can't send a message to a non-existant entity");
 
     if (ent->localRequests.count(reqid) == 0)
         return;

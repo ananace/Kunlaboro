@@ -70,7 +70,7 @@ namespace Kunlaboro
          * \param local Should the component only care about locally added components.
          * \sa requireComponent()
          */
-        void requestComponent(const std::string& name, MessageFunction func, bool local = false) const;
+        void requestComponent(const std::string& name, MessageFunction func, bool local = true) const;
         /** \brief Add a request to be told whenever a specific component is added, and if it's not then don't create the component.
          *
          * This function takes the same parameters as requestParameter(), the difference
@@ -285,7 +285,7 @@ namespace Kunlaboro
          * \param local Should the component only care about locally added components.
          */
         template<class T>
-        void requestComponent(const std::string& name, void (T::*f)(const Message&), bool local = false) const;
+        void requestComponent(const std::string& name, void (T::*f)(const Message&), bool local = true) const;
         /** \brief Add a request to be told whenever a specific component is added, and if it's not then don't create the component.
          *
          * This is a convenience function that lets you use a class method as a MessageFunction
