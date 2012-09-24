@@ -17,7 +17,11 @@
 #ifndef _KUNLABORO_DEFINES_HPP
 #define _KUNLABORO_DEFINES_HPP
 
+#cmakedefine Kunlaboro_BOOST
+
+#ifdef Kunlaboro_BOOST
 #include <boost/any.hpp>
+#endif
 #include <string>
 #include <vector>
 #include <functional>
@@ -39,7 +43,11 @@ namespace Kunlaboro
     typedef GUID RequestId;
 
     /// The Payload type to use.
+#ifdef Kunlaboro_BOOST
     typedef boost::any Payload;
+#else
+    typedef void* Payload;
+#endif
 
     /// The MessageFunction.
     typedef std::function<void(const Message&)> MessageFunction;

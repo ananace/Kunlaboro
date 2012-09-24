@@ -1,6 +1,7 @@
 #include "EntitySystem.hpp"
 #include "Component.hpp"
 #include <stdexcept>
+#include <algorithm>
 
 using namespace Kunlaboro;
 
