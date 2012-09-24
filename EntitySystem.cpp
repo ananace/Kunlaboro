@@ -307,7 +307,7 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
     Message msg(Type_Create);
     for (unsigned int i = 0; i < mEntities.size(); i++)
     {
-        if (mEntities[i] = 0)
+        if (mEntities[i] == 0)
             continue;
 
         std::vector<Component*>& comps = mEntities[i]->components[req.name];

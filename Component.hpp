@@ -5,6 +5,10 @@
 #include <functional>
 #include <string>
 
+#ifndef _WIN32
+#include <tr1/functional>
+#endif
+
 namespace Kunlaboro
 {
     class EntitySystem;
@@ -78,19 +82,19 @@ namespace Kunlaboro
     template<class T>
     void Component::requestMessage(const std::string& name, void (T::*f)(const Message&)) const
     {
-        requestMessage(name, std::bind(f, (T*)(this), std::tr1::placeholders::_1));
+        requestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1));
     }
 
     template<class T>
     void Component::requestComponent(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        requestComponent(name, std::bind(f, (T*)(this), std::tr1::placeholders::_1), local);
+        requestComponent(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), local);
     }
 
     template<class T>
     void Component::requireComponent(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        requireComponent(name, std::bind(f, (T*)(this), std::tr1::placeholders::_1), local);
+        requireComponent(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), local);
     }
 }
 

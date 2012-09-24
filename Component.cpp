@@ -144,7 +144,7 @@ bool Component::isDestroyed() const
 
 bool Component::isValid() const
 {
-    return mOwner >= 0 && !mName.empty() && !mDestroyed;
+    return mOwner != 0 && !mName.empty() && !mDestroyed;
 }
 
 const std::string& Component::getName() const
