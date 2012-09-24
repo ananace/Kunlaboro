@@ -107,6 +107,10 @@ Component* EntitySystem::createComponent(const std::string& name)
         throw new std::runtime_error("Can't create a non-existant component");
 
     Component* comp = mRegisteredComponents[name]();
+
+    if (comp->getName() != name)
+        throw new std::runtime_error("The factory function for " + name + " creates components of type " + comp->getName());
+
     comp->mEntitySystem = this;
     comp->mId = mComponentCounter++;
     return comp;
