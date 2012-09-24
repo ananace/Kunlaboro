@@ -6,7 +6,7 @@
 using namespace Kunlaboro;
 
 EntitySystem::EntitySystem() :
-    mComponentCounter(1), mRequestCounter(1), mEntityCounter(1)
+    mComponentCounter(1), mRequestCounter(1), mEntityCounter(1), mFrozen(0)
 {
 }
 
@@ -31,7 +31,6 @@ EntitySystem::~EntitySystem()
         }
 
         delete ent;
-        mEntities[i] = 0;
     }
 }
 
@@ -56,14 +55,32 @@ void EntitySystem::destroyEntity(EntityId entity)
     if (ent == NULL)
         throw new std::runtime_error("Can't destroy a non-existant entity");
 
+    if (isFrozen())
+    {
+        mFrozenData.frozenEntityDestructions.push_back(entity);
+        mFrozenData.needsProcessing = true;
+        return;
+    }
+
     for (ComponentMap::iterator it = ent->components.begin(); it != ent->components.end(); ++it)
     {
         for (std::vector<Component*>::iterator cit = it->second.begin(); cit != it->second.end(); ++it)
+        {
             destroyComponent(*cit);
+
+            if (it->second.empty())
+                break;
+        }
     }
 
     delete ent;
-    mEntities[entity-1] = NULL;
+    Entity** entP = &mEntities.front();
+
+    for (unsigned k = entity; k < mEntities.size(); ++k) {
+        entP[k-1] = entP[k];
+    }
+
+    mEntities.pop_back();
 }
 
 void EntitySystem::finalizeEntity(EntityId entity)
@@ -122,6 +139,13 @@ void EntitySystem::destroyComponent(Component* component)
     if (!component->isValid())
         throw new std::runtime_error("Can't destroy an invalid component");
 
+    if (isFrozen())
+    {
+        mFrozenData.frozenComponentDestructions.push_back(component);
+        mFrozenData.needsProcessing = true;
+        return;
+    }
+
     std::vector<ComponentRequested>& reqs = mRequestsByComponent[component->getId()];
     for (auto it = reqs.begin(); it != reqs.end(); ++it)
     {
@@ -177,6 +201,8 @@ void EntitySystem::destroyComponent(Component* component)
 
     if (reqid != 0)
     {
+        freeze();
+
         for (auto it = mGlobalRequests[reqid].begin(); it != mGlobalRequests[reqid].end(); ++it)
             it->callback(msg);
 
@@ -185,6 +211,8 @@ void EntitySystem::destroyComponent(Component* component)
         {
             regs[i].callback(msg);
         }
+
+        unfreeze();
     }
 
     delete component;
@@ -215,6 +243,8 @@ void EntitySystem::addComponent(EntityId entity, Component* component)
 
     Message msg(Type_Create, component);
 
+    freeze();
+
     for (std::vector<ComponentRegistered>::iterator it = mGlobalRequests[entity].begin(); it != mGlobalRequests[entity].end(); ++it)
     {
         if (it->component->getId() != component->getId())
@@ -226,6 +256,8 @@ void EntitySystem::addComponent(EntityId entity, Component* component)
     {
         regs[i].callback(msg);
     }
+
+    unfreeze();
 }
 
 void EntitySystem::removeComponent(EntityId entity, Component* component)
@@ -255,6 +287,8 @@ void EntitySystem::removeComponent(EntityId entity, Component* component)
 
     Message msg(Type_Destroy, component);
 
+    freeze();
+
     for (std::vector<ComponentRegistered>::iterator it = mGlobalRequests[entity].begin(); it != mGlobalRequests[entity].end(); ++it)
     {
         if (it->component->getId() != component->getId())
@@ -265,6 +299,39 @@ void EntitySystem::removeComponent(EntityId entity, Component* component)
     for (unsigned int i = 0; i < regs.size(); i++)
     {
         regs[i].callback(msg);
+    }
+
+    unfreeze();
+}
+
+std::vector<Component*> EntitySystem::getAllComponentsOnEntity(EntityId entity, const std::string& name)
+{
+    if (entity == 0 || entity > mEntities.size())
+        throw new std::runtime_error("Can't check for components on a non-existant entity");
+
+    Entity* ent = mEntities[entity-1];
+    
+    if (ent == NULL)
+        throw new std::runtime_error("Can't check for components on a non-existant entity");
+
+    if (name == "")
+    {
+        std::vector<Component*> components;
+
+        for (auto it = ent->components.begin(); it != ent->components.end(); ++it)
+        {
+            for (auto cit = it->second.begin(); cit != it->second.end(); ++cit)
+                components.push_back(*cit);
+        }
+
+        return components;
+    }
+    else
+    {
+        if (ent->components.count(name) > 0)
+            return ent->components[name];
+        else
+            return std::vector<Component*>();
     }
 }
 
@@ -288,6 +355,13 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
 {
     if (!reg.component->isValid())
         throw new std::runtime_error("Can't register a request from an invalid component");
+
+    if (isFrozen())
+    {
+        mFrozenData.frozenGlobalRequests.push_back(std::pair<ComponentRequested, ComponentRegistered>(req, reg));
+        mFrozenData.needsProcessing = true;
+        return;
+    }
 
     RequestId reqid = getMessageRequestId(req.reason, req.name);
 
@@ -315,6 +389,9 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
         if (mEntities[i] == 0)
             continue;
 
+        if (mEntities[i]->components.count(req.name) == 0)
+            continue;
+
         std::vector<Component*>& comps = mEntities[i]->components[req.name];
         for (auto it = comps.begin(); it != comps.end(); ++it)
         {
@@ -330,6 +407,13 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
 
 void EntitySystem::registerLocalRequest(const ComponentRequested& req, const ComponentRegistered& reg)
 {
+    if (isFrozen())
+    {
+        mFrozenData.frozenLocalRequests.push_back(std::pair<ComponentRequested, ComponentRegistered>(req, reg));
+        mFrozenData.needsProcessing = true;
+        return;
+    }
+
     RequestId reqid = getMessageRequestId(req.reason, req.name);
 
     Entity* ent = mEntities[reg.component->getOwnerId()-1];
@@ -342,6 +426,9 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
         return;
 
     Message msg(Type_Create);
+
+    if (ent->components.count(req.name) == 0)
+        return;
 
     std::vector<Component*>& comps = ent->components[req.name];
     for (auto it = comps.begin(); it != comps.end(); ++it)
@@ -360,10 +447,14 @@ void EntitySystem::sendGlobalMessage(RequestId reqid, const Message& msg)
     if (msg.sender != 0 && !msg.sender->isValid())
         throw new std::runtime_error("Invalid sender for global message");
 
+    freeze();
+
     for (auto it = mGlobalRequests[reqid].begin(); it != mGlobalRequests[reqid].end(); ++it)
     {
         it->callback(msg);
     }
+
+    unfreeze();
 }
 
 void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, const Message& msg)
@@ -379,10 +470,45 @@ void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, const Mess
     if (ent->localRequests.count(reqid) == 0)
         return;
 
+    freeze();
+
     std::vector<ComponentRegistered>& regs = ent->localRequests[reqid];
     for (unsigned int i = 0; i < regs.size(); i++)
     {
         regs[i].callback(msg);
+    }
+
+    unfreeze();
+}
+
+void EntitySystem::freeze()
+{
+    mFrozen++;
+}
+
+void EntitySystem::unfreeze()
+{
+    if (--mFrozen == 0 && mFrozenData.needsProcessing)
+    {
+        //Process frozen queues
+
+        for (auto it = mFrozenData.frozenGlobalRequests.begin(); it != mFrozenData.frozenGlobalRequests.end(); ++it)
+            registerGlobalRequest(it->first, it->second);
+        for (auto it = mFrozenData.frozenLocalRequests.begin(); it != mFrozenData.frozenLocalRequests.end(); ++it)
+            registerLocalRequest(it->first, it->second);
+
+        for (auto it = mFrozenData.frozenComponentDestructions.begin(); it != mFrozenData.frozenComponentDestructions.end(); ++it)
+            destroyComponent(*it);
+
+        for (auto it = mFrozenData.frozenEntityDestructions.begin(); it != mFrozenData.frozenEntityDestructions.end(); ++it)
+            destroyEntity(*it);
+
+        mFrozenData.frozenComponentDestructions.clear();
+        mFrozenData.frozenEntityDestructions.clear();
+        mFrozenData.frozenGlobalRequests.clear();
+        mFrozenData.frozenLocalRequests.clear();
+
+        mFrozenData.needsProcessing = false;
     }
 }
 

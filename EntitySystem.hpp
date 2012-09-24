@@ -115,6 +115,13 @@ namespace Kunlaboro
          */
         void removeComponent(EntityId eid, Component* c);
 
+        /** \brief Returns a list of components on the specified entity.
+         *
+         * \param eid The entity to check.
+         * \param name A specific type of component you're looking for.
+         */
+        std::vector<Component*> getAllComponentsOnEntity(EntityId eid, const std::string& name = "");
+
         /** \brief Register a global request into the EntitySystem.
          *
          * This function will register a given request into the global request queue, any messages
@@ -178,6 +185,20 @@ namespace Kunlaboro
             sendGlobalMessage(getMessageRequestId(Reason_Message, n), Message(Type_Message, NULL, p));
         }
 
+        /** \brief Freezes the EntitySystem, forcing all following modifications to be put on a queue.
+         *
+         */
+        void freeze();
+        /** \brief Unfreezes the EntitySystem and lets it process all the queued modifications.
+         *
+         */
+        void unfreeze();
+
+        /** \brief Returns if the EntitySystem is frozen
+         *
+         */
+        inline bool isFrozen() { return mFrozen > 0; }
+
     private:
         /// A helper struct for containing Entity specific information.
         struct Entity
@@ -187,6 +208,17 @@ namespace Kunlaboro
             ComponentMap components; ///< The Component objects stored in this Entity. 
             std::unordered_map<RequestId, std::vector<ComponentRegistered> > localRequests; ///< The local requests stored inside the Entity.
         };
+
+        struct FrozenData
+        {
+            std::vector<std::pair<ComponentRequested, ComponentRegistered> > frozenGlobalRequests;
+            std::vector<std::pair<ComponentRequested, ComponentRegistered> > frozenLocalRequests;
+
+            std::vector<Component*> frozenComponentDestructions;
+            std::vector<EntityId> frozenEntityDestructions;
+
+            bool needsProcessing;
+        } mFrozenData;
 
         /** \brief Get an existing RequestId for a message.
          *
@@ -210,6 +242,8 @@ namespace Kunlaboro
         std::unordered_map<EntityId, std::vector<ComponentRegistered> > mGlobalRequests; ///< Globally registered requests.
         std::unordered_map<ComponentId, std::vector<ComponentRequested> > mRequestsByComponent; ///< Requests by component.
         std::vector<Entity*> mEntities; ///< List of created entities.
+
+        int mFrozen; ///< Is the EntitySystem frozen.
     };
 }
 
