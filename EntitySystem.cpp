@@ -56,11 +56,12 @@ void EntitySystem::destroyEntity(EntityId entity)
 
     for (ComponentMap::iterator it = ent->components.begin(); it != ent->components.end(); ++it)
     {
-        for (std::vector<Component*>::iterator cit = it->second.begin(); cit != it->second.end(); ++it)
+        std::vector<Component*>& comps = it->second;
+        for (auto cit = comps.begin(); cit != comps.end(); ++cit)
         {
             destroyComponent(*cit);
 
-            if (it->second.empty())
+            if (comps.empty())
                 break;
         }
     }
@@ -408,8 +409,10 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
     RequestId reqid = getMessageRequestId(req.reason, req.name);
 
     Entity* ent = mEntities[reg.component->getOwnerId()-1];
-    ent->localRequests[reqid].push_back(reg);
-    std::sort(ent->localRequests[reqid].begin(), ent->localRequests[reqid].end(), RequestSort());
+
+    std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
+    regs.push_back(reg);
+    std::sort(regs.begin(), regs.end(), RequestSort());
 
     if (reg.required && !ent->finalised)
         mRequiredComponents[ent->id].push_back(req.name);
