@@ -87,6 +87,13 @@ namespace Kunlaboro
          */
         void requireComponent(const std::string& name, MessageFunction func, bool local = true) const;
 
+        /** \brief Change the priority of a specific request.
+         *
+         * \param rid The request to change.
+         * \param priority The new priority of the request.
+         */
+        void changeRequestPriority(RequestId rid, int priority) const;
+
         /** \brief Get the RequestId for the specified message.
          *
          * This function will ask the EntitySystem for the RequestId of the specified message,

@@ -9,7 +9,7 @@ struct RequestSort
 {
     bool operator()(ComponentRegistered a, ComponentRegistered b)
     {
-        return a.priority > b.priority;
+        return a.priority < b.priority;
     }
 };
 
@@ -20,25 +20,9 @@ EntitySystem::EntitySystem() :
 
 EntitySystem::~EntitySystem()
 {
-    for (unsigned int i = 0; i < mEntities.size(); i++)
+    while(!mEntities.empty())
     {
-        if (mEntities[i] == 0)
-            continue;
-
-        Entity* ent = mEntities[i];
-
-        for (ComponentMap::iterator it = ent->components.begin(); it != ent->components.end(); ++it)
-        {
-            for (std::vector<Component*>::iterator cit = it->second.begin(); cit != it->second.end(); ++cit)
-            {
-                destroyComponent(*cit);
-
-                if (it->second.empty())
-                    break;
-            }
-        }
-
-        delete ent;
+        destroyEntity(mEntities.back()->id);
     }
 }
 
@@ -162,11 +146,10 @@ void EntitySystem::destroyComponent(Component* component)
         if (reqid == 0)
             return;
 
-        std::vector<ComponentRegistered>& reqs = mGlobalRequests[reqid];
-        for(auto reg = reqs.begin(); reg != reqs.end();)
+        for(auto reg = mGlobalRequests[reqid].begin(); reg != mGlobalRequests[reqid].end();)
         {
             if (reg->component->getId() == component->getId())
-                reg = reqs.erase(reg);
+                reg = mGlobalRequests[reqid].erase(reg);
             else
                 ++reg;
         }
@@ -184,20 +167,15 @@ void EntitySystem::destroyComponent(Component* component)
 
     for (unsigned int i = 0; i < ent->localRequests.size(); i++)
     {
-        std::vector<ComponentRegistered>& regs = ent->localRequests[i];
+        std::deque<ComponentRegistered>& regs = ent->localRequests[i];
         if (regs.empty())
             continue;
 
-        ComponentRegistered* regsP = &regs.front();
-        for (unsigned int j = 0; j < regs.size(); j++)
+        for (auto it = regs.begin(); it != regs.end(); ++it)
         {
-            if (regsP[j].component->getId() == component->getId())
+            if (it->component->getId() == component->getId())
             {
-                for (unsigned k = j+1; k < regs.size(); ++k) {
-                    regsP[k-1] = regsP[k];
-                }
-
-                regs.pop_back();
+                regs.erase(it);
                 break;
             }
         }
@@ -214,7 +192,7 @@ void EntitySystem::destroyComponent(Component* component)
         for (auto it = mGlobalRequests[reqid].begin(); it != mGlobalRequests[reqid].end(); ++it)
             it->callback(msg);
 
-        std::vector<ComponentRegistered>& regs = ent->localRequests[reqid];
+        std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
         for (unsigned int i = 0; i < regs.size(); i++)
         {
             regs[i].callback(msg);
@@ -254,7 +232,7 @@ void EntitySystem::addComponent(EntityId entity, Component* component)
     freeze();
 
     if (mGlobalRequests.count(reqid) > 0)
-        for (std::vector<ComponentRegistered>::iterator it = mGlobalRequests[reqid].begin(); it != mGlobalRequests[reqid].end(); ++it)
+        for (std::deque<ComponentRegistered>::iterator it = mGlobalRequests[reqid].begin(); it != mGlobalRequests[reqid].end(); ++it)
         {
             if (it->component->getId() != component->getId())
                 it->callback(msg);
@@ -262,7 +240,7 @@ void EntitySystem::addComponent(EntityId entity, Component* component)
 
     if (ent->localRequests.count(reqid) > 0)
     {
-        std::vector<ComponentRegistered>& regs = ent->localRequests[reqid];
+        std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
         for (unsigned int i = 0; i < regs.size(); i++)
         {
             regs[i].callback(msg);
@@ -301,13 +279,13 @@ void EntitySystem::removeComponent(EntityId entity, Component* component)
 
     freeze();
 
-    for (std::vector<ComponentRegistered>::iterator it = mGlobalRequests[entity].begin(); it != mGlobalRequests[entity].end(); ++it)
+    for (std::deque<ComponentRegistered>::iterator it = mGlobalRequests[entity].begin(); it != mGlobalRequests[entity].end(); ++it)
     {
         if (it->component->getId() != component->getId())
             it->callback(msg);
     }
 
-    std::vector<ComponentRegistered>& regs = ent->localRequests[reqid];
+    std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
     for (unsigned int i = 0; i < regs.size(); i++)
     {
         regs[i].callback(msg);
@@ -456,6 +434,36 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
     }
 }
 
+void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int priority)
+{
+    Entity* ent = mEntities[comp->getOwnerId()-1];
+    if (ent->localRequests.count(reqid) > 0)
+    {
+        std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
+        for (auto it = regs.begin(); it != regs.end(); ++it)
+            if (it->component == comp)
+            {
+                it->priority = priority;
+                break;
+            }
+
+        std::sort(regs.begin(), regs.end(), RequestSort());
+    }
+
+    if (mGlobalRequests.count(reqid) > 0)
+    {
+        std::deque<ComponentRegistered>& regs = mGlobalRequests[reqid];
+        for (auto it = regs.begin(); it != regs.end(); ++it)
+            if (it->component == comp)
+            {
+                it->priority = priority;
+                break;
+            }
+
+        std::sort(regs.begin(), regs.end(), RequestSort());
+    }
+}
+
 void EntitySystem::sendGlobalMessage(RequestId reqid, const Message& msg)
 {
     if (msg.sender != 0 && !msg.sender->isValid())
@@ -486,7 +494,7 @@ void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, const Mess
 
     freeze();
 
-    std::vector<ComponentRegistered>& regs = ent->localRequests[reqid];
+    std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
     for (unsigned int i = 0; i < regs.size(); i++)
     {
         regs[i].callback(msg);

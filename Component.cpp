@@ -73,6 +73,11 @@ void Component::requireComponent(const std::string& name, MessageFunction callba
         mEntitySystem->registerGlobalRequest(req, reg);
 }
 
+void Component::changeRequestPriority(RequestId rid, int priority) const
+{
+    mEntitySystem->reprioritizeRequest(const_cast<Component*>(this), rid, priority);
+}
+
 RequestId Component::getMessageRequestId(const std::string& name) const
 {
     return mEntitySystem->getMessageRequestId(Reason_Message, name);

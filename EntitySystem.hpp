@@ -142,6 +142,17 @@ namespace Kunlaboro
          */
         void registerLocalRequest(const ComponentRequested& req, const ComponentRegistered& reg);
 
+        /** \brief Changes the priority of the specific request.
+         *
+         * This function will change the priority of the request from the specified component,
+         * \todo Right now it's not very fast but I'll be doing my damn best to fix that.
+         *
+         * \param comp The component that owns the request.
+         * \param rid The request to change.
+         * \param priority The new priority of the request.
+         */
+        void reprioritizeRequest(Component* comp, RequestId rid, int priority);
+
         /** \brief Get a RequestId for the specified reason and string.
          *
          * This will return the RequestId for the specified message, you can use such a RequestId
