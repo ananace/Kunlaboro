@@ -57,12 +57,9 @@ void EntitySystem::destroyEntity(EntityId entity)
     for (ComponentMap::iterator it = ent->components.begin(); it != ent->components.end(); ++it)
     {
         std::vector<Component*>& comps = it->second;
-        for (auto cit = comps.begin(); cit != comps.end(); ++cit)
+        while(!comps.empty())
         {
-            destroyComponent(*cit);
-
-            if (comps.empty())
-                break;
+            destroyComponent(comps.back());
         }
     }
 
