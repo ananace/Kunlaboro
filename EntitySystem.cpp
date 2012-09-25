@@ -5,6 +5,14 @@
 
 using namespace Kunlaboro;
 
+struct RequestSort
+{
+    bool operator()(ComponentRegistered a, ComponentRegistered b)
+    {
+        return a.priority > b.priority;
+    }
+};
+
 EntitySystem::EntitySystem() :
     mComponentCounter(1), mRequestCounter(1), mEntityCounter(1), mFrozen(0)
 {
@@ -372,6 +380,7 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
     if (req.reason != Reason_AllComponents)
     {
         mGlobalRequests[reqid].push_back(reg);
+        std::sort(mGlobalRequests[reqid].begin(), mGlobalRequests[reqid].end(), RequestSort());
 
         if (req.reason == Reason_Message)
         {
@@ -422,6 +431,7 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
 
     Entity* ent = mEntities[reg.component->getOwnerId()-1];
     ent->localRequests[reqid].push_back(reg);
+    std::sort(ent->localRequests[reqid].begin(), ent->localRequests[reqid].end(), RequestSort());
 
     if (reg.required && !ent->finalised)
         mRequiredComponents[ent->id].push_back(req.name);

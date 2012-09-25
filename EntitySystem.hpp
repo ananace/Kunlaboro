@@ -206,7 +206,7 @@ namespace Kunlaboro
             EntityId id; ///< The EntityId of the Entity.
             bool finalised; ///< If the Entity is finalized.
             ComponentMap components; ///< The Component objects stored in this Entity. 
-            std::unordered_map<RequestId, std::vector<ComponentRegistered> > localRequests; ///< The local requests stored inside the Entity.
+            RequestMap localRequests; ///< The local requests stored inside the Entity.
         };
 
         struct FrozenData
@@ -239,7 +239,7 @@ namespace Kunlaboro
 
         std::unordered_map<std::string, FactoryFunction> mRegisteredComponents; ///< Registered Components in the EntitySystem
         std::unordered_map<EntityId, std::vector<std::string> > mRequiredComponents; ///< Required Components in entities.
-        std::unordered_map<EntityId, std::vector<ComponentRegistered> > mGlobalRequests; ///< Globally registered requests.
+        RequestMap mGlobalRequests; ///< Globally registered requests.
         std::unordered_map<ComponentId, std::vector<ComponentRequested> > mRequestsByComponent; ///< Requests by component.
         std::vector<Entity*> mEntities; ///< List of created entities.
 

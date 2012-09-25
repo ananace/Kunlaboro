@@ -58,8 +58,9 @@ namespace Kunlaboro
          *
          * \param message The message in question.
          * \param func The function to call when the message is sent.
+         * \param priority The prioity of this component, lower priorities will get the message before higher priorities.
          */
-        void requestMessage(const std::string& message, MessageFunction func) const;
+        void requestMessage(const std::string& message, MessageFunction func, int priority = 0) const;
         /** \brief Add a request to be told whenever a specific component is added.
          *
          * Whenever the requested component is added to the local entity or the global
@@ -272,9 +273,10 @@ namespace Kunlaboro
          *
          * \param name The message in question.
          * \param f The function to call when the message is sent.
+         * \param priority The prioity of this component, lower priorities will get the message before higher priorities.
          */
         template<class T>
-        void requestMessage(const std::string& name, void (T::*f)(const Message&)) const;
+        void requestMessage(const std::string& name, void (T::*f)(const Message&), int priority = 0) const;
         /** \brief Add a request to be told whenever a specific component is added.
          *
          * This is a convenience function that lets you use a class method as a MessageFunction
@@ -325,9 +327,9 @@ namespace Kunlaboro
 
 
     template<class T>
-    void Component::requestMessage(const std::string& name, void (T::*f)(const Message&)) const
+    void Component::requestMessage(const std::string& name, void (T::*f)(const Message&), int priority) const
     {
-        requestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1));
+        requestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), priority);
     }
 
     template<class T>
