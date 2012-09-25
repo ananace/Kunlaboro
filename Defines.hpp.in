@@ -23,7 +23,7 @@
 #include <boost/any.hpp>
 #endif
 #include <string>
-#include <vector>
+#include <deque>
 #include <functional>
 #include <unordered_map>
 
@@ -95,8 +95,8 @@ namespace Kunlaboro
     };
 
     /// A map of requests
-    typedef std::unordered_map<GUID, std::vector<ComponentRegistered> > RequestMap;
-    
+    typedef std::unordered_map<GUID, std::deque<ComponentRegistered> > RequestMap;
+
     /// A message that is sent through the EntitySystem.
     struct Message {
         MessageType type;  ///< The type of the message.

@@ -19,6 +19,7 @@
 
 #include "Defines.hpp"
 #include <map>
+#include <vector>
 
 namespace Kunlaboro
 {
