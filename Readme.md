@@ -26,3 +26,44 @@ Documentation
 -------------
 
 The documentation for Kunlaboro can be found in the source files, a Doxyfile has been provided if you want some better formatted documentation.
+
+A code example of Kunlaboro can be seen below:
+```c++
+#include <Kunlaboro/Kunlaboro.hpp>
+#include <iostream>
+
+using namespace Kunlaboro;
+using namespace std;
+
+class PrintComponent : public Component
+{
+public:
+    PrintComponent() : Kunlaboro::Component("Print") { }
+
+    void printString(const Message& msg)
+    {
+        cout << boost::any_cast<std::string>(msg.payload) << endl;
+    }
+
+    void addedToEntity()
+    {
+        registerMessage("Print.PrintString", &PrintComponent::printString);
+    }
+};
+
+Component* createPrint() { return new PrintComponent(); }
+
+int main()
+{
+    EntitySystem sys;
+    sys.registerComponent("Print", &createPrint);
+
+    EntityId eId = sys.createEntity();
+    sys.addComponent(eId, sys.createComponent("Print"));
+    sys.finalizeEntity(eId);
+
+    sys.sendGlobalMessage("Print.PrintString", std::string("Hello World!"));
+
+    return 0;
+}
+```
