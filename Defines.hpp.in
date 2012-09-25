@@ -91,8 +91,12 @@ namespace Kunlaboro
         Component* component;     ///< The Component the registered a request.
         MessageFunction callback; ///< The callback in question.
         bool required;            ///< Is this a requirement and not a request.
+        int priority;             ///< The priority of this request.
     };
 
+    /// A map of requests
+    typedef std::unordered_map<GUID, std::vector<ComponentRegistered> > RequestMap;
+    
     /// A message that is sent through the EntitySystem.
     struct Message {
         MessageType type;  ///< The type of the message.
