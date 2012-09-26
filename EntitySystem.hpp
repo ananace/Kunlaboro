@@ -215,7 +215,8 @@ namespace Kunlaboro
          */
         inline void sendGlobalMessage(const std::string& n, const Payload& p = 0)
         {
-            sendGlobalMessage(getMessageRequestId(Reason_Message, n), Message(Type_Message, NULL, p));
+            Message msg(Type_Message, NULL, p);
+            sendGlobalMessage(getMessageRequestId(Reason_Message, n), msg);
         }
 
         /** \brief Freezes the EntitySystem, forcing all following modifications to be put on a queue.
