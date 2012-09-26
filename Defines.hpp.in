@@ -50,7 +50,7 @@ namespace Kunlaboro
 #endif
 
     /// The MessageFunction.
-    typedef std::function<void(const Message&)> MessageFunction;
+    typedef std::function<void(Message&)> MessageFunction;
     /// The FactoryFunction for a Component.
     typedef std::function<Component*()> 	    FactoryFunction;
 
@@ -102,9 +102,10 @@ namespace Kunlaboro
         MessageType type;  ///< The type of the message.
         Component* sender; ///< The sender of the message, can be NULL.
         Payload payload;   ///< The payload of the message, can be empty.
-        Message(MessageType t) : type(t) {} ///< Create an empty message of the specified type.
-        Message(MessageType t, Component *c) : type(t), sender(c) {} ///< Create an empty message with a specified sender.
-        Message(MessageType t, Component *c, Payload p) : type(t), sender(c), payload(p) {} ///< Create a message with the specified sender and Payload.
+        bool handled;      ///< Has the message been handled?
+        Message(MessageType t) : type(t), handled(false) {} ///< Create an empty message of the specified type.
+        Message(MessageType t, Component *c) : type(t), sender(c), handled(false) {} ///< Create an empty message with a specified sender.
+        Message(MessageType t, Component *c, Payload p) : type(t), sender(c), payload(p), handled(false) {} ///< Create a message with the specified sender and Payload.
     };
 }
 

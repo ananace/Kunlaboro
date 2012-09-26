@@ -61,6 +61,16 @@ namespace Kunlaboro
          * \param priority The prioity of this component, lower priorities will get the message before higher priorities.
          */
         void requestMessage(const std::string& message, MessageFunction func, int priority = 0) const;
+        /** \brief Removes a request for a specific message.
+         *
+         * This function will remove a request that was created by the requestMessage() function, note that the
+         * arguments must be identical to the requestMessage() call.
+         *
+         * \param message The message in question.
+         * \param func The function that was registered for the request.
+         * \param priority The priority that was used when registering the request.
+         */
+        void unrequestMessage(const std::string& message, MessageFunction func, int priority = 0) const;
         /** \brief Add a request to be told whenever a specific component is added.
          *
          * Whenever the requested component is added to the local entity or the global
@@ -138,6 +148,17 @@ namespace Kunlaboro
          * \sa sendMessage(RequestId, const Payload&) const
          */
         void sendMessage(RequestId id, const Message& msg) const;
+        /** \brief Send a question to the local object.
+         *
+         * This function will send a question with the specified RequestId and Message object
+         * to the entity that contains the current Component. 
+         *
+         * \param id The RequestId to send.
+         * \param msg The Message to send.
+         * \returns The response that was recieved, check if handled is set to true before
+         * assuming that something actually responded.
+         */
+        Message sendQuestion(RequestId id, const Message& msg) const;
         /** \brief Send a message to the entire EntitySystem that the local entity is a part of.
          *
          * This function will send a RequestId to the entire EntitySystem and all the
@@ -173,6 +194,15 @@ namespace Kunlaboro
          * \sa sendGlobalMessage(RequestId, const Payload&) const
          */
         void sendGlobalMessage(RequestId id, const Message& msg) const;
+        /** \brief Send a message to the entire EntitySystem that the local entity is a part of.
+         *
+         * 
+         * \param id The RequestId to send.
+         * \param msg The Message to send.
+         * \returns The response that was recieved, check if handled is set to true before
+         * assuming that something actually responded.
+         */
+        Message sendGlobalQuestion(RequestId id, const Message& msg) const;
         /** \brief Send a message to a specific entity.
          *
          * This function will send a RequestId to a specific entity in the EntitySystem.
@@ -207,6 +237,16 @@ namespace Kunlaboro
          * \sa sendMessageToEntity(EntityId, RequestId, const Payload&) const
          */
         void sendMessageToEntity(EntityId eid, RequestId rid, const Message& m) const;
+        /** \brief Send a message to a specific entity.
+         *
+         * 
+         * \param eid The EntityId to send the RequestId to.
+         * \param rid The RequestId to send.
+         * \param m The Message to send.
+         * \returns The response that was recieved, check if handled is set to true before
+         * assuming that something actually responded.
+         */
+        Message sendQuestionToEntity(EntityId eid, RequestId rid, const Message& m) const;
 
         /** \brief Send a message to the entire EntitySystem that the local entity is a part of.
          *
@@ -217,7 +257,17 @@ namespace Kunlaboro
          * \param id The name of the request to send.
          * \param p The payload to send.
          */
-        void sendGlobalMessage(const std::string& id, const Payload& p) const;
+        void sendGlobalMessage(const std::string& id, const Payload& p = 0) const;
+        /** \brief Send a message to the entire EntitySystem that the local entity is a part of.
+         *
+         * This function is a convenience function that lets you quickly send out a global message
+         * without having to get the RequestId in advance, and while not a function you should use
+         * repeatedly, it is good if you just need to send a quick message.
+         *
+         * \param id The name of the request to send.
+         * \param p The payload to send.
+         */
+        Message sendGlobalQuestion(const std::string& id, const Payload& p = 0) const;
         /** \brief Get a pointer to the EntitySystem that this Component is a part of.
          *
          * This function returns a pointer to the EntitySystem that governs the current component,
@@ -280,10 +330,43 @@ namespace Kunlaboro
          *
          * \param name The message in question.
          * \param f The function to call when the message is sent.
-         * \param priority The prioity of this component, lower priorities will get the message before higher priorities.
+         * \param priority The priority of this component, lower priorities will get the message before higher priorities.
+         */
+        template<class T>
+        void requestMessage(const std::string& name, void (T::*f)(Message&), int priority = 0) const;
+        /** \brief Adds a request for a specific message.
+         *
+         * This is a convenience function that lets you use a class method as a MessageFunction
+         * for the requestMessage(const std::string&, MessageFunction) const function.
+         *
+         * \param name The message in question.
+         * \param f The function to call when the message is sent.
+         * \param priority The priority of this component, lower priorities will get the message before higher priorities.
          */
         template<class T>
         void requestMessage(const std::string& name, void (T::*f)(const Message&), int priority = 0) const;
+        /** \brief Removes a request for a specific message.
+         *
+         * This is a convenience function that lets you use a class method as a MessageFunction
+         * for the unrequestMessage(const std::string&, MessageFunction) const function.
+         *
+         * \param name The message in question.
+         * \param f The function that was registered for the request.
+         * \param priority The priority that was used when registering the request.
+         */
+        template<class T>
+        void unrequestMessage(const std::string& name, void (T::*f)(Message&), int priority = 0) const;
+        /** \brief Removes a request for a specific message.
+         *
+         * This is a convenience function that lets you use a class method as a MessageFunction
+         * for the unrequestMessage(const std::string&, MessageFunction) const function.
+         *
+         * \param name The message in question.
+         * \param f The function that was registered for the request.
+         * \param priority The priority that was used when registering the request.
+         */
+        template<class T>
+        void unrequestMessage(const std::string& name, void (T::*f)(const Message&), int priority = 0) const;
         /** \brief Add a request to be told whenever a specific component is added.
          *
          * This is a convenience function that lets you use a class method as a MessageFunction
@@ -334,9 +417,27 @@ namespace Kunlaboro
 
 
     template<class T>
+    void Component::requestMessage(const std::string& name, void (T::*f)(Message&), int priority) const
+    {
+        requestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), priority);
+    }
+
+    template<class T>
     void Component::requestMessage(const std::string& name, void (T::*f)(const Message&), int priority) const
     {
         requestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), priority);
+    }
+
+    template<class T>
+    void Component::unrequestMessage(const std::string& name, void (T::*f)(Message&), int priority) const
+    {
+        unrequestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), priority);
+    }
+
+    template<class T>
+    void Component::unrequestMessage(const std::string& name, void (T::*f)(const Message&), int priority) const
+    {
+        unrequestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), priority);
     }
 
     template<class T>

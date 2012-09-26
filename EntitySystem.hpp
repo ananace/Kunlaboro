@@ -143,6 +143,27 @@ namespace Kunlaboro
          */
         void registerLocalRequest(const ComponentRequested& req, const ComponentRegistered& reg);
 
+        /** \brief Removes a global request from the EntitySystem.
+         *
+         * This function will remove a given request from the global request queue.
+         * \note Note that the arguments must be identical to an earlier call of the registerGlobalRequest()
+         * function for this to succeed.
+         *
+         * \param req The Component request to remove.
+         * \param reg The Callback registration to remove.
+         */
+        void removeGlobalRequest(const ComponentRequested& req, const ComponentRegistered& reg);
+        /** \brief Remove a local request from the EntitySystem.
+         *
+         * This function will remove a local request from inside the entity that created the request.
+         * \note Note that the arguments must be identical to an earlier call of the registerLocalRequest()
+         * function for this to succeed.
+         *
+         * \param req The Component request to remove.
+         * \param reg The Callback registration to remove.
+         */
+        void removeLocalRequest(const ComponentRequested& req, const ComponentRegistered& reg);
+
         /** \brief Changes the priority of the specific request.
          *
          * This function will change the priority of the request from the specified component,
@@ -172,7 +193,7 @@ namespace Kunlaboro
          * \param id The RequestId to send.
          * \param msg The Message to send.
          */
-        void sendGlobalMessage(RequestId id, const Message& msg);
+        void sendGlobalMessage(RequestId id, Message& msg);
         /** \brief Send a local message to all the Component objects in the specified entity.
          *
          * This function will send a message to the specified entity and all the Component objects
@@ -182,7 +203,7 @@ namespace Kunlaboro
          * \param rid The RequestId to send.
          * \param msg The Message to send.
          */
-        void sendLocalMessage(EntityId eid, RequestId rid, const Message& msg);
+        void sendLocalMessage(EntityId eid, RequestId rid, Message& msg);
 
         /** \brief Send a global message to all the Component objects in the EntitySystem.
          *
@@ -221,16 +242,22 @@ namespace Kunlaboro
             RequestMap localRequests; ///< The local requests stored inside the Entity.
         };
 
+        /// A container for all the requests that happened during a time when the EntitySystem was frozen.
         struct FrozenData
         {
+            /// Global requests that were frozen.
             std::vector<std::pair<ComponentRequested, ComponentRegistered> > frozenGlobalRequests;
+            /// Local requests that were frozen.
             std::vector<std::pair<ComponentRequested, ComponentRegistered> > frozenLocalRequests;
 
+            /// Component destructions that were frozen.
             std::vector<Component*> frozenComponentDestructions;
+            /// Entity destructions that were frozen.
             std::vector<EntityId> frozenEntityDestructions;
 
+            /// Have any requests been frozen and need processing?
             bool needsProcessing;
-        } mFrozenData;
+        } mFrozenData; 
 
         /** \brief Get an existing RequestId for a message.
          *

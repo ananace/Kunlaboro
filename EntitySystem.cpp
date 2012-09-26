@@ -5,11 +5,35 @@
 
 using namespace Kunlaboro;
 
+/// A simple sorting predicate for registered requests.
 struct RequestSort
 {
+    /// Check which of the provided requests should be sorted first.
     bool operator()(ComponentRegistered a, ComponentRegistered b)
     {
         return a.priority < b.priority;
+    }
+};
+
+/// A simple comparison function for finding a registered request.
+struct RequestFind
+{
+    const ComponentRegistered* reg;
+    const ComponentRequested* req;
+
+    RequestFind(const ComponentRegistered& a): reg(&a), req(NULL) {} ///< Search for a ComponentRegistered struct
+    RequestFind(const ComponentRequested& a): req(&a), reg(NULL) {}  ///< Search for a ComponentRequested struct
+
+    /// Is the ComponentRegistered that this struct was created with identical to the parameter
+    bool operator()(ComponentRegistered b) 
+    {
+        return reg->component == b.component && reg->priority == b.priority && reg->required == b.required;
+    }
+
+    /// Is the ComponentRequested that this struct was created with identical to the parameter
+    bool operator()(ComponentRequested b)
+    {
+        return req->name == b.name && req->reason == b.reason;
     }
 };
 
@@ -434,6 +458,66 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
     }
 }
 
+void EntitySystem::removeGlobalRequest(const ComponentRequested& req, const ComponentRegistered& reg)
+{
+    if (!reg.component->isValid())
+        throw std::runtime_error("Can't remove a request from an invalid component");
+
+    /*if (isFrozen())
+    {
+        mFrozenData.frozenGlobalRequests.push_back(std::pair<ComponentRequested, ComponentRegistered>(req, reg));
+        mFrozenData.needsProcessing = true;
+        return;
+    }*/
+
+    RequestId reqid = getMessageRequestId(req.reason, req.name);
+
+    if (req.reason != Reason_AllComponents && mGlobalRequests.count(reqid) > 0)
+    {
+        std::deque<ComponentRegistered>& regs = mGlobalRequests[reqid];
+        
+        auto it = std::find_if(regs.begin(), regs.end(), RequestFind(reg));
+        if (it != regs.end())
+        {
+            regs.erase(it);
+
+            if (req.reason == Reason_Message)
+            {
+                std::deque<ComponentRegistered>& lregs = mEntities[reg.component->getOwnerId()-1]->localRequests[reqid];
+                lregs.erase(std::find_if(lregs.begin(), lregs.end(), RequestFind(reg)));
+            }
+
+            std::vector<ComponentRequested>& reqs = mRequestsByComponent[reg.component->getId()];
+            auto it2 = std::find_if(reqs.begin(), reqs.end(), RequestFind(req));
+            if (it2 != reqs.end())
+                reqs.erase(it2);
+        }
+    }
+}
+
+void EntitySystem::removeLocalRequest(const ComponentRequested& req, const ComponentRegistered& reg)
+{
+    if (!reg.component->isValid())
+        throw std::runtime_error("Can't remove a request from an invalid component");
+
+    /*if (isFrozen())
+    {
+        mFrozenData.frozenLocalRequests.push_back(std::pair<ComponentRequested, ComponentRegistered>(req, reg));
+        mFrozenData.needsProcessing = true;
+        return;
+    }*/
+
+    RequestId reqid = getMessageRequestId(req.reason, req.name);
+
+    Entity* ent = mEntities[reg.component->getOwnerId()-1];
+
+    std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
+
+    auto it = std::find_if(regs.begin(), regs.end(), RequestFind(reg));
+    if (it != regs.end())
+        regs.erase(it);
+}
+
 void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int priority)
 {
     Entity* ent = mEntities[comp->getOwnerId()-1];
@@ -464,7 +548,7 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
     }
 }
 
-void EntitySystem::sendGlobalMessage(RequestId reqid, const Message& msg)
+void EntitySystem::sendGlobalMessage(RequestId reqid, Message& msg)
 {
     if (msg.sender != 0 && !msg.sender->isValid())
         throw std::runtime_error("Invalid sender for global message");
@@ -474,12 +558,18 @@ void EntitySystem::sendGlobalMessage(RequestId reqid, const Message& msg)
     for (auto it = mGlobalRequests[reqid].begin(); it != mGlobalRequests[reqid].end(); ++it)
     {
         it->callback(msg);
+
+        if (msg.handled)
+        {
+            msg.sender = it->component;
+            break;
+        }
     }
 
     unfreeze();
 }
 
-void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, const Message& msg)
+void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, Message& msg)
 {
     if (entity == 0 || entity > mEntities.size())
         throw std::runtime_error("Can't send a message to a non-existant entity");
@@ -495,9 +585,15 @@ void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, const Mess
     freeze();
 
     std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
-    for (unsigned int i = 0; i < regs.size(); i++)
+    for (auto it = regs.begin(); it != regs.end(); ++it)
     {
-        regs[i].callback(msg);
+        it->callback(msg);
+
+        if (msg.handled)
+        {
+            msg.sender = it->component;
+            break;
+        }
     }
 
     unfreeze();

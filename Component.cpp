@@ -37,6 +37,21 @@ void Component::requestMessage(const std::string& name, MessageFunction callback
     mEntitySystem->registerGlobalRequest(req, reg);
 }
 
+void Component::unrequestMessage(const std::string& name, MessageFunction callback, int priority) const
+{
+    ComponentRequested req;
+    req.name = name;
+    req.reason = Reason_Message;
+
+    ComponentRegistered reg;
+    reg.callback = callback;
+    reg.component = const_cast<Component*>(this);
+    reg.required = false;
+    reg.priority = priority;
+
+    mEntitySystem->removeGlobalRequest(req, reg);
+}
+
 void Component::requestComponent(const std::string& name, MessageFunction callback, bool local) const
 {
     ComponentRequested req;
@@ -93,9 +108,18 @@ void Component::sendMessage(RequestId id, const Payload& p) const
     mEntitySystem->sendLocalMessage(mOwner, id, Message(Type_Message, const_cast<Component*>(this), p));
 }
 
-void Component::sendMessage(RequestId id, const Message& msg) const
+void Component::sendMessage(RequestId id, const Message& m) const
 {
+    Message msg = m;
     mEntitySystem->sendLocalMessage(mOwner, id, msg);
+}
+
+Message Component::sendQuestion(RequestId id, const Message& m) const
+{
+    Message msg = m;
+    mEntitySystem->sendLocalMessage(mOwner, id, msg);
+
+    return msg;
 }
 
 void Component::sendGlobalMessage(RequestId id) const
@@ -108,9 +132,18 @@ void Component::sendGlobalMessage(RequestId id, const Payload& p) const
     mEntitySystem->sendGlobalMessage(id, Message(Type_Message, const_cast<Component*>(this), p));
 }
 
-void Component::sendGlobalMessage(RequestId id, const Message& msg) const
+void Component::sendGlobalMessage(RequestId id, const Message& m) const
 {
+    Message msg = m;
     mEntitySystem->sendGlobalMessage(id, msg);
+}
+
+Message Component::sendGlobalQuestion(RequestId id, const Message& m) const
+{
+    Message msg = m;
+    mEntitySystem->sendGlobalMessage(id, msg);
+
+    return msg;
 }
 
 void Component::sendMessageToEntity(EntityId eid, RequestId rid) const
@@ -123,12 +156,22 @@ void Component::sendMessageToEntity(EntityId eid, RequestId rid, const Payload& 
     mEntitySystem->sendLocalMessage(eid, rid, Message(Type_Message, const_cast<Component*>(this), p));
 }
 
-void Component::sendMessageToEntity(EntityId eid, RequestId rid, const Message& msg) const
+void Component::sendMessageToEntity(EntityId eid, RequestId rid, const Message& m) const
 {
+    Message msg = m;
     mEntitySystem->sendLocalMessage(eid, rid, msg);
 }
 
+Message Component::sendQuestionToEntity(EntityId eid, RequestId rid, const Message& m) const
+{
+    Message msg = m;
+    mEntitySystem->sendLocalMessage(eid, rid, msg);
+
+    return msg;
+}
+
 void Component::sendGlobalMessage(const std::string& id, const Payload& p) const { sendGlobalMessage(mEntitySystem->getMessageRequestId(Reason_Message, id), p); }
+Message Component::sendGlobalQuestion(const std::string& id, const Payload& p) const { Message m(Type_Message, const_cast<Component*>(this), p); m = sendGlobalQuestion(mEntitySystem->getMessageRequestId(Reason_Message, id), m); return m; }
 
 ComponentId Component::getId() const
 {
