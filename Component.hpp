@@ -257,7 +257,7 @@ namespace Kunlaboro
          * \param id The name of the request to send.
          * \param p The payload to send.
          */
-        void sendGlobalMessage(const std::string& id, const Payload& p = 0) const;
+        void sendGlobalMessage(const std::string& id, const Payload& p) const;
         /** \brief Send a message to the entire EntitySystem that the local entity is a part of.
          *
          * This function is a convenience function that lets you quickly send out a global message
@@ -267,7 +267,7 @@ namespace Kunlaboro
          * \param id The name of the request to send.
          * \param p The payload to send.
          */
-        Message sendGlobalQuestion(const std::string& id, const Payload& p = 0) const;
+        Message sendGlobalQuestion(const std::string& id, const Payload& p) const;
         /** \brief Get a pointer to the EntitySystem that this Component is a part of.
          *
          * This function returns a pointer to the EntitySystem that governs the current component,
