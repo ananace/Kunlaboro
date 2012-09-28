@@ -59,8 +59,9 @@ namespace Kunlaboro
          * \param message The message in question.
          * \param func The function to call when the message is sent.
          * \param priority The prioity of this component, lower priorities will get the message before higher priorities.
+         * \param local Should this request only listen to local message?
          */
-        void requestMessage(const std::string& message, MessageFunction func, int priority = 0) const;
+        void requestMessage(const std::string& message, MessageFunction func, int priority = 0, bool local = false) const;
         /** \brief Removes a request for a specific message.
          *
          * This function will remove a request that was created by the requestMessage() function, note that the
@@ -69,8 +70,9 @@ namespace Kunlaboro
          * \param message The message in question.
          * \param func The function that was registered for the request.
          * \param priority The priority that was used when registering the request.
+         * \param local Should this request only listen to local message?
          */
-        void unrequestMessage(const std::string& message, MessageFunction func, int priority = 0) const;
+        void unrequestMessage(const std::string& message, MessageFunction func, int priority = 0, bool local = false) const;
         /** \brief Add a request to be told whenever a specific component is added.
          *
          * Whenever the requested component is added to the local entity or the global
@@ -331,9 +333,10 @@ namespace Kunlaboro
          * \param name The message in question.
          * \param f The function to call when the message is sent.
          * \param priority The priority of this component, lower priorities will get the message before higher priorities.
+         * \param local Should this request only listen to local message?
          */
         template<class T>
-        void requestMessage(const std::string& name, void (T::*f)(Message&), int priority = 0) const;
+        void requestMessage(const std::string& name, void (T::*f)(Message&), int priority = 0, bool local = false) const;
         /** \brief Adds a request for a specific message.
          *
          * This is a convenience function that lets you use a class method as a MessageFunction
@@ -342,9 +345,10 @@ namespace Kunlaboro
          * \param name The message in question.
          * \param f The function to call when the message is sent.
          * \param priority The priority of this component, lower priorities will get the message before higher priorities.
+         * \param local Should this request only listen to local message?
          */
         template<class T>
-        void requestMessage(const std::string& name, void (T::*f)(const Message&), int priority = 0) const;
+        void requestMessage(const std::string& name, void (T::*f)(const Message&), int priority = 0, bool local = false) const;
         /** \brief Removes a request for a specific message.
          *
          * This is a convenience function that lets you use a class method as a MessageFunction
@@ -353,9 +357,10 @@ namespace Kunlaboro
          * \param name The message in question.
          * \param f The function that was registered for the request.
          * \param priority The priority that was used when registering the request.
+         * \param local Should this request only listen to local message?
          */
         template<class T>
-        void unrequestMessage(const std::string& name, void (T::*f)(Message&), int priority = 0) const;
+        void unrequestMessage(const std::string& name, void (T::*f)(Message&), int priority = 0, bool local = false) const;
         /** \brief Removes a request for a specific message.
          *
          * This is a convenience function that lets you use a class method as a MessageFunction
@@ -364,9 +369,10 @@ namespace Kunlaboro
          * \param name The message in question.
          * \param f The function that was registered for the request.
          * \param priority The priority that was used when registering the request.
+         * \param local Should this request only listen to local message?
          */
         template<class T>
-        void unrequestMessage(const std::string& name, void (T::*f)(const Message&), int priority = 0) const;
+        void unrequestMessage(const std::string& name, void (T::*f)(const Message&), int priority = 0, bool local = false) const;
         /** \brief Add a request to be told whenever a specific component is added.
          *
          * This is a convenience function that lets you use a class method as a MessageFunction
@@ -417,27 +423,27 @@ namespace Kunlaboro
 
 
     template<class T>
-    void Component::requestMessage(const std::string& name, void (T::*f)(Message&), int priority) const
+    void Component::requestMessage(const std::string& name, void (T::*f)(Message&), int priority, bool local) const
     {
-        requestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), priority);
+        requestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), priority, local);
     }
 
     template<class T>
-    void Component::requestMessage(const std::string& name, void (T::*f)(const Message&), int priority) const
+    void Component::requestMessage(const std::string& name, void (T::*f)(const Message&), int priority, bool local) const
     {
-        requestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), priority);
+        requestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), priority, local);
     }
 
     template<class T>
-    void Component::unrequestMessage(const std::string& name, void (T::*f)(Message&), int priority) const
+    void Component::unrequestMessage(const std::string& name, void (T::*f)(Message&), int priority, bool local) const
     {
-        unrequestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), priority);
+        unrequestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), priority, local);
     }
 
     template<class T>
-    void Component::unrequestMessage(const std::string& name, void (T::*f)(const Message&), int priority) const
+    void Component::unrequestMessage(const std::string& name, void (T::*f)(const Message&), int priority, bool local) const
     {
-        unrequestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), priority);
+        unrequestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), priority, local);
     }
 
     template<class T>

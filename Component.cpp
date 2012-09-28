@@ -22,7 +22,7 @@ void Component::addLocalComponent(Component* comp)
     mEntitySystem->addComponent(mOwner, comp);
 }
 
-void Component::requestMessage(const std::string& name, MessageFunction callback, int priority) const
+void Component::requestMessage(const std::string& name, MessageFunction callback, int priority, bool local) const
 {
     ComponentRequested req;
     req.name = name;
@@ -34,10 +34,13 @@ void Component::requestMessage(const std::string& name, MessageFunction callback
     reg.required = false;
     reg.priority = priority;
 
-    mEntitySystem->registerGlobalRequest(req, reg);
+    if (local)
+        mEntitySystem->registerLocalRequest(req, reg);
+    else
+        mEntitySystem->registerGlobalRequest(req, reg);
 }
 
-void Component::unrequestMessage(const std::string& name, MessageFunction callback, int priority) const
+void Component::unrequestMessage(const std::string& name, MessageFunction callback, int priority, bool local) const
 {
     ComponentRequested req;
     req.name = name;
@@ -49,7 +52,10 @@ void Component::unrequestMessage(const std::string& name, MessageFunction callba
     reg.required = false;
     reg.priority = priority;
 
-    mEntitySystem->removeGlobalRequest(req, reg);
+    if (local)
+        mEntitySystem->removeLocalRequest(req, reg);
+    else
+        mEntitySystem->removeGlobalRequest(req, reg);
 }
 
 void Component::requestComponent(const std::string& name, MessageFunction callback, bool local) const

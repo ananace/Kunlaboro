@@ -5,37 +5,49 @@
 
 using namespace Kunlaboro;
 
-/// A simple sorting predicate for registered requests.
 struct RequestSort
 {
-    /// Check which of the provided requests should be sorted first.
-    bool operator()(ComponentRegistered a, ComponentRegistered b)
+    bool operator()(const ComponentRegistered& a, const ComponentRegistered& b) const
     {
         return a.priority < b.priority;
     }
 };
 
-/// A simple comparison function for finding a registered request.
 struct RequestFind
 {
     const ComponentRegistered* reg;
     const ComponentRequested* req;
 
-    RequestFind(const ComponentRegistered& a): reg(&a), req(NULL) {} ///< Search for a ComponentRegistered struct
-    RequestFind(const ComponentRequested& a): req(&a), reg(NULL) {}  ///< Search for a ComponentRequested struct
+    RequestFind(const ComponentRegistered& a): reg(&a), req(NULL) {}
+    RequestFind(const ComponentRequested& a): req(&a), reg(NULL) {}
 
-    /// Is the ComponentRegistered that this struct was created with identical to the parameter
-    bool operator()(ComponentRegistered b) 
+    bool operator()(const ComponentRegistered& b) const
     {
         return reg->component == b.component && reg->priority == b.priority && reg->required == b.required;
     }
 
-    /// Is the ComponentRequested that this struct was created with identical to the parameter
-    bool operator()(ComponentRequested b)
+    bool operator()(const ComponentRequested& b) const
     {
         return req->name == b.name && req->reason == b.reason;
     }
 };
+
+template<typename T, typename Y>
+inline void insertedPush(std::deque<T>& deque, const T& value, const Y& comp)
+{
+    std::deque<T>::iterator first = deque.begin(), last = deque.end(), it;
+    std::iterator_traits<std::deque<T>::iterator>::difference_type count, step;
+
+    count = std::distance(first,last);
+    while (count>0)
+    {
+        it = first; step=count/2; std::advance (it,step);
+        if (!comp(value,*it)) { first=++it; count-=step+1;  }
+        else count=step;
+    }
+  
+    deque.insert(first, value);
+}
 
 EntitySystem::EntitySystem() :
     mComponentCounter(1), mRequestCounter(1), mEntityCounter(1), mFrozen(0)
@@ -379,12 +391,11 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
 
     if (req.reason != Reason_AllComponents)
     {
-        mGlobalRequests[reqid].push_back(reg);
-        std::sort(mGlobalRequests[reqid].begin(), mGlobalRequests[reqid].end(), RequestSort());
+        insertedPush(mGlobalRequests[reqid], reg, RequestSort());
 
         if (req.reason == Reason_Message)
         {
-            mEntities[reg.component->getOwnerId()-1]->localRequests[reqid].push_back(reg);
+           insertedPush(mEntities[reg.component->getOwnerId()-1]->localRequests[reqid], reg, RequestSort());
         }
 
         if (reg.required && !mEntities[reg.component->getOwnerId()-1]->finalised)
@@ -432,8 +443,7 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
     Entity* ent = mEntities[reg.component->getOwnerId()-1];
 
     std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
-    regs.push_back(reg);
-    std::sort(regs.begin(), regs.end(), RequestSort());
+    insertedPush(regs, reg, RequestSort());
 
     if (reg.required && !ent->finalised)
         mRequiredComponents[ent->id].push_back(req.name);
@@ -476,7 +486,7 @@ void EntitySystem::removeGlobalRequest(const ComponentRequested& req, const Comp
     {
         std::deque<ComponentRegistered>& regs = mGlobalRequests[reqid];
         
-        auto it = std::find_if(regs.begin(), regs.end(), RequestFind(reg));
+        auto it = std::upper_bound(regs.begin(), regs.end(), reg, RequestSort());
         if (it != regs.end())
         {
             regs.erase(it);
@@ -484,7 +494,7 @@ void EntitySystem::removeGlobalRequest(const ComponentRequested& req, const Comp
             if (req.reason == Reason_Message)
             {
                 std::deque<ComponentRegistered>& lregs = mEntities[reg.component->getOwnerId()-1]->localRequests[reqid];
-                lregs.erase(std::find_if(lregs.begin(), lregs.end(), RequestFind(reg)));
+                lregs.erase(std::upper_bound(lregs.begin(), lregs.end(), reg, RequestSort()));
             }
 
             std::vector<ComponentRequested>& reqs = mRequestsByComponent[reg.component->getId()];
@@ -513,7 +523,7 @@ void EntitySystem::removeLocalRequest(const ComponentRequested& req, const Compo
 
     std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
 
-    auto it = std::find_if(regs.begin(), regs.end(), RequestFind(reg));
+    auto it = std::upper_bound(regs.begin(), regs.end(), reg, RequestSort());
     if (it != regs.end())
         regs.erase(it);
 }
@@ -527,11 +537,14 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
         for (auto it = regs.begin(); it != regs.end(); ++it)
             if (it->component == comp)
             {
-                it->priority = priority;
+                ComponentRegistered reg = *it;
+                regs.erase(it);
+
+                reg.priority = priority;
+
+                insertedPush(regs, reg, RequestSort());
                 break;
             }
-
-        std::sort(regs.begin(), regs.end(), RequestSort());
     }
 
     if (mGlobalRequests.count(reqid) > 0)
@@ -540,11 +553,14 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
         for (auto it = regs.begin(); it != regs.end(); ++it)
             if (it->component == comp)
             {
-                it->priority = priority;
+                ComponentRegistered reg = *it;
+                regs.erase(it);
+
+                reg.priority = priority;
+
+                insertedPush(regs, reg, RequestSort());
                 break;
             }
-
-        std::sort(regs.begin(), regs.end(), RequestSort());
     }
 }
 

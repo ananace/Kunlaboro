@@ -105,6 +105,19 @@ namespace Kunlaboro
          * \param c The Component to add to the entity.
          */
         void addComponent(EntityId eid, Component* c);
+        /** \brief Add a Component to an entity.
+         *
+         * This will add an orphaned Component into the specified entity, calling the Components
+         * addedToEntity() function and sending out creation messages to all Components that have
+         * registered a request for them.
+         *
+         * \param eid The entity to add the Component to.
+         * \param name The name of the Component to add to the entity.
+         */
+        inline void addComponent(EntityId eid, const std::string& name)
+        {
+            addComponent(eid, createComponent(name));
+        }
         /** \brief Remove a Component from an entity.
          * \warning Not really tested, at all. Use at own risk.
          *
