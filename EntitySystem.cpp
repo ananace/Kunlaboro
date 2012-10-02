@@ -19,7 +19,7 @@ struct RequestFind
     const ComponentRequested* req;
 
     RequestFind(const ComponentRegistered& a): reg(&a), req(NULL) {}
-    RequestFind(const ComponentRequested& a): req(&a), reg(NULL) {}
+    RequestFind(const ComponentRequested& a): reg(NULL), req(&a) {}
 
     bool operator()(const ComponentRegistered& b) const
     {
@@ -35,18 +35,7 @@ struct RequestFind
 template<typename T, typename Y>
 inline void insertedPush(std::deque<T>& deque, const T& value, const Y& comp)
 {
-    std::deque<T>::iterator first = deque.begin(), last = deque.end(), it;
-    std::iterator_traits<std::deque<T>::iterator>::difference_type count, step;
-
-    count = std::distance(first,last);
-    while (count>0)
-    {
-        it = first; step=count/2; std::advance (it,step);
-        if (!comp(value,*it)) { first=++it; count-=step+1;  }
-        else count=step;
-    }
-  
-    deque.insert(first, value);
+    deque.insert(std::lower_bound(deque.begin(), deque.end(), value, comp), value);
 }
 
 EntitySystem::EntitySystem() :
