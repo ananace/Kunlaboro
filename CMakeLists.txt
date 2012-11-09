@@ -11,6 +11,8 @@ set(Kunlaboro_SOURCES
 	EntitySystem.cpp
 	EntitySystem.hpp
 	Kunlaboro.hpp
+	Template.cpp
+	Template.hpp
 )
 
 add_library(Kunlaboro STATIC ${Kunlaboro_SOURCES})

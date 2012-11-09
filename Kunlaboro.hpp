@@ -19,6 +19,7 @@
 
 #include "Component.hpp"
 #include "EntitySystem.hpp"
+#include "Template.hpp"
 
 #endif // _KUNLABORO_HPP
 
@@ -40,7 +41,7 @@ Kunlaboro is designed to easily fit into your project and is therefore set up to
 
 \section requirements Requirements
 Kunlaboro is built with many of the c++0x/c++11 features that were provided both in the tr1 release, and before.
-Therefor Kunlaboro requires a reasonably modern compiler to work properly, it's been tested and made sure to compile with both Microsoft Visual Studio 2010 and GCC 4.6.3.
+Therefore Kunlaboro requires a reasonably modern compiler to work properly, it's been tested and made sure to compile with both Microsoft Visual Studio 2010 and GCC 4.6.3.
 
 \section usage Code Example
 Here's a simple example of a Kunlaboro application:
@@ -73,13 +74,14 @@ Component* createPrint() { return new PrintComponent(); }
 int main()
 {
     EntitySystem sys;
-    sys.registerComponent("Print", &createPrint);
+    sys.registerComponent<PrintComponent>("Print");
 
     EntityId eId = sys.createEntity();
     sys.addComponent(eId, sys.createComponent("Print"));
     sys.finalizeEntity(eId);
 
     sys.sendGlobalMessage("Print.PrintString", "Hello World!");
+    sys.sendMessageToEntity(eId, "Print.PrintString", "Hello Local World!");
 
     return 0;
 }

@@ -1,5 +1,6 @@
 #include "EntitySystem.hpp"
 #include "Component.hpp"
+#include "Template.hpp"
 #include <stdexcept>
 #include <algorithm>
 
@@ -7,7 +8,7 @@ using namespace Kunlaboro;
 
 struct RequestSort
 {
-    bool operator()(const ComponentRegistered& a, const ComponentRegistered& b) const
+    inline bool operator()(const ComponentRegistered& a, const ComponentRegistered& b) const
     {
         return a.priority < b.priority;
     }
@@ -21,12 +22,12 @@ struct RequestFind
     RequestFind(const ComponentRegistered& a): reg(&a), req(NULL) {}
     RequestFind(const ComponentRequested& a): reg(NULL), req(&a) {}
 
-    bool operator()(const ComponentRegistered& b) const
+    inline bool operator()(const ComponentRegistered& b) const
     {
         return reg->component == b.component && reg->priority == b.priority && reg->required == b.required;
     }
 
-    bool operator()(const ComponentRequested& b) const
+    inline bool operator()(const ComponentRequested& b) const
     {
         return req->name == b.name && req->reason == b.reason;
     }
@@ -60,6 +61,21 @@ EntityId EntitySystem::createEntity()
     mEntities.push_back(ent);
 
     return mEntityCounter-1;
+}
+
+EntityId EntitySystem::createEntity(const std::string& templateName)
+{
+    if (mRegisteredTemplates.count(templateName) == 0)
+        throw std::runtime_error("Can't instantiate a template that doesn't exist");
+
+    EntityId ent = createEntity();
+    Template* temp = mRegisteredTemplates[templateName]();
+    addComponent(ent, dynamic_cast<Component*>(temp));
+    finalizeEntity(ent);
+    
+    temp->instanceCreated();
+
+    return ent;
 }
 
 void EntitySystem::destroyEntity(EntityId entity)
@@ -100,6 +116,17 @@ void EntitySystem::destroyEntity(EntityId entity)
 
 void EntitySystem::finalizeEntity(EntityId entity)
 {
+    int wasFrozen = 0;
+    if (isFrozen())
+    {
+        // Dirty hack to let entities accept messages immediately after creation
+
+        wasFrozen = mFrozen;
+        mFrozen = 1;
+
+        unfreeze();
+    }
+
     if (entity == 0 || entity > mEntities.size())
         throw std::runtime_error("Can't finalize a non-existant entity");
 
@@ -124,9 +151,12 @@ void EntitySystem::finalizeEntity(EntityId entity)
 
     if (destroy)
         destroyEntity(entity);
+
+    if (wasFrozen)
+        mFrozen = wasFrozen;
 }
 
-void EntitySystem::registerComponent(const std::string& name, FactoryFunction func)
+void EntitySystem::registerComponent(const std::string& name, ComponentFactory func)
 {
     if (mRegisteredComponents.count(name) > 0)
         throw std::runtime_error("Registered components must have unique names");
@@ -471,25 +501,36 @@ void EntitySystem::removeGlobalRequest(const ComponentRequested& req, const Comp
 
     RequestId reqid = getMessageRequestId(req.reason, req.name);
 
-    if (req.reason != Reason_AllComponents && mGlobalRequests.count(reqid) > 0)
+    if (mGlobalRequests.count(reqid) > 0)
     {
         std::deque<ComponentRegistered>& regs = mGlobalRequests[reqid];
-        
-        auto it = std::upper_bound(regs.begin(), regs.end(), reg, RequestSort());
-        if (it != regs.end())
-        {
-            regs.erase(it);
-
-            if (req.reason == Reason_Message)
+        for (auto it = regs.begin(); it != regs.end(); ++it)
+            if (it->component == reg.component)
             {
-                std::deque<ComponentRegistered>& lregs = mEntities[reg.component->getOwnerId()-1]->localRequests[reqid];
-                lregs.erase(std::upper_bound(lregs.begin(), lregs.end(), reg, RequestSort()));
-            }
+                regs.erase(it);
 
-            std::vector<ComponentRequested>& reqs = mRequestsByComponent[reg.component->getId()];
-            auto it2 = std::find_if(reqs.begin(), reqs.end(), RequestFind(req));
-            if (it2 != reqs.end())
-                reqs.erase(it2);
+                if (req.reason == Reason_Message)
+                {
+                    Entity* ent = mEntities[reg.component->getOwnerId()-1];
+
+                    if (ent->localRequests.count(reqid) > 0)
+                    {
+                        std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
+                        for (auto it = regs.begin(); it != regs.end(); ++it)
+                            if (it->component == reg.component)
+                            {
+                                regs.erase(it);
+                                break;
+                            }
+                    }
+                }
+
+                std::vector<ComponentRequested>& reqs = mRequestsByComponent[reg.component->getId()];
+                auto it2 = std::find_if(reqs.begin(), reqs.end(), RequestFind(req));
+                if (it2 != reqs.end())
+                    reqs.erase(it2);
+
+                break;
         }
     }
 }
@@ -510,11 +551,16 @@ void EntitySystem::removeLocalRequest(const ComponentRequested& req, const Compo
 
     Entity* ent = mEntities[reg.component->getOwnerId()-1];
 
-    std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
-
-    auto it = std::upper_bound(regs.begin(), regs.end(), reg, RequestSort());
-    if (it != regs.end())
-        regs.erase(it);
+    if (ent->localRequests.count(reqid) > 0)
+    {
+        std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
+        for (auto it = regs.begin(); it != regs.end(); ++it)
+            if (it->component == reg.component)
+            {
+                regs.erase(it);
+                break;
+            }
+    }
 }
 
 void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int priority)
@@ -598,6 +644,23 @@ void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, Message& m
         {
             msg.sender = it->component;
             break;
+        }
+    }
+
+    if (!msg.handled)
+    {
+        for (auto it = mGlobalRequests[reqid].begin(); it != mGlobalRequests[reqid].end(); ++it)
+        {
+            if (it->component->getOwnerId() != entity)
+                continue;
+            
+            it->callback(msg);
+
+            if (msg.handled)
+            {
+                msg.sender = it->component;
+                break;
+            }
         }
     }
 

@@ -30,6 +30,7 @@
 namespace Kunlaboro
 {
     class Component;
+    class Template;
     struct Message;
 
     /// A Globally Unique IDentifier.
@@ -51,8 +52,10 @@ namespace Kunlaboro
 
     /// The MessageFunction.
     typedef std::function<void(Message&)> MessageFunction;
-    /// The FactoryFunction for a Component.
-    typedef std::function<Component*()> 	    FactoryFunction;
+    /// The factory function for a Component.
+    typedef std::function<Component*()> ComponentFactory;
+    /// The factory function for a Template.
+    typedef std::function<Template*()> TemplateFactory;
 
     /// A ComponentMap to store and access Component objects against their names.
     typedef std::unordered_map<std::string, std::vector<Component*> > ComponentMap;

@@ -24,6 +24,7 @@
 namespace Kunlaboro
 {
     class Component;
+    class Template;
 
     /** \brief A class containing an entire Entity System
      *
@@ -46,6 +47,14 @@ namespace Kunlaboro
          * \returns The EntityId of the newly created entity.
          */
         EntityId createEntity();
+        /** \brief Creates an entity using a template.
+         *
+         * This function will create an entity and apply a template to it before returning.
+         *
+         * \param templateName The name of the template to apply.
+         * \returns The ID of the newly created entity.
+         */
+        EntityId createEntity(const std::string& templateName);
         /** \brief Destroys a previously created entity.
          *
          * This function will destroy an entity created by the EntitySystem, cleaning up and removing
@@ -72,9 +81,20 @@ namespace Kunlaboro
          * problems inside the EntitySystem.
          *
          * \param name The name of the Component that the factory creates.
-         * \param func Function that will create and return a Component* using new.
+         * \param func A function that will create and return a Component* using the \b new keyword.
          */
-        void registerComponent(const std::string& name, FactoryFunction func);
+        void registerComponent(const std::string& name, ComponentFactory func);
+        /** \brief Register an automatic factory for a specific component type.
+         *
+         * This function will create a simple automated factory that just calls the default constructor
+         * on the specified component, which works well for all component that doesn't need initializing.
+         * If your components require any form of initializing then use registerComponent(const std::string&, FactoryFunction) instead.
+         *
+         * \param name The name of the Component that will be created.
+         * \tparam T The component type you want to register.
+         */
+        template<class T>
+        void registerComponent(const std::string& name);
         /** \brief Create an instance of a Component.
          *
          * This function will use the FactoryFunction that was registered through registerComponent()
@@ -290,7 +310,8 @@ namespace Kunlaboro
         NameToIdMap mNameMap[2]; ///< Maps for getting GUIDs from names.
         IdToNameMap mIdMap[2]; ///< Maps for converting GUIDs back to names.
 
-        std::unordered_map<std::string, FactoryFunction> mRegisteredComponents; ///< Registered Components in the EntitySystem
+        std::unordered_map<std::string, ComponentFactory> mRegisteredComponents; ///< Registered Components in the EntitySystem
+        std::unordered_map<std::string, TemplateFactory> mRegisteredTemplates; ///< Registered Templates in the EntitySystem
         std::unordered_map<EntityId, std::vector<std::string> > mRequiredComponents; ///< Required Components in entities.
         RequestMap mGlobalRequests; ///< Globally registered requests.
         std::unordered_map<ComponentId, std::vector<ComponentRequested> > mRequestsByComponent; ///< Requests by component.
@@ -298,6 +319,12 @@ namespace Kunlaboro
 
         int mFrozen; ///< Is the EntitySystem frozen.
     };
+
+    template<class T>
+    void EntitySystem::registerComponent(const std::string& name)
+    {
+        registerComponent(name, [](){ return new T(); });
+    }
 }
 
 #endif
