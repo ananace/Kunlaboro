@@ -284,6 +284,8 @@ namespace Kunlaboro
             /// Local requests that were frozen.
             std::vector<std::pair<ComponentRequested, ComponentRegistered> > frozenLocalRequests;
 
+            std::vector<std::pair<Component*, std::pair<RequestId, int> > > frozenRepriorities;
+
             /// Component destructions that were frozen.
             std::vector<Component*> frozenComponentDestructions;
             /// Entity destructions that were frozen.

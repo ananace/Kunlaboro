@@ -116,7 +116,7 @@ void EntitySystem::destroyEntity(EntityId entity)
 
 void EntitySystem::finalizeEntity(EntityId entity)
 {
-    int wasFrozen = 0;
+    /*int wasFrozen = 0;
     if (isFrozen())
     {
         // Dirty hack to let entities accept messages immediately after creation
@@ -125,7 +125,7 @@ void EntitySystem::finalizeEntity(EntityId entity)
         mFrozen = 1;
 
         unfreeze();
-    }
+    }*/
 
     if (entity == 0 || entity > mEntities.size())
         throw std::runtime_error("Can't finalize a non-existant entity");
@@ -152,8 +152,8 @@ void EntitySystem::finalizeEntity(EntityId entity)
     if (destroy)
         destroyEntity(entity);
 
-    if (wasFrozen)
-        mFrozen = wasFrozen;
+    /*if (wasFrozen)
+        mFrozen = wasFrozen;*/
 }
 
 void EntitySystem::registerComponent(const std::string& name, ComponentFactory func)
@@ -565,6 +565,13 @@ void EntitySystem::removeLocalRequest(const ComponentRequested& req, const Compo
 
 void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int priority)
 {
+    if (isFrozen())
+    {
+        mFrozenData.frozenRepriorities.push_back(std::pair<Component*, std::pair<RequestId, int> >(comp, std::pair<RequestId, int>(reqid, priority)));
+        mFrozenData.needsProcessing = true;
+        return;
+    }
+
     Entity* ent = mEntities[comp->getOwnerId()-1];
     if (ent->localRequests.count(reqid) > 0)
     {
@@ -678,6 +685,9 @@ void EntitySystem::unfreeze()
     {
         //Process frozen queues
 
+        for (auto it = mFrozenData.frozenRepriorities.begin(); it != mFrozenData.frozenRepriorities.end(); ++it)
+            reprioritizeRequest(it->first, it->second.first, it->second.second);
+
         for (auto it = mFrozenData.frozenGlobalRequests.begin(); it != mFrozenData.frozenGlobalRequests.end(); ++it)
             registerGlobalRequest(it->first, it->second);
         for (auto it = mFrozenData.frozenLocalRequests.begin(); it != mFrozenData.frozenLocalRequests.end(); ++it)
@@ -689,6 +699,7 @@ void EntitySystem::unfreeze()
         for (auto it = mFrozenData.frozenEntityDestructions.begin(); it != mFrozenData.frozenEntityDestructions.end(); ++it)
             destroyEntity(*it);
 
+        mFrozenData.frozenRepriorities.clear();
         mFrozenData.frozenComponentDestructions.clear();
         mFrozenData.frozenEntityDestructions.clear();
         mFrozenData.frozenGlobalRequests.clear();
