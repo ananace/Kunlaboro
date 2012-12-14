@@ -24,6 +24,7 @@
 #endif
 #include <string>
 #include <deque>
+#include <vector>
 #include <functional>
 #include <unordered_map>
 
