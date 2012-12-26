@@ -716,21 +716,11 @@ void EntitySystem::unfreeze(RequestId rid)
     lock.locked = false;
     --mFrozen;
 
-    for (auto it = lock.localRequests.begin(); it != lock.localRequests.end(); ++it)
-        registerLocalRequest(it->first, it->second);
-
-    for (auto it = lock.globalRequests.begin(); it != lock.globalRequests.end(); ++it)
-        registerGlobalRequest(it->first, it->second);
-
-    for (auto it = lock.repriorities.begin(); it != lock.repriorities.end(); ++it)
-        reprioritizeRequest(it->first, it->second.first, it->second.second);
-
-    for (auto it = lock.localRequestRemoves.begin(); it != lock.localRequestRemoves.end(); ++it)
-        removeLocalRequest(it->first, it->second);
-
-    for (auto it = lock.globalRequestRemoves.begin(); it != lock.globalRequestRemoves.end(); ++it)
-        removeGlobalRequest(it->first, it->second);
-
+    std::list<std::pair<Component*, std::pair<RequestId, int> > > repriorities = lock.repriorities;
+    std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequests = lock.localRequests;
+    std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequestRemoves = lock.localRequestRemoves;
+    std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequests = lock.globalRequests;
+    std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequestRemoves = lock.globalRequestRemoves;
 
     lock.localRequests.clear();
     lock.globalRequests.clear();
@@ -738,20 +728,36 @@ void EntitySystem::unfreeze(RequestId rid)
     lock.localRequestRemoves.clear();
     lock.globalRequestRemoves.clear();
 
+    for (auto it = localRequests.begin(); it != localRequests.end(); ++it)
+        registerLocalRequest(it->first, it->second);
+
+    for (auto it = globalRequests.begin(); it != globalRequests.end(); ++it)
+        registerGlobalRequest(it->first, it->second);
+
+    for (auto it = repriorities.begin(); it != repriorities.end(); ++it)
+        reprioritizeRequest(it->first, it->second.first, it->second.second);
+
+    for (auto it = localRequestRemoves.begin(); it != localRequestRemoves.end(); ++it)
+        removeLocalRequest(it->first, it->second);
+
+    for (auto it = globalRequestRemoves.begin(); it != globalRequestRemoves.end(); ++it)
+        removeGlobalRequest(it->first, it->second);
+
     if (mFrozen == 0 && mFrozenData.needsProcessing)
     {
+        mFrozenData.needsProcessing = false;
         //Process frozen queues
 
-        for (auto it = mFrozenData.frozenComponentDestructions.begin(); it != mFrozenData.frozenComponentDestructions.end(); ++it)
+        std::list<Component*> frozenComponentDestructions = mFrozenData.frozenComponentDestructions;
+        std::list<EntityId> frozenEntityDestructions = mFrozenData.frozenEntityDestructions;
+        mFrozenData.frozenComponentDestructions.clear();
+        mFrozenData.frozenEntityDestructions.clear();
+
+        for (auto it = frozenComponentDestructions.begin(); it != frozenComponentDestructions.end(); ++it)
             destroyComponent(*it);
 
-        mFrozenData.frozenComponentDestructions.clear();
-
-        for (auto it = mFrozenData.frozenEntityDestructions.begin(); it != mFrozenData.frozenEntityDestructions.end(); ++it)
+        for (auto it = frozenEntityDestructions.begin(); it != frozenEntityDestructions.end(); ++it)
             destroyEntity(*it);
-
-        mFrozenData.frozenEntityDestructions.clear();
-        mFrozenData.needsProcessing = false;
     }
 }
 
