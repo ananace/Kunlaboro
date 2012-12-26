@@ -197,7 +197,7 @@ void EntitySystem::destroyComponent(Component* component)
         RequestId reqid = getExistingRequestId(it->reason, it->name);
 
         if (reqid == 0)
-            return;
+            continue;
 
         freeze(reqid);
 
