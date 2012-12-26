@@ -2,13 +2,13 @@
 
     The MIT License (MIT)
     Copyright (c) 2012 Alexander Olofsson (ace@haxalot.com)
- 
+
     Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
     to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
     and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- 
+
     The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- 
+
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -19,6 +19,7 @@
 
 #include "Defines.hpp"
 #include <map>
+#include <list>
 #include <vector>
 
 namespace Kunlaboro
@@ -230,7 +231,7 @@ namespace Kunlaboro
         /** \brief Send a local message to all the Component objects in the specified entity.
          *
          * This function will send a message to the specified entity and all the Component objects
-         * contained inside of that entity, 
+         * contained inside of that entity,
          *
          * \param eid The EntityId to send the message to.
          * \param rid The RequestId to send.
@@ -255,16 +256,17 @@ namespace Kunlaboro
         /** \brief Freezes the EntitySystem, forcing all following modifications to be put on a queue.
          *
          */
-        void freeze();
+        void freeze(RequestId rid);
         /** \brief Unfreezes the EntitySystem and lets it process all the queued modifications.
          *
          */
-        void unfreeze();
+        void unfreeze(RequestId rid);
 
         /** \brief Returns if the EntitySystem is frozen
          *
          */
         inline bool isFrozen() { return mFrozen > 0; }
+        inline bool isFrozen(RequestId rid) { return mFrozenData.frozenRequests[rid].locked; }
 
     private:
         /// A helper struct for containing Entity specific information.
@@ -272,33 +274,40 @@ namespace Kunlaboro
         {
             EntityId id; ///< The EntityId of the Entity.
             bool finalised; ///< If the Entity is finalized.
-            ComponentMap components; ///< The Component objects stored in this Entity. 
+            ComponentMap components; ///< The Component objects stored in this Entity.
             RequestMap localRequests; ///< The local requests stored inside the Entity.
         };
 
         /// A container for all the requests that happened during a time when the EntitySystem was frozen.
         struct FrozenData
         {
-            /// Global requests that were frozen.
-            std::vector<std::pair<ComponentRequested, ComponentRegistered> > frozenGlobalRequests;
-            /// Local requests that were frozen.
-            std::vector<std::pair<ComponentRequested, ComponentRegistered> > frozenLocalRequests;
+            /// A container for a locked request.
+            struct RequestLock
+            {
+                bool locked;
+                std::list<std::pair<Component*, std::pair<RequestId, int> > > repriorities;
+                std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequests;
+                std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequestRemoves;
+                std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequests;
+                std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequestRemoves;
+                RequestLock() : locked(false) { }
+            };
 
-            std::vector<std::pair<Component*, std::pair<RequestId, int> > > frozenRepriorities;
+            std::unordered_map<RequestId, RequestLock> frozenRequests;
 
             /// Component destructions that were frozen.
-            std::vector<Component*> frozenComponentDestructions;
+            std::list<Component*> frozenComponentDestructions;
             /// Entity destructions that were frozen.
-            std::vector<EntityId> frozenEntityDestructions;
+            std::list<EntityId> frozenEntityDestructions;
 
             /// Have any requests been frozen and need processing?
             bool needsProcessing;
-        } mFrozenData; 
+        } mFrozenData;
 
         /** \brief Get an existing RequestId for a message.
          *
          * If a RequestId does not exist for the specified reason and name, then this function will return 0.
-         * 
+         *
          * \param reason The reason for the request.
          * \param name The name of the request.
          * \returns The RequestId of the existing request.
@@ -337,7 +346,7 @@ namespace Kunlaboro
 * \code
 * #include <Kunlaboro/Kunlaboro.hpp>
 * #include "CalculatorComponent.hpp"
-* 
+*
 * Component* createCalculator()
 * {
 *     return new CalculatorComponent();
@@ -347,7 +356,7 @@ namespace Kunlaboro
 * {
 *     Kunlaboro::EntitySystem entity_system;
 *     entity_system.registerComponent("Calculator", &createCalculator);
-*     
+*
 *     Kunlaboro::EntityId calc = entity_system.createEntity();
 *     entity_system.addComponent(calc, entity_system.createComponent("Calculator"));
 *     entity_system.finalizeEntity(calc);
