@@ -46,9 +46,12 @@ EntitySystem::EntitySystem() :
 
 EntitySystem::~EntitySystem()
 {
-    while(!mEntities.empty())
+    for (auto it = mEntities.begin(); it != mEntities.end(); ++it)
     {
-        destroyEntity(mEntities.back()->id);
+        if (it->second == NULL)
+            continue;
+
+        destroyEntity(it->second->id);
     }
 }
 
@@ -58,7 +61,7 @@ EntityId EntitySystem::createEntity()
     ent->id = mEntityCounter++;
     ent->finalised = false;
 
-    mEntities.push_back(ent);
+    mEntities[ent->id] = ent;
 
     return mEntityCounter-1;
 }
@@ -80,10 +83,10 @@ EntityId EntitySystem::createEntity(const std::string& templateName)
 
 void EntitySystem::destroyEntity(EntityId entity)
 {
-    if (entity == 0 || entity > mEntities.size())
+    if (entity == 0)
         throw std::runtime_error("Can't destroy a non-existant entity");
 
-    Entity* ent = mEntities[entity-1];
+    Entity* ent = mEntities[entity];
 
     if (ent == NULL)
         throw std::runtime_error("Can't destroy a non-existant entity");
@@ -105,32 +108,15 @@ void EntitySystem::destroyEntity(EntityId entity)
     }
 
     delete ent;
-    Entity** entP = &mEntities.front();
-
-    for (unsigned k = entity; k < mEntities.size(); ++k) {
-        entP[k-1] = entP[k];
-    }
-
-    mEntities.pop_back();
+    mEntities[entity] = NULL;
 }
 
 void EntitySystem::finalizeEntity(EntityId entity)
 {
-    /*int wasFrozen = 0;
-    if (isFrozen())
-    {
-        // Dirty hack to let entities accept messages immediately after creation
-
-        wasFrozen = mFrozen;
-        mFrozen = 1;
-
-        unfreeze();
-    }*/
-
-    if (entity == 0 || entity > mEntities.size())
+    if (entity == 0)
         throw std::runtime_error("Can't finalize a non-existant entity");
 
-    Entity* ent = mEntities[entity-1];
+    Entity* ent = mEntities[entity];
 
     if (ent == NULL)
         throw std::runtime_error("Can't finalize a non-existant entity");
@@ -151,9 +137,6 @@ void EntitySystem::finalizeEntity(EntityId entity)
 
     if (destroy)
         destroyEntity(entity);
-
-    /*if (wasFrozen)
-        mFrozen = wasFrozen;*/
 }
 
 void EntitySystem::registerComponent(const std::string& name, ComponentFactory func)
@@ -212,7 +195,7 @@ void EntitySystem::destroyComponent(Component* component)
         unfreeze(reqid);
     }
 
-    Entity* ent = mEntities[component->getOwnerId()-1];
+    Entity* ent = mEntities[component->getOwnerId()];
 
     std::vector<Component*>& comps = ent->components[component->getName()];
     for (auto it = comps.begin(); it != comps.end(); ++it)
@@ -266,10 +249,10 @@ void EntitySystem::addComponent(EntityId entity, Component* component)
     if (component->getOwnerId() != 0)
         throw std::runtime_error("Can't add a component to several entities");
 
-    if (entity == 0 || entity > mEntities.size())
+    if (entity == 0)
         throw std::runtime_error("Can't add a component to a non-existant entity");
 
-    Entity* ent = mEntities[entity-1];
+    Entity* ent = mEntities[entity];
 
     if (ent == NULL)
         throw std::runtime_error("Can't add a component to a non-existant entity");
@@ -309,10 +292,10 @@ void EntitySystem::addComponent(EntityId entity, Component* component)
 
 void EntitySystem::removeComponent(EntityId entity, Component* component)
 {
-    if (entity == 0 || entity > mEntities.size())
+    if (entity == 0)
         throw std::runtime_error("Can't remove a component from a non-existant entity");
 
-    Entity* ent = mEntities[entity-1];
+    Entity* ent = mEntities[entity];
 
     if (ent == NULL)
         throw std::runtime_error("Can't remove a component from a non-existant entity");
@@ -353,10 +336,10 @@ void EntitySystem::removeComponent(EntityId entity, Component* component)
 
 std::vector<Component*> EntitySystem::getAllComponentsOnEntity(EntityId entity, const std::string& name)
 {
-    if (entity == 0 || entity > mEntities.size())
+    if (entity == 0)
         throw std::runtime_error("Can't check for components on a non-existant entity");
 
-    Entity* ent = mEntities[entity-1];
+    Entity* ent = mEntities[entity];
 
     if (ent == NULL)
         throw std::runtime_error("Can't check for components on a non-existant entity");
@@ -418,10 +401,10 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
 
         if (req.reason == Reason_Message)
         {
-           insertedPush(mEntities[reg.component->getOwnerId()-1]->localRequests[reqid], reg, RequestSort());
+           insertedPush(mEntities[reg.component->getOwnerId()]->localRequests[reqid], reg, RequestSort());
         }
 
-        if (reg.required && !mEntities[reg.component->getOwnerId()-1]->finalised)
+        if (reg.required && !mEntities[reg.component->getOwnerId()]->finalised)
             mRequiredComponents[reg.component->getOwnerId()].push_back(req.name);
 
         mRequestsByComponent[reg.component->getId()].push_back(req);
@@ -467,7 +450,7 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
         return;
     }
 
-    Entity* ent = mEntities[reg.component->getOwnerId()-1];
+    Entity* ent = mEntities[reg.component->getOwnerId()];
 
     std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
     insertedPush(regs, reg, RequestSort());
@@ -525,7 +508,7 @@ void EntitySystem::removeGlobalRequest(const ComponentRequested& req, const Comp
 
                 if (req.reason == Reason_Message)
                 {
-                    Entity* ent = mEntities[reg.component->getOwnerId()-1];
+                    Entity* ent = mEntities[reg.component->getOwnerId()];
 
                     if (ent->localRequests.count(reqid) > 0)
                     {
@@ -567,7 +550,7 @@ void EntitySystem::removeLocalRequest(const ComponentRequested& req, const Compo
 
     freeze(reqid);
 
-    Entity* ent = mEntities[reg.component->getOwnerId()-1];
+    Entity* ent = mEntities[reg.component->getOwnerId()];
 
     if (ent->localRequests.count(reqid) > 0)
     {
@@ -594,7 +577,7 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
 
     freeze(reqid);
 
-    Entity* ent = mEntities[comp->getOwnerId()-1];
+    Entity* ent = mEntities[comp->getOwnerId()];
     if (ent->localRequests.count(reqid) > 0)
     {
         std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
@@ -653,10 +636,10 @@ void EntitySystem::sendGlobalMessage(RequestId reqid, Message& msg)
 
 void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, Message& msg)
 {
-    if (entity == 0 || entity > mEntities.size())
+    if (entity == 0)
         throw std::runtime_error("Can't send a message to a non-existant entity");
 
-    Entity* ent = mEntities[entity-1];
+    Entity* ent = mEntities[entity];
 
     if (ent == NULL)
         throw std::runtime_error("Can't send a message to a non-existant entity");
@@ -714,7 +697,7 @@ void EntitySystem::unfreeze(RequestId rid)
     if (!lock.locked) throw std::runtime_error("Tried to unfreeze a request that wasn't frozen!");
 
     lock.locked = false;
-    --mFrozen;
+    if (--mFrozen < 0) mFrozen = 0;
 
     std::list<std::pair<Component*, std::pair<RequestId, int> > > repriorities = lock.repriorities;
     std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequests = lock.localRequests;
@@ -743,7 +726,7 @@ void EntitySystem::unfreeze(RequestId rid)
     for (auto it = globalRequestRemoves.begin(); it != globalRequestRemoves.end(); ++it)
         removeGlobalRequest(it->first, it->second);
 
-    if (mFrozen == 0 && mFrozenData.needsProcessing)
+    if (mFrozen <= 0 && mFrozenData.needsProcessing)
     {
         mFrozenData.needsProcessing = false;
         //Process frozen queues

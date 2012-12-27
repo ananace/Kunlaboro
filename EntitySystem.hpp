@@ -326,7 +326,7 @@ namespace Kunlaboro
         std::unordered_map<EntityId, std::vector<std::string> > mRequiredComponents; ///< Required Components in entities.
         RequestMap mGlobalRequests; ///< Globally registered requests.
         std::unordered_map<ComponentId, std::vector<ComponentRequested> > mRequestsByComponent; ///< Requests by component.
-        std::vector<Entity*> mEntities; ///< List of created entities.
+        std::unordered_map<EntityId,Entity*> mEntities; ///< List of created entities.
 
         int mFrozen; ///< Is the EntitySystem frozen.
     };
