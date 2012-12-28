@@ -35,9 +35,9 @@ It is designed to have a close to cost-free message passing system for communica
 The code for Kunlaboro can be found on github at this link: https://github.com/ace13/Kunlaboro.
 With the code in your hand you can use the provided CMakeList to generate project files for your favourite platform.
 
-Feel free to send me issues, and/or patches for any problems you find in my code. Or provide me with constructive critisism, as I doubt this to be the most optimal code possible.
+Feel free to send me issues, and/or patches for any problems you find in my code. Or provide me with constructive critisism, as I doubt this to be the most optimal code possible. Github has an excellent issue tracker for this exact function, also feel free to fork it and make your own changes to the code.
 
-Kunlaboro is designed to easily fit into your project and is therefore set up to be statically compiled as a small library.
+Kunlaboro is designed to easily fit into your project and is therefore set up to be statically compiled as a small library, perfect to just stick into your already existing git project as a simple submodule.
 
 \section requirements Requirements
 Kunlaboro is built with many of the c++0x/c++11 features that were provided both in the tr1 release, and before.

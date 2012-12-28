@@ -2,7 +2,7 @@ Kunlaboro
 =========
 
 So I see you've stumbled upon this little project of mine.
-Kunlaboro, which is esperanto for 'cooperation', is a C++ Entity System designed around a heavily modified RDBMS.
+Kunlaboro, which is esperanto for 'cooperation', is a C++ Entity System designed around a heavily modified RDBMS. It's licensed under the MIT license to allow free use by whomever would want to use it.
 
 It is designed to have a close to cost-free message passing system for communication between components, as well as a way for components to store pointers to each other for direct access.
 
@@ -10,11 +10,11 @@ Getting the code
 ----------------
 
 The code for Kunlaboro can be found on github at this link: https://github.com/ace13/Kunlaboro.
-
 With the code in your hand you can use the provided CMakeList to generate project files for your favourite platform.
-Feel free to send me issues, and/or patches for any problems you find in my code. Or provide me with constructive critisism, as I doubt this to be the most optimal code possible.
 
-Kunlaboro is designed to easily fit into your project and is therefore set up to be statically compiled as a small library.
+Feel free to send me issues, and/or patches for any problems you find in my code. Or provide me with constructive critisism, as I doubt this to be the most optimal code possible. Github has an excellent issue tracker for this exact function, also feel free to fork it and make your own changes to the code.
+
+Kunlaboro is designed to easily fit into your project and is therefore set up to be statically compiled as a small library, perfect to just stick into your already existing git project as a simple submodule.
 
 Requirements
 ------------
@@ -38,7 +38,7 @@ using namespace std;
 class PrintComponent : public Component
 {
 public:
-    PrintComponent() : Kunlaboro::Component("Print") { }
+    PrintComponent() : Component("Print") { }
 
     void printString(const Message& msg)
     {
@@ -56,14 +56,17 @@ Component* createPrint() { return new PrintComponent(); }
 int main()
 {
     EntitySystem sys;
-    sys.registerComponent("Print", &createPrint);
+    sys.registerComponent<PrintComponent>("Print");
 
     EntityId eId = sys.createEntity();
     sys.addComponent(eId, sys.createComponent("Print"));
     sys.finalizeEntity(eId);
 
-    sys.sendGlobalMessage("Print.PrintString", std::string("Hello World!"));
+    sys.sendGlobalMessage("Print.PrintString", "Hello World!");
+    sys.sendMessageToEntity(eId, "Print.PrintString", "Hello Local World!");
 
     return 0;
 }
 ```
+
+More examples are available in the Component and EntitySystem documentation if you want them.
