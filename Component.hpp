@@ -2,13 +2,13 @@
 
     The MIT License (MIT)
     Copyright (c) 2012 Alexander Olofsson (ace@haxalot.com)
- 
+
     Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
     to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
     and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- 
+
     The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- 
+
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
@@ -45,14 +45,14 @@ namespace Kunlaboro
         virtual void addedToEntity();
 
         /** \brief Adds a component to the local entity.
-         *   
+         *
          *  \param c The component to add.
          */
         void addLocalComponent(Component* c);
-        
+
         /** \brief Adds a request for a specific message.
          *
-         * When something sends the requested message then the EntitySystem 
+         * When something sends the requested message then the EntitySystem
          * will make sure to call the provided MessageFunction for all components
          * that have requested the message.
          *
@@ -157,7 +157,7 @@ namespace Kunlaboro
         /** \brief Send a question to the local object.
          *
          * This function will send a question with the specified RequestId and Message object
-         * to the entity that contains the current Component. 
+         * to the entity that contains the current Component.
          *
          * \param id The RequestId to send.
          * \param msg The Message to send.
@@ -170,7 +170,7 @@ namespace Kunlaboro
          * This function will send a RequestId to the entire EntitySystem and all the
          * Components that have registered a request for the message in question,
          * regardless of which entity that contains them.
-         * 
+         *
          * \param id The RequestId to send.
          * \sa sendGlobalMessage(RequestId, const Payload&) const
          * \sa sendGlobalMessage(RequestId, const Message&) const
@@ -181,7 +181,7 @@ namespace Kunlaboro
          * This function will send a RequestId and Payload to the entire EntitySystem and all the
          * Components that have registered a request for the message in question,
          * regardless of which entity that contains them.
-         * 
+         *
          * \param id The RequestId to send.
          * \param p The Payload to send.
          * \sa sendGlobalMessage(RequestId) const
@@ -193,7 +193,7 @@ namespace Kunlaboro
          * This function will send a RequestId and Message to the entire EntitySystem and all the
          * Components that have registered a request for the message in question,
          * regardless of which entity that contains them.
-         * 
+         *
          * \param id The RequestId to send.
          * \param msg The Message to send.
          * \sa sendGlobalMessage(RequestId) const
@@ -202,7 +202,7 @@ namespace Kunlaboro
         void sendGlobalMessage(RequestId id, const Message& msg) const;
         /** \brief Send a message to the entire EntitySystem that the local entity is a part of.
          *
-         * 
+         *
          * \param id The RequestId to send.
          * \param msg The Message to send.
          * \returns The response that was recieved, check if handled is set to true before
@@ -245,7 +245,7 @@ namespace Kunlaboro
         void sendMessageToEntity(EntityId eid, RequestId rid, const Message& m) const;
         /** \brief Send a message to a specific entity.
          *
-         * 
+         *
          * \param eid The EntityId to send the RequestId to.
          * \param rid The RequestId to send.
          * \param m The Message to send.
@@ -296,7 +296,7 @@ namespace Kunlaboro
         EntityId getOwnerId() const;
 
         /** \brief Destroys the Component
-         * 
+         *
          * This function will tell the EntitySystem that the Component requests to be destroyed,
          * any entities containing it will have the Component removed from them. Unless the entity
          * in question requires the component to exist, at which point the entire entity will be destroyed.
@@ -412,7 +412,7 @@ namespace Kunlaboro
 
         /// The owner of the Component
         EntityId mOwner;
-        /// The EntitySystem that the Component is a part of 
+        /// The EntitySystem that the Component is a part of
         EntitySystem* mEntitySystem;
         /// The ComponentId of the Component
         ComponentId mId;
@@ -469,8 +469,11 @@ std::ostream& operator<<(std::ostream& os, const Kunlaboro::Component& c);
 
 /** \class Kunlaboro::Component
 *
-* Usage example:
+* Usage example (Needs Kunlaboro to be compiled with Boost):
 * \code
+* #include <Kunlaboro/Component.hpp>
+* #include <iostream>
+*
 * class CalculatorComponent : public Kunlaboro::Component
 * {
 * public:
@@ -482,7 +485,7 @@ std::ostream& operator<<(std::ostream& os, const Kunlaboro::Component& c);
 *         number += boost::any_cast<int>(msg.payload);
 *         std::cout << number << std::endl;
 *     }
-* 
+*
 *     void Sub(const Kunlaboro::Message& msg)
 *     {
 *         std::cout << number << " - " << msg.payload << " = ";

@@ -50,7 +50,7 @@ namespace Kunlaboro
         EntityId createEntity();
         /** \brief Creates an entity using a template.
          *
-         * This function will create an entity and apply a template to it before returning.
+         * This function will create an entity and apply a template to it before returning it.
          *
          * \param templateName The name of the template to apply.
          * \returns The ID of the newly created entity.
@@ -140,7 +140,12 @@ namespace Kunlaboro
             addComponent(eid, createComponent(name));
         }
         /** \brief Remove a Component from an entity.
-         * \warning Not really tested, at all. Use at own risk.
+         * \warning This function has not been thoroughly tested and could possible break your application,
+         * try to use it sparingly.
+         * \todo Create a system like the frozen requests to handle safely removing the requests
+         * from the component that's being removed, the system in use now will probably crash if
+         * a component is removed in the middle of sending a message that the component in question
+         * has requested.
          *
          * This function will remove a Component from the specified entity, sending out destruction
          * messages and preparing the Component for being inserted into another entity.
@@ -284,15 +289,16 @@ namespace Kunlaboro
             /// A container for a locked request.
             struct RequestLock
             {
-                bool locked;
-                std::list<std::pair<Component*, std::pair<RequestId, int> > > repriorities;
-                std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequests;
-                std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequestRemoves;
-                std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequests;
-                std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequestRemoves;
-                RequestLock() : locked(false) { }
+                bool locked; ///< Is the request locked or not
+                std::list<std::pair<Component*, std::pair<RequestId, int> > > repriorities; ///< A list of all the locked calls to reprioritize requests.
+                std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequests; ///< A list of all the locked calls to register local requests.
+                std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequestRemoves; ///< A list of all the locked calls to remove local requests.
+                std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequests; ///< A list of all the locked calls to register global requests.
+                std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequestRemoves; ///< A list of all the locked calls to remove global requests.
+                RequestLock() : locked(false) { } ///< The standard constructor
             };
 
+            /// A map of all the frozen requests that have been made.
             std::unordered_map<RequestId, RequestLock> frozenRequests;
 
             /// Component destructions that were frozen.
@@ -300,7 +306,7 @@ namespace Kunlaboro
             /// Entity destructions that were frozen.
             std::list<EntityId> frozenEntityDestructions;
 
-            /// Have any requests been frozen and need processing?
+            /// Have any requests been frozen and need processing when the system is unfrozen?
             bool needsProcessing;
         } mFrozenData;
 
@@ -347,19 +353,14 @@ namespace Kunlaboro
 * #include <Kunlaboro/Kunlaboro.hpp>
 * #include "CalculatorComponent.hpp"
 *
-* Component* createCalculator()
-* {
-*     return new CalculatorComponent();
-* }
-*
 * int main()
 * {
 *     Kunlaboro::EntitySystem entity_system;
-*     entity_system.registerComponent("Calculator", &createCalculator);
+*     entity_system.registerComponent<CalculatorComponent>("Calculator");
 *
 *     Kunlaboro::EntityId calc = entity_system.createEntity();
 *     entity_system.addComponent(calc, entity_system.createComponent("Calculator"));
-*     entity_system.finalizeEntity(calc);
+*     entity_system.finalizeEntity(calc); // This call is only really needed if the component requires another component to work.
 *
 *     entity_system.sendGlobalMessage("Calculator.Add", 500);
 *     entity_system.sendGlobalMessage("Calculator.Sub", 460);
