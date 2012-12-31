@@ -738,7 +738,6 @@ void EntitySystem::unfreeze(RequestId rid)
 
     if (!lock.locked) throw std::runtime_error("Tried to unfreeze a request that wasn't frozen!");
 
-    lock.locked = false;
     if (--mFrozen < 0) mFrozen = 0;
 
     std::list<std::pair<Component*, std::pair<RequestId, int> > > repriorities = lock.repriorities;
@@ -747,11 +746,7 @@ void EntitySystem::unfreeze(RequestId rid)
     std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequests = lock.globalRequests;
     std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequestRemoves = lock.globalRequestRemoves;
 
-    lock.localRequests.clear();
-    lock.globalRequests.clear();
-    lock.repriorities.clear();
-    lock.localRequestRemoves.clear();
-    lock.globalRequestRemoves.clear();
+    mFrozenData.frozenRequests.erase(rid);
 
     for (auto it = localRequests.begin(); it != localRequests.end(); ++it)
         registerLocalRequest(it->first, it->second);

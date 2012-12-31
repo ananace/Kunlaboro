@@ -27,7 +27,7 @@ namespace Kunlaboro
     class Component;
     class Template;
 
-    /** \brief A class containing an entire Entity System
+    /** \brief A class containing an entire EntitySystem based on RDBMS.
      *
      * Only one instance of this class needs to exist at any given time unless you want
      * to have several different Entity Systems inside of the same application.
@@ -206,7 +206,6 @@ namespace Kunlaboro
         /** \brief Changes the priority of the specific request.
          *
          * This function will change the priority of the request from the specified component,
-         * \todo Right now it's not very fast but I'll be doing my damn best to fix that.
          *
          * \param comp The component that owns the request.
          * \param rid The request to change.
@@ -260,17 +259,25 @@ namespace Kunlaboro
 
         /** \brief Freezes the EntitySystem, forcing all following modifications to be put on a queue.
          *
+         * \param rid The RequestId that's going to be frozen
          */
         void freeze(RequestId rid);
         /** \brief Unfreezes the EntitySystem and lets it process all the queued modifications.
          *
+         * \param rid The RequestId that's going to be unfrozen.
          */
         void unfreeze(RequestId rid);
 
-        /** \brief Returns if the EntitySystem is frozen
+        /** \brief Check if the EntitySystem is frozen
          *
+         * \returns If the EntitySystem has any frozen requests.
          */
         inline bool isFrozen() { return mFrozen > 0; }
+        /** \brief Check if the EntitySystem is frozen for the specified request.
+         *
+         * \param rid The RequestId you want to check.
+         * \returns If the given RequestId is frozen.
+         */
         inline bool isFrozen(RequestId rid) { return mFrozenData.frozenRequests[rid].locked; }
 
     private:

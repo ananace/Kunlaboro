@@ -69,8 +69,6 @@ public:
     }
 };
 
-Component* createPrint() { return new PrintComponent(); }
-
 int main()
 {
     EntitySystem sys;
