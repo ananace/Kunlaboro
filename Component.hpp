@@ -69,14 +69,13 @@ namespace Kunlaboro
         void requestMessage(const std::string& message, MessageFunction func, bool local = false) const;
         /** \brief Removes a request for a specific message.
          *
-         * This function will remove a request that was created by the requestMessage() function, note that the
-         * arguments must be identical to the requestMessage() call.
+         * This function will remove a request that was created by the requestMessage() function.
          *
          * \param message The message in question.
          * \param func The function that was registered for the request.
          * \param local Should this request only listen to messages directed to the local entity?
          */
-        void unrequestMessage(const std::string& message, MessageFunction func, bool local = false) const;
+        void unrequestMessage(const std::string& message, bool local = false) const;
         /** \brief Add a request to be told whenever a specific component is added.
          *
          * Whenever the requested component is added to the local entity or the global

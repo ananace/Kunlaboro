@@ -40,14 +40,13 @@ void Component::requestMessage(const std::string& name, MessageFunction callback
         mEntitySystem->registerGlobalRequest(req, reg);
 }
 
-void Component::unrequestMessage(const std::string& name, MessageFunction callback, bool local) const
+void Component::unrequestMessage(const std::string& name, bool local) const
 {
     ComponentRequested req;
     req.name = name;
     req.reason = Reason_Message;
 
     ComponentRegistered reg;
-    reg.callback = callback;
     reg.component = const_cast<Component*>(this);
     reg.required = false;
     reg.priority = 0;
