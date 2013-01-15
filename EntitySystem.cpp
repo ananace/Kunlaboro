@@ -91,6 +91,13 @@ void EntitySystem::destroyEntity(EntityId entity)
     if (ent == NULL)
         throw std::runtime_error("Can't destroy a non-existant entity");
 
+    for (ComponentMap::iterator it = ent->components.begin(); it != ent->components.end(); ++it)
+    {
+        std::deque<Component*>& comps = it->second;
+        for(std::deque<Component*>::iterator it = comps.begin(); it != comps.end(); ++it)
+            (*it)->setDestroyed();
+    }
+
     if (isFrozen())
     {
         mFrozenData.frozenEntityDestructions.push_back(entity);
