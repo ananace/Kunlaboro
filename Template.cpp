@@ -20,18 +20,12 @@ void Template::addedToEntity()
 {
     for (unsigned int i = 0; i < mComponents.size(); i++)
         addLocalComponent(getEntitySystem()->createComponent(mComponents[i]));
+
+    getEntitySystem()->finalizeEntity(getOwnerId());
+    instanceCreated();
 }
 
 void Template::instanceCreated()
 {
-}
-
-std::string Template::serialize()
-{
-    return "";
-}
-
-bool Template::deserialize(const std::string&)
-{
-    return false;
+	
 }
