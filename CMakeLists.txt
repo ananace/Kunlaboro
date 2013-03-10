@@ -2,6 +2,14 @@ project(Kunlaboro)
 
 option(Kunlaboro_BOOST "Should Kunlaboro be built with boost (boost::any as message payloads)" OFF)
 
+if (Kunlaboro_BOOST)
+	FIND_PACKAGE(Boost REQUIRED COMPONENTS system)
+
+	include_directories(
+		${Boost_INCLUDE_DIR}
+	)
+endif()
+
 configure_file(Defines.hpp.in Defines.hpp)
 
 set(Kunlaboro_SOURCES
