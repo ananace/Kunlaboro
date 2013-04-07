@@ -40,9 +40,14 @@ inline void insertedPush(std::deque<T>& deque, const T& value, const Y& comp)
 }
 
 EntitySystem::EntitySystem(bool thread) :
-    mComponentCounter(1), mRequestCounter(1), mEntityCounter(1), mFrozen(0), mThreaded(thread)
+    mComponentCounter(1), mRequestCounter(1), mEntityCounter(1), mThreaded(thread), mFrozen(0)
 {
     mFrozenData.needsProcessing = false;
+
+#ifndef Kunlaboro_BOOST
+    if (mThreaded)
+        throw std::runtime_error("A threaded EntitySystem requires Kunlaboro to be compiled with Boost.");
+#endif
 }
 
 EntitySystem::~EntitySystem()
@@ -726,16 +731,20 @@ void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, Message& m
 
 void EntitySystem::freeze(RequestId rid)
 {
-    if (mFrozenData.frozenRequests[rid].locked)
+    FrozenData::RequestLock& lock = mFrozenData.frozenRequests[rid];
+
+    if (lock.locked)
     {
+#ifdef Kunlaboro_BOOST
         if (mThreaded)
-            (void)0; // Lock a mutex here.
+            lock.mutex.lock();
         else
+#endif
             return;
     }
 
     mFrozen++;
-    mFrozenData.frozenRequests[rid].locked = true;
+    lock.locked = true;
 }
 
 void EntitySystem::unfreeze(RequestId rid)
@@ -744,8 +753,10 @@ void EntitySystem::unfreeze(RequestId rid)
 
     if (!lock.locked) throw std::runtime_error("Tried to unfreeze a request that wasn't frozen!");
 
-    if (mThreaded)
-        (void)0; // Unlock the mutex here.
+#ifdef Kunlaboro_BOOST
+        if (mThreaded)
+            lock.mutex.unlock();
+#endif
 
     if (--mFrozen < 0) mFrozen = 0;
 

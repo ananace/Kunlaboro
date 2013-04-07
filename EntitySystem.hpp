@@ -2,6 +2,9 @@
 #define _KUNLABORO_ENTITYSYSTEM_HPP
 
 #include "Defines.hpp"
+#ifdef Kunlaboro_BOOST
+#include <boost/thread/mutex.hpp>
+#endif
 #include <map>
 #include <list>
 #include <vector>
@@ -282,6 +285,9 @@ namespace Kunlaboro
             struct RequestLock
             {
                 bool locked; ///< Is the request locked or not
+#ifdef Kunlaboro_BOOST
+                boost::mutex mutex; ///< A mutex to allow for threaded access.
+#endif
                 std::list<std::pair<Component*, std::pair<RequestId, int> > > repriorities; ///< A list of all the locked calls to reprioritize requests.
                 std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequests; ///< A list of all the locked calls to register local requests.
                 std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequestRemoves; ///< A list of all the locked calls to remove local requests.
