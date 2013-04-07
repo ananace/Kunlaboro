@@ -42,6 +42,7 @@ inline void insertedPush(std::deque<T>& deque, const T& value, const Y& comp)
 EntitySystem::EntitySystem() :
     mComponentCounter(1), mRequestCounter(1), mEntityCounter(1), mFrozen(0)
 {
+    mFrozenData.needsProcessing = false;
 }
 
 EntitySystem::~EntitySystem()
