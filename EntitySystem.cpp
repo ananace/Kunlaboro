@@ -39,8 +39,8 @@ inline void insertedPush(std::deque<T>& deque, const T& value, const Y& comp)
     deque.insert(std::lower_bound(deque.begin(), deque.end(), value, comp), value);
 }
 
-EntitySystem::EntitySystem() :
-    mComponentCounter(1), mRequestCounter(1), mEntityCounter(1), mFrozen(0)
+EntitySystem::EntitySystem(bool thread) :
+    mComponentCounter(1), mRequestCounter(1), mEntityCounter(1), mFrozen(0), mThreaded(thread)
 {
     mFrozenData.needsProcessing = false;
 }
@@ -727,7 +727,12 @@ void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, Message& m
 void EntitySystem::freeze(RequestId rid)
 {
     if (mFrozenData.frozenRequests[rid].locked)
-        return;
+    {
+        if (mThreaded)
+            (void)0; // Lock a mutex here.
+        else
+            return;
+    }
 
     mFrozen++;
     mFrozenData.frozenRequests[rid].locked = true;
@@ -738,6 +743,9 @@ void EntitySystem::unfreeze(RequestId rid)
     FrozenData::RequestLock& lock = mFrozenData.frozenRequests[rid];
 
     if (!lock.locked) throw std::runtime_error("Tried to unfreeze a request that wasn't frozen!");
+
+    if (mThreaded)
+        (void)0; // Unlock the mutex here.
 
     if (--mFrozen < 0) mFrozen = 0;
 

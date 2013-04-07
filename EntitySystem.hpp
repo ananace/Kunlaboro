@@ -20,7 +20,8 @@ namespace Kunlaboro
     {
     public:
         /// Constructs the EntitySystem.
-        EntitySystem();
+        /// \param threaded Is the EntitySystem going to be used in threads?
+        EntitySystem(bool threaded = false);
         /// Destroys the EntitySystem.
         ~EntitySystem();
 
@@ -325,6 +326,7 @@ namespace Kunlaboro
         std::unordered_map<ComponentId, std::vector<ComponentRequested> > mRequestsByComponent; ///< Requests by component.
         std::unordered_map<EntityId,Entity*> mEntities; ///< List of created entities.
 
+        bool mThreaded; ///< Should this EntitySystem allow for threading?
         int mFrozen; ///< Is the EntitySystem frozen.
     };
 
