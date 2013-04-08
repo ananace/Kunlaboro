@@ -4,7 +4,9 @@ compiler:
   - clang
 before_install:
   - sudo apt-get install libboost-all-dev
-  - "cd /usr/src/gtest && sudo cmake . && sudo cmake --build . && sudo mv libg* /usr/local/lib; cd -"
+  - "sudo mkdir /usr/src/gtest/build && cd /usr/src/gtest/build && sudo cmake .. && sudo make && sudo ln -s /usr/src/gtest/build/libg* /usr/lib/; cd -"
 before_script:
-  - cmake -DKunlaboro_BOOST=1 .
+  - mkdir build
+  - cd build
+  - cmake -DKunlaboro_BOOST=1 -DKunlaboro_GTEST=1 ..
 script: "make && make test"
