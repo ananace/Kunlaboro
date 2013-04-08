@@ -9,4 +9,4 @@ before_script:
   - mkdir build
   - cd build
   - cmake -DKunlaboro_BOOST=1 -DKunlaboro_GTEST=1 ..
-script: "make -j2 && ./Test"
+script: "make -j2 && ./tests/Test"
