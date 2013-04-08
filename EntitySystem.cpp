@@ -771,13 +771,21 @@ void EntitySystem::freeze(RequestId rid)
 {
     FrozenData::RequestLock& lock = mFrozenData.frozenRequests[rid];
 
-    if (lock.locked)
-        return;
-
 #ifdef Kunlaboro_BOOST
     if (mThreaded)
+    {
+        boost::thread::id cur_thread = boost::this_thread::get_id();
+
+        if (lock.locked && lock.owner == cur_thread)
+            return;
+
         lock.mutex.lock();
+        lock.owner = cur_thread;
+    }
+    else
 #endif
+    if (lock.locked)
+        return;
 
     mFrozen++;
     lock.locked = true;
@@ -840,7 +848,10 @@ void EntitySystem::unfreeze(RequestId rid)
 
 #ifdef Kunlaboro_BOOST
     if (mThreaded)
+    {
+        lock.owner = boost::thread::id();
         lock.mutex.unlock();
+    }
 #endif
 }
 
