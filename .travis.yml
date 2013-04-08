@@ -3,12 +3,11 @@ compiler:
   - gcc
   - clang
 before_install:
-  - sudo apt-get install libboost-system-dev libboost-thread-dev libgtest-dev
+  - sudo apt-get install libboost-all-dev libgtest-dev
   - "sudo mkdir /usr/src/gtest/build && cd /usr/src/gtest/build && sudo cmake .. && sudo make && sudo ln -s /usr/src/gtest/build/libg* /usr/lib/; cd -"
 before_script:
   - mkdir build
   - cd build
   - cmake -DKunlaboro_BOOST=1 -DKunlaboro_GTEST=1 ..
 script: 
-  - make -j2
-  - ./tests/Test
+  - "make && ./tests/Test"
