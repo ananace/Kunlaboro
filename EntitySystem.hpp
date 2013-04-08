@@ -296,8 +296,8 @@ namespace Kunlaboro
                 std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequests; ///< A list of all the locked calls to register global requests.
                 std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequestRemoves; ///< A list of all the locked calls to remove global requests.
                 RequestLock() : locked(false) { } ///< The standard constructor
-                RequestLock(RequestLock&);
-                RequestLock& operator=(RequestLock&);
+                RequestLock(const RequestLock&);
+                RequestLock& operator=(const RequestLock&);
             };
 
             /// A map of all the frozen requests that have been made.

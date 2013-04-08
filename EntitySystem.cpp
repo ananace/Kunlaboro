@@ -39,11 +39,11 @@ inline void insertedPush(std::deque<T>& deque, const T& value, const Y& comp)
     deque.insert(std::lower_bound(deque.begin(), deque.end(), value, comp), value);
 }
 
-EntitySystem::FrozenData::RequestLock::RequestLock(RequestLock& b)
+EntitySystem::FrozenData::RequestLock::RequestLock(const RequestLock& b)
 {
 #ifdef Kunlaboro_BOOST
     boost::unique_lock<boost::mutex> l1(mutex, boost::defer_lock);
-    boost::unique_lock<boost::mutex> l2(b.mutex, boost::defer_lock);
+    boost::unique_lock<boost::mutex> l2(const_cast<RequestLock&>(b).mutex, boost::defer_lock);
     boost::lock(l1,l2);
 #endif
 
@@ -54,14 +54,14 @@ EntitySystem::FrozenData::RequestLock::RequestLock(RequestLock& b)
     globalRequests = b.globalRequests;
     globalRequestRemoves = b.globalRequestRemoves;
 }
-EntitySystem::FrozenData::RequestLock& EntitySystem::FrozenData::RequestLock::operator=(EntitySystem::FrozenData::RequestLock& b)
+EntitySystem::FrozenData::RequestLock& EntitySystem::FrozenData::RequestLock::operator=(const EntitySystem::FrozenData::RequestLock& b)
 {
     if (this == &b)
         return *this;
 
 #ifdef Kunlaboro_BOOST
     boost::unique_lock<boost::mutex> l1(mutex, boost::defer_lock);
-    boost::unique_lock<boost::mutex> l2(b.mutex, boost::defer_lock);
+    boost::unique_lock<boost::mutex> l2(const_cast<RequestLock&>(b).mutex, boost::defer_lock);
     boost::lock(l1,l2);
 #endif
 
