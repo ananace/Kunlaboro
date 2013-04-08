@@ -39,6 +39,42 @@ inline void insertedPush(std::deque<T>& deque, const T& value, const Y& comp)
     deque.insert(std::lower_bound(deque.begin(), deque.end(), value, comp), value);
 }
 
+EntitySystem::FrozenData::RequestLock::RequestLock(RequestLock& b)
+{
+#ifdef Kunlaboro_BOOST
+    boost::unique_lock<boost::mutex> l1(mutex, boost::defer_lock);
+    boost::unique_lock<boost::mutex> l2(b.mutex, boost::defer_lock);
+    boost::lock(l1,l2);
+#endif
+
+    locked = b.locked;
+    repriorities = b.repriorities;
+    localRequests = b.localRequests;
+    localRequestRemoves = b.localRequestRemoves;
+    globalRequests = b.globalRequests;
+    globalRequestRemoves = b.globalRequestRemoves;
+}
+EntitySystem::FrozenData::RequestLock& EntitySystem::FrozenData::RequestLock::operator=(EntitySystem::FrozenData::RequestLock& b)
+{
+    if (this == &b)
+        return *this;
+
+#ifdef Kunlaboro_BOOST
+    boost::unique_lock<boost::mutex> l1(mutex, boost::defer_lock);
+    boost::unique_lock<boost::mutex> l2(b.mutex, boost::defer_lock);
+    boost::lock(l1,l2);
+#endif
+
+    locked = b.locked;
+    repriorities = b.repriorities;
+    localRequests = b.localRequests;
+    localRequestRemoves = b.localRequestRemoves;
+    globalRequests = b.globalRequests;
+    globalRequestRemoves = b.globalRequestRemoves;
+
+    return *this;
+}
+
 EntitySystem::EntitySystem(bool thread) :
     mComponentCounter(1), mRequestCounter(1), mEntityCounter(1), mThreaded(thread), mFrozen(0)
 {
@@ -117,7 +153,7 @@ void EntitySystem::destroyEntity(EntityId entity)
     mEntities[entity] = NULL;
 }
 
-void EntitySystem::finalizeEntity(EntityId entity)
+bool EntitySystem::finalizeEntity(EntityId entity)
 {
     if (entity == 0)
         throw std::runtime_error("Can't finalize a non-existant entity");
@@ -130,7 +166,7 @@ void EntitySystem::finalizeEntity(EntityId entity)
     ent->finalised = true;
 
     if (mRequiredComponents.count(entity) == 0)
-        return;
+        return true;
 
     std::vector<std::string>& reqs = mRequiredComponents[entity];
     bool destroy = false;
@@ -143,6 +179,8 @@ void EntitySystem::finalizeEntity(EntityId entity)
 
     if (destroy)
         destroyEntity(entity);
+
+    return !destroy;
 }
 
 void EntitySystem::registerComponent(const std::string& name, ComponentFactory func)
@@ -734,14 +772,12 @@ void EntitySystem::freeze(RequestId rid)
     FrozenData::RequestLock& lock = mFrozenData.frozenRequests[rid];
 
     if (lock.locked)
-    {
+        return;
+
 #ifdef Kunlaboro_BOOST
-        if (mThreaded)
-            lock.mutex.lock();
-        else
+    if (mThreaded)
+        lock.mutex.lock();
 #endif
-            return;
-    }
 
     mFrozen++;
     lock.locked = true;
@@ -752,21 +788,15 @@ void EntitySystem::unfreeze(RequestId rid)
     FrozenData::RequestLock& lock = mFrozenData.frozenRequests[rid];
 
     if (!lock.locked) throw std::runtime_error("Tried to unfreeze a request that wasn't frozen!");
-
-#ifdef Kunlaboro_BOOST
-        if (mThreaded)
-            lock.mutex.unlock();
-#endif
+    lock.locked = false;
 
     if (--mFrozen < 0) mFrozen = 0;
 
-    std::list<std::pair<Component*, std::pair<RequestId, int> > > repriorities = lock.repriorities;
-    std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequests = lock.localRequests;
-    std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequestRemoves = lock.localRequestRemoves;
-    std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequests = lock.globalRequests;
-    std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequestRemoves = lock.globalRequestRemoves;
-
-    mFrozenData.frozenRequests.erase(rid);
+    std::list<std::pair<Component*, std::pair<RequestId, int> > >& repriorities = lock.repriorities;
+    std::list<std::pair<ComponentRequested, ComponentRegistered>>& localRequests = lock.localRequests;
+    std::list<std::pair<ComponentRequested, ComponentRegistered>>& localRequestRemoves = lock.localRequestRemoves;
+    std::list<std::pair<ComponentRequested, ComponentRegistered>>& globalRequests = lock.globalRequests;
+    std::list<std::pair<ComponentRequested, ComponentRegistered>>& globalRequestRemoves = lock.globalRequestRemoves;
 
     for (auto it = localRequests.begin(); it != localRequests.end(); ++it)
         registerLocalRequest(it->first, it->second);
@@ -782,6 +812,14 @@ void EntitySystem::unfreeze(RequestId rid)
 
     for (auto it = globalRequestRemoves.begin(); it != globalRequestRemoves.end(); ++it)
         removeGlobalRequest(it->first, it->second);
+
+    repriorities.clear();
+    localRequests.clear();
+    localRequestRemoves.clear();
+    globalRequests.clear();
+    globalRequestRemoves.clear();
+
+    //mFrozenData.frozenRequests.erase(rid);
 
     if (mFrozen <= 0 && mFrozenData.needsProcessing)
     {
@@ -799,6 +837,11 @@ void EntitySystem::unfreeze(RequestId rid)
         for (auto it = frozenEntityDestructions.begin(); it != frozenEntityDestructions.end(); ++it)
             destroyEntity(*it);
     }
+
+#ifdef Kunlaboro_BOOST
+    if (mThreaded)
+        lock.mutex.unlock();
+#endif
 }
 
 RequestId EntitySystem::getExistingRequestId(MessageReason reason, const std::string& name)

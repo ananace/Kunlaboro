@@ -60,8 +60,9 @@ namespace Kunlaboro
          * until the finalizeEntitity() function has been called without destroying the entity.
          *
          * \param eid The EntityId to finalize.
+         * \returns If the entity was finalized successfully.
          */
-        void finalizeEntity(EntityId eid);
+        bool finalizeEntity(EntityId eid);
 
         /** \brief Register a factory for a specific component type.
          *
@@ -234,7 +235,8 @@ namespace Kunlaboro
         /** \brief Send a global message to all the Component objects in the EntitySystem.
          *
          * This is a convenience function for sending a message without having to look up the RequestId or
-         * create a Message object, which means it will run much slower than the other sendGlobalMessage() function.
+         * create a Message object, which means it should not be used repeatedly as it is slower than the
+         * other sendGlobalMessage() function.
          *
          * \param n The name of the RequestId to send.
          * \param p The Payload to send.
@@ -294,6 +296,8 @@ namespace Kunlaboro
                 std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequests; ///< A list of all the locked calls to register global requests.
                 std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequestRemoves; ///< A list of all the locked calls to remove global requests.
                 RequestLock() : locked(false) { } ///< The standard constructor
+                RequestLock(RequestLock&);
+                RequestLock& operator=(RequestLock&);
             };
 
             /// A map of all the frozen requests that have been made.
@@ -359,7 +363,8 @@ namespace Kunlaboro
 *
 *     Kunlaboro::EntityId calc = entity_system.createEntity();
 *     entity_system.addComponent(calc, entity_system.createComponent("Calculator"));
-*     entity_system.finalizeEntity(calc); // This call is only really needed if the component requires another component to work.
+*     if (!entity_system.finalizeEntity(calc)) // This call is only really needed if the component requires another component to work.
+*         return 1; // The entity didn't get all of the components that were required for it.
 *
 *     entity_system.sendGlobalMessage("Calculator.Add", 500);
 *     entity_system.sendGlobalMessage("Calculator.Sub", 460);

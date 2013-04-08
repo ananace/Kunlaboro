@@ -1,13 +1,21 @@
 project(Kunlaboro)
 
 option(Kunlaboro_BOOST "Should Kunlaboro be built with boost (boost::any as message payloads)" OFF)
+option(Kunlaboro_GTEST "Build GTest tests?" OFF)
 
 if (Kunlaboro_BOOST)
-	FIND_PACKAGE(Boost REQUIRED COMPONENTS system)
+	FIND_PACKAGE(Boost REQUIRED COMPONENTS system thread)
 
 	include_directories(
 		${Boost_INCLUDE_DIR}
 	)
+	link_directories(
+		${Boost_LIBRARY_DIRS}
+	)
+endif()
+
+if (Kunlaboro_GTEST)
+	add_subdirectory(tests)
 endif()
 
 configure_file(Defines.hpp.in Defines.hpp)
