@@ -289,7 +289,7 @@ namespace Kunlaboro
             {
                 bool locked; ///< Is the request locked or not
 #ifdef Kunlaboro_BOOST
-                boost::mutex mutex; ///< A mutex to allow for threaded access.
+                boost::shared_ptr<boost::mutex> mutex; ///< A mutex to allow for threaded access.
                 boost::thread::id owner; ///< The thread that owns the lock on the request
 #endif
                 std::list<std::pair<Component*, std::pair<RequestId, int> > > repriorities; ///< A list of all the locked calls to reprioritize requests.

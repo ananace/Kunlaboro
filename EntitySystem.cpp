@@ -41,13 +41,8 @@ inline void insertedPush(std::deque<T>& deque, const T& value, const Y& comp)
 
 EntitySystem::FrozenData::RequestLock::RequestLock(const RequestLock& b)
 {
-#ifdef Kunlaboro_BOOST
-    boost::unique_lock<boost::mutex> l1(mutex, boost::defer_lock);
-    boost::unique_lock<boost::mutex> l2(const_cast<RequestLock&>(b).mutex, boost::defer_lock);
-    boost::lock(l1,l2);
-#endif
-
     locked = b.locked;
+    mutex = b.mutex;
     repriorities = b.repriorities;
     localRequests = b.localRequests;
     localRequestRemoves = b.localRequestRemoves;
@@ -59,19 +54,14 @@ EntitySystem::FrozenData::RequestLock& EntitySystem::FrozenData::RequestLock::op
     if (this == &b)
         return *this;
 
-#ifdef Kunlaboro_BOOST
-    boost::unique_lock<boost::mutex> l1(mutex, boost::defer_lock);
-    boost::unique_lock<boost::mutex> l2(const_cast<RequestLock&>(b).mutex, boost::defer_lock);
-    boost::lock(l1,l2);
-#endif
-
     locked = b.locked;
+    mutex = b.mutex;
     repriorities = b.repriorities;
     localRequests = b.localRequests;
     localRequestRemoves = b.localRequestRemoves;
     globalRequests = b.globalRequests;
     globalRequestRemoves = b.globalRequestRemoves;
-
+    
     return *this;
 }
 
@@ -779,7 +769,7 @@ void EntitySystem::freeze(RequestId rid)
         if (lock.locked && lock.owner == cur_thread)
             return;
 
-        lock.mutex.lock();
+        lock.mutex->lock();
         lock.owner = cur_thread;
     }
     else
@@ -850,7 +840,7 @@ void EntitySystem::unfreeze(RequestId rid)
     if (mThreaded)
     {
         lock.owner = boost::thread::id();
-        lock.mutex.unlock();
+        lock.mutex->unlock();
     }
 #endif
 }
