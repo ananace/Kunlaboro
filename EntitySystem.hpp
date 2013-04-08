@@ -298,11 +298,7 @@ namespace Kunlaboro
                 std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequests; ///< A list of all the locked calls to register global requests.
                 std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequestRemoves; ///< A list of all the locked calls to remove global requests.
                 RequestLock() : locked(false) { } ///< The standard constructor
-                ~RequestLock() {
-#ifdef Kunlaboro_BOOST
-                    mutex.destroy();
-#endif
-                }
+                ~RequestLock() { }
                 RequestLock(const RequestLock&);
                 RequestLock& operator=(const RequestLock&);
             };
