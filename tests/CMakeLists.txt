@@ -3,7 +3,7 @@ function(Kunlaboro_TEST Executable)
 	GTEST_ADD_TESTS(${Executable} "" ${ARGN})
 	target_link_libraries(${Executable} Kunlaboro ${GTEST_BOTH_LIBRARIES})
 	if (NOT WIN32)
-		target_link_libraries(${Executable} pthreads)
+		target_link_libraries(${Executable} pthread)
 	endif ()
 endfunction()
 
