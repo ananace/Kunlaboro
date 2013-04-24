@@ -547,7 +547,7 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
     std::deque<Component*>& comps = ent->components[req.name];
     for (auto it = comps.begin(); it != comps.end(); ++it)
     {
-        if ((*it)->isValid() && reg.component->getId() == (*it)->getId())
+        if ((*it)->isValid() && reg.component->getId() != (*it)->getId())
         {
             msg.sender = *it;
 
