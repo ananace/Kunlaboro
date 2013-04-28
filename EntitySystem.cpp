@@ -66,7 +66,7 @@ EntitySystem::FrozenData::RequestLock& EntitySystem::FrozenData::RequestLock::op
 }
 
 EntitySystem::EntitySystem(bool thread) :
-    mComponentCounter(1), mRequestCounter(1), mEntityCounter(1), mThreaded(thread), mFrozen(0)
+    mComponentCounter(1), mRequestCounter(1), mEntityCounter(1), mThreaded(thread), mFrozen(0), mEntityC(0), mComponentC(0)
 {
     mFrozenData.needsProcessing = false;
 
@@ -94,6 +94,7 @@ EntityId EntitySystem::createEntity()
     ent->finalised = false;
 
     mEntities[ent->id] = ent;
+    mEntityC++;
 
     return mEntityCounter-1;
 }
@@ -141,6 +142,7 @@ void EntitySystem::destroyEntity(EntityId entity)
 
     delete ent;
     mEntities[entity] = NULL;
+    mEntityC--;
 }
 
 bool EntitySystem::finalizeEntity(EntityId entity)
@@ -191,6 +193,7 @@ Component* EntitySystem::createComponent(const std::string& name)
     if (comp->getName() != name)
         throw std::runtime_error("The factory function for " + name + " creates components of type " + comp->getName());
 
+    mComponentC++;
     comp->mEntitySystem = this;
     comp->mId = mComponentCounter++;
     return comp;
@@ -200,6 +203,8 @@ void EntitySystem::destroyComponent(Component* component)
 {
     if (!component->isValid())
         throw std::runtime_error("Can't destroy an invalid component");
+
+    component->setDestroyed();
 
     if (isFrozen())
     {
@@ -270,6 +275,8 @@ void EntitySystem::destroyComponent(Component* component)
 
         unfreeze(reqid);
     }
+
+    mComponentC--;
 
     delete component;
 }

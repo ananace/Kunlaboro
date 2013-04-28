@@ -271,6 +271,11 @@ namespace Kunlaboro
          */
         inline bool isFrozen(RequestId rid) { return mFrozenData.frozenRequests[rid].locked; }
 
+        inline bool isValid(Kunlaboro::EntityId eid) { if (eid == 0) return false; return mEntities[eid] != NULL; }
+
+        inline unsigned int numEnt() { return mEntityC; }
+        inline unsigned int numCom() { return mComponentC; }
+
     private:
         /// A helper struct for containing Entity specific information.
         struct Entity
@@ -341,6 +346,9 @@ namespace Kunlaboro
 
         bool mThreaded; ///< Should this EntitySystem allow for threading?
         int mFrozen; ///< Is the EntitySystem frozen.
+
+        unsigned int mEntityC;
+        unsigned int mComponentC;
     };
 
     template<class T>
