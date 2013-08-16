@@ -48,7 +48,7 @@ if (NOT _SKIP_PIC)
 endif()
 
 include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR}	
-	${CMAKE_CURRENT_BINARY_DIR}
+	${CMAKE_CURRENT_SOURCE_DIR}/..
+	${CMAKE_CURRENT_BINARY_DIR}/..
 )
 #link_directories(${CMAKE_CURRENT_BINARY_DIR})

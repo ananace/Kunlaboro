@@ -1,7 +1,7 @@
 #ifndef _KUNLABORO_COMPONENT_HPP
 #define _KUNLABORO_COMPONENT_HPP
 
-#include "Defines.hpp"
+#include <Kunlaboro/Defines.hpp>
 #include <functional>
 #include <string>
 

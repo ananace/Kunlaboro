@@ -1,7 +1,7 @@
 #ifndef _KUNLABORO_ENTITYSYSTEM_HPP
 #define _KUNLABORO_ENTITYSYSTEM_HPP
 
-#include "Defines.hpp"
+#include <Kunlaboro/Defines.hpp>
 #ifdef Kunlaboro_BOOST
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
