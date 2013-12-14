@@ -392,7 +392,7 @@ namespace Kunlaboro
          *
          * \returns Is the Component valid.
          */
-        inline bool isValid() const { return mOwner != 0 && mId != 0 && mEntitySystem != NULL && !mName.empty() && !mDestroyed; }
+        inline bool isValid() const { return mOwner != 0 && mId != 0 && mEntitySystem != NULL && !mName.empty()/* && !mDestroyed*/; }
 
         /** \brief Get the name of the Component.
          *
