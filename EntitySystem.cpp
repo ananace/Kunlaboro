@@ -735,11 +735,12 @@ void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, Message& m
     std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
     for (auto it = regs.begin(); it != regs.end(); ++it)
     {
-        it->callback(msg);
+        auto& reg = *it;
+        reg.callback(msg);
 
         if (msg.handled)
         {
-            msg.sender = it->component;
+            msg.sender = reg.component;
             break;
         }
     }
