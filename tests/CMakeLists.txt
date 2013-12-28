@@ -1,9 +1,3 @@
-function(Kunlaboro_TEST Executable)
-	add_executable(${Executable} ${ARGN})
-	GTEST_ADD_TESTS(${Executable} "" ${ARGN})
-	target_link_libraries(${Executable} Kunlaboro ${GTEST_BOTH_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES})
-endfunction()
-
 enable_testing()
 
 find_package(GTest REQUIRED)
@@ -20,4 +14,11 @@ if (NOT WIN32)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 endif()
 
-Kunlaboro_TEST(Test test.cpp)
+add_executable(Test "test.cpp")
+GTEST_ADD_TESTS(Test "" "test.cpp")
+target_link_libraries(Test
+	Kunlaboro
+	${GTEST_BOTH_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT}
+	${Boost_LIBRARIES}
+)

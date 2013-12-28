@@ -3,7 +3,7 @@
 
 #include <Kunlaboro/Defines.hpp>
 #ifdef Kunlaboro_BOOST
-#include <boost/thread/mutex.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/thread.hpp>
 #endif
 #include <map>
@@ -305,8 +305,7 @@ namespace Kunlaboro
             {
                 bool locked; ///< Is the request locked or not
 #ifdef Kunlaboro_BOOST
-                boost::shared_ptr<boost::mutex> mutex; ///< A mutex to allow for threaded access.
-                boost::thread::id owner; ///< The thread that owns the lock on the request
+                boost::recursive_mutex mutex; ///< The mutex for this request.
 #endif
                 std::list<std::pair<Component*, std::pair<RequestId, int> > > repriorities; ///< A list of all the locked calls to reprioritize requests.
                 std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequests; ///< A list of all the locked calls to register local requests.

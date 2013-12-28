@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <Kunlaboro/Kunlaboro.hpp>
+#include <boost/thread.hpp>
 
 class GTestComponent : public Kunlaboro::Component
 {
@@ -58,13 +59,59 @@ public:
     virtual void TestMessageHandling(Kunlaboro::Message& msg) { FAIL(); }
 };
 
+class GTestThreadComponent : public Kunlaboro::Component
+{
+public:
+    GTestThreadComponent() : Kunlaboro::Component("GTestThread"), mInMiddleOfMessage(false) {}
+
+    void addedToEntity()
+    {
+        requestMessage("Work", [this](const Kunlaboro::Message& msg)
+        {
+            mWorkThread = boost::thread([this](){
+                int millisecond_sleep = 50 / getOwnerId();
+
+                for (int i = 0; i < 10; ++i)
+                {
+                    sendGlobalMessage("Thread", getOwnerId());
+                    boost::this_thread::sleep_for(boost::chrono::milliseconds(millisecond_sleep));
+                }
+            });
+        });
+
+        requestMessage("Join", [this](const Kunlaboro::Message& msg)
+        {
+            if (mWorkThread.joinable())
+                mWorkThread.join();
+        });
+
+        requestMessage("Thread", [this](const Kunlaboro::Message& msg) {
+            ASSERT_FALSE(mInMiddleOfMessage);
+            mInMiddleOfMessage = true;
+
+            auto owner = boost::any_cast<Kunlaboro::EntityId>(msg.payload);
+
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+
+            mInMiddleOfMessage = false;
+        });
+    }
+
+private:
+    bool mInMiddleOfMessage;
+    boost::thread mWorkThread;
+};
+
 class KunlaboroTest : public testing::Test {
 protected:
 
     virtual void SetUp()
     {
+        System = Kunlaboro::EntitySystem(true);
+
         System.registerComponent<GTestComponentSucceed>("GTestComponentSucceed");
         System.registerComponent<GTestComponentFail>("GTestComponentFail");
+        System.registerComponent<GTestThreadComponent>("GTestThread");
 
         Entity = System.createEntity();
 
@@ -78,6 +125,13 @@ protected:
         EXPECT_EQ(2, System.getAllComponentsOnEntity(Entity).size());
 
         EXPECT_TRUE(System.finalizeEntity(Entity));
+
+        for (int i = 0; i < 10; ++i)
+        {
+            auto ent = System.createEntity();
+            System.addComponent(ent, "GTestThread");
+            ASSERT_TRUE(System.finalizeEntity(ent));
+        }
     }
 
     virtual void TearDown()
@@ -129,4 +183,12 @@ TEST_F(KunlaboroTest, TestHandling) {
 
     void* data;
     System.sendGlobalMessage("TestHandle", data);
+}
+
+TEST_F(KunlaboroTest, TestThreading) {
+    System.sendGlobalMessage("Work");
+
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+
+    System.sendGlobalMessage("Join");
 }
