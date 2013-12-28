@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 2.8)
 project(Kunlaboro)
 
 option(Kunlaboro_BOOST "Should Kunlaboro be built with boost (boost::any as message payloads)" OFF)
@@ -18,17 +19,14 @@ if (Kunlaboro_GTEST)
 	add_subdirectory(tests)
 endif()
 
-configure_file(Defines.hpp.in Defines.hpp)
+configure_file(
+	include/Kunlaboro/Defines.hpp.in
+	include/Kunlaboro/Defines.hpp
+)
 
 set(Kunlaboro_SOURCES
-	Component.cpp
-	Component.hpp
-	${CMAKE_CURRENT_BINARY_DIR}/Defines.hpp
-	EntitySystem.cpp
-	EntitySystem.hpp
-	Kunlaboro.hpp
-	Template.cpp
-	Template.hpp
+	source/Kunlaboro/Component.cpp
+	source/Kunlaboro/EntitySystem.cpp
 )
 
 if (NOT WIN32)
@@ -48,7 +46,6 @@ if (NOT _SKIP_PIC)
 endif()
 
 include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR}/..
-	${CMAKE_CURRENT_BINARY_DIR}/..
+	${CMAKE_CURRENT_SOURCE_DIR}/include
+	${CMAKE_CURRENT_BINARY_DIR}/include
 )
-#link_directories(${CMAKE_CURRENT_BINARY_DIR})

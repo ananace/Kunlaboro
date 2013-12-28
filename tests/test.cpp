@@ -1,5 +1,5 @@
-#include "gtest/gtest.h"
-#include "Kunlaboro/Kunlaboro.hpp"
+#include <gtest/gtest.h>
+#include <Kunlaboro/Kunlaboro.hpp>
 
 class GTestComponent : public Kunlaboro::Component
 {

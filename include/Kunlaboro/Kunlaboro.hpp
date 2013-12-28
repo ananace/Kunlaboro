@@ -1,9 +1,8 @@
 #ifndef _KUNLABORO_HPP
 #define _KUNLABORO_HPP
 
-#include "Component.hpp"
-#include "EntitySystem.hpp"
-#include "Template.hpp"
+#include <Kunlaboro/Component.hpp>
+#include <Kunlaboro/EntitySystem.hpp>
 
 #endif // _KUNLABORO_HPP
 
@@ -28,11 +27,12 @@ Kunlaboro is built with many of the c++0x/c++11 features that were provided both
 Therefore Kunlaboro requires a reasonably modern compiler to work properly, it's been tested and made sure to compile with both Microsoft Visual Studio 2010 and GCC 4.6.3.
 
 \section usage Code Example
-Here's a simple example of a Kunlaboro application:
+Here's a simple example of a Kunlaboro application using Boost for payloads:
 
 \code
 #include <Kunlaboro/Kunlaboro.hpp>
 #include <iostream>
+#include <tuple>
 
 using namespace Kunlaboro;
 using namespace std;
@@ -53,17 +53,45 @@ public:
     }
 };
 
+// You can also use C++11 features without problems
+class AddComponent : public Component
+{
+public:
+    AddComponent : Component("Add") { }
+
+    void addedToEntity()
+    {
+        registerMessage("Add.AddNumbers", [](const Kunlaboro::Message& msg)
+        {
+            auto tuple = boost::any_cast<std::tuple<int, float>>(msg.payload);
+
+            float return = std::get<0>(tuple) + std::get<1>(tuple);
+
+            msg.handle(return);
+        });
+    }
+}
+
 int main()
 {
     EntitySystem sys;
     sys.registerComponent<PrintComponent>("Print");
+    sys.registerComponent<AddComponent>("Add");
 
-    EntityId eId = sys.createEntity();
-    sys.addComponent(eId, sys.createComponent("Print"));
-    sys.finalizeEntity(eId);
+    std::vector<std::string> exampleTemplate;
+    exampleTemplate.push_back("Print");
+    exampleTemplate.push_back("Add");
+    sys.registerTemplate("Example", exampleTemplate);
+
+    EntityId eId = sys.createEntity("Example");
 
     sys.sendGlobalMessage("Print.PrintString", "Hello World!");
     sys.sendMessageToEntity(eId, "Print.PrintString", "Hello Local World!");
+
+    Message msg(Type_Message, nullptr, std::make_tuple(1, 2.5f));
+    sys.sendGlobalQuestion(sys.getMessageRequestId("Add.AddNumbers"), msg);
+    if (msg.handled)
+        std::cout << "1 + 2.5 = " << boost::any_cast<float>(msg.payload) << std::endl;
 
     return 0;
 }

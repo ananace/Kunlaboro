@@ -5,13 +5,15 @@ function(Kunlaboro_TEST Executable)
 endfunction()
 
 enable_testing()
+
 find_package(GTest REQUIRED)
 FIND_PACKAGE(Threads REQUIRED)
-FIND_PACKAGE(Boost REQUIRED COMPONENTS thread)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS system thread)
+
 include_directories(
 	${GTEST_INCLUDE_DIRS}
-	../..
-	${CMAKE_CURRENT_BINARY_DIR}/..
+	../include
+	${CMAKE_CURRENT_BINARY_DIR}/../include
 )
 
 if (NOT WIN32)

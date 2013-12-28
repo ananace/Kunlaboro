@@ -39,10 +39,11 @@ namespace Kunlaboro
         EntityId createEntity();
         /** \brief Creates an entity using a template.
          *
-         * This function will create an entity and apply a template to it before returning it.
+         * This function will create an entity and apply a template to it before returning it, the
+         * function will also finalize the entity to ensure that it's properly created.
          *
          * \param templateName The name of the template to apply.
-         * \returns The ID of the newly created entity.
+         * \returns The ID of the newly created entity or 0 if it failed to finalize.
          */
         EntityId createEntity(const std::string& templateName);
         /** \brief Destroys a previously created entity.
@@ -65,6 +66,16 @@ namespace Kunlaboro
          */
         bool finalizeEntity(EntityId eid);
 
+        /** \brief Register an entity template.
+         *
+         * An entity template is a set of components that will automatically be added to an entity
+         * when it's created using that template.
+         *
+         * \param name The name of the entity template
+         * \param components The components that the entity will be created with.
+         * \sa createEntity(templateName)
+         */
+        void registerTemplate(const std::string& name, const std::vector<std::string>& components);
         /** \brief Register a factory for a specific component type.
          *
          * It is recommended to use this function for registering all the Component types you are
@@ -338,7 +349,7 @@ namespace Kunlaboro
         IdToNameMap mIdMap[2]; ///< Maps for converting GUIDs back to names.
 
         std::unordered_map<std::string, ComponentFactory> mRegisteredComponents; ///< Registered Components in the EntitySystem
-        std::unordered_map<std::string, TemplateFactory> mRegisteredTemplates; ///< Registered Templates in the EntitySystem
+        std::unordered_map<std::string, std::vector<std::string>> mRegisteredTemplates; ///< Registered Templates in the EntitySystem
         std::unordered_map<EntityId, std::vector<std::string> > mRequiredComponents; ///< Required Components in entities.
         RequestMap mGlobalRequests; ///< Globally registered requests.
         std::unordered_map<ComponentId, std::vector<ComponentRequested> > mRequestsByComponent; ///< Requests by component.

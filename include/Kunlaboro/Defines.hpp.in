@@ -15,7 +15,6 @@
 namespace Kunlaboro
 {
     class Component;
-    class Template;
     struct Message;
 
     /// A Globally Unique IDentifier.
@@ -32,15 +31,13 @@ namespace Kunlaboro
 #ifdef Kunlaboro_BOOST
     typedef boost::any Payload;
 #else
-    typedef void* Payload;
+    typedef const void* Payload;
 #endif
 
     /// The MessageFunction.
     typedef std::function<void(Message&)> MessageFunction;
     /// The factory function for a Component.
     typedef std::function<Component*()> ComponentFactory;
-    /// The factory function for a Template.
-    typedef std::function<Template*()> TemplateFactory;
 
     /// A ComponentMap to store and access Component objects against their names.
     typedef std::unordered_map<std::string, std::deque<Component*> > ComponentMap;
@@ -91,10 +88,27 @@ namespace Kunlaboro
         Component* sender; ///< The sender of the message, can be NULL.
         Payload payload;   ///< The payload of the message, can be empty.
         bool handled;      ///< Has the message been handled?
-        Message(MessageType t) : type(t), handled(false) {} ///< Create an empty message of the specified type.
-        Message(MessageType t, Component *c) : type(t), sender(c), handled(false) {} ///< Create an empty message with a specified sender.
-        Message(MessageType t, Component *c, Payload p) : type(t), sender(c), payload(p), handled(false) {} ///< Create a message with the specified sender and Payload.
+        Message(MessageType t = Type_Message, Component *c = nullptr, Payload p = nullptr) : type(t), sender(c), payload(p), handled(false) {} ///< Create an empty message of the specified type.
+
+        /// Helper function to handle a message.
+        template<typename T>
+#ifdef Kunlaboro_BOOST
+        void handle(const T& ret);
+#else
+        void handle(const T* ret);
+#endif
     };
+}
+
+template<typename T>
+#ifdef Kunlaboro_BOOST
+void Kunlaboro::Message::handle(const T& ret)
+#else
+void Kunlaboro::Message::handle(const T* ret)
+#endif
+{
+    payload = ret;
+    handled = true;
 }
 
 #endif

@@ -5,10 +5,6 @@
 #include <functional>
 #include <string>
 
-#ifndef _WIN32
-#include <tr1/functional>
-#endif
-
 namespace Kunlaboro
 {
     class EntitySystem;
@@ -507,37 +503,37 @@ namespace Kunlaboro
     template<class T>
     void Component::requestMessage(const std::string& name, void (T::*f)(Message&), bool local) const
     {
-        requestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), local);
+        requestMessage(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::requestMessage(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        requestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), local);
+        requestMessage(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::unrequestMessage(const std::string& name, void (T::*f)(Message&), bool local) const
     {
-        unrequestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), local);
+        unrequestMessage(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::unrequestMessage(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        unrequestMessage(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), local);
+        unrequestMessage(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::requestComponent(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        requestComponent(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), local);
+        requestComponent(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::requireComponent(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        requireComponent(name, std::tr1::bind(f, (T*)(this), std::tr1::placeholders::_1), local);
+        requireComponent(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 }
 
