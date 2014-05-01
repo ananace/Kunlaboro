@@ -2,13 +2,12 @@
 #define _KUNLABORO_ENTITYSYSTEM_HPP
 
 #include <Kunlaboro/Defines.hpp>
-#ifdef Kunlaboro_BOOST
-#include <boost/thread/recursive_mutex.hpp>
-#include <boost/thread/thread.hpp>
-#endif
-#include <map>
-#include <list>
+
+#include <unordered_map>
 #include <vector>
+#include <mutex>
+#include <list>
+#include <map>
 
 namespace Kunlaboro
 {
@@ -304,9 +303,7 @@ namespace Kunlaboro
             struct RequestLock
             {
                 bool locked; ///< Is the request locked or not
-#ifdef Kunlaboro_BOOST
-                boost::recursive_mutex mutex; ///< The mutex for this request.
-#endif
+                std::recursive_mutex mutex; ///< The mutex for this request.
                 std::list<std::pair<Component*, std::pair<RequestId, int> > > repriorities; ///< A list of all the locked calls to reprioritize requests.
                 std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequests; ///< A list of all the locked calls to register local requests.
                 std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequestRemoves; ///< A list of all the locked calls to remove local requests.

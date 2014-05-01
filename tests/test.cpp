@@ -68,15 +68,7 @@ public:
     {
         requestMessage("Work", [this](const Kunlaboro::Message& msg)
         {
-            mWorkThread = boost::thread([this](){
-                int millisecond_sleep = 50 / getOwnerId();
-
-                for (int i = 0; i < 10; ++i)
-                {
-                    sendGlobalMessage("Thread", getOwnerId());
-                    boost::this_thread::sleep_for(boost::chrono::milliseconds(millisecond_sleep));
-                }
-            });
+            mWorkThread = boost::thread(&GTestThreadComponent::workFunction, this);
         });
 
         requestMessage("Join", [this](const Kunlaboro::Message& msg)
@@ -98,6 +90,17 @@ public:
     }
 
 private:
+    void workFunction()
+    {
+        int millisecond_sleep = 50 / getOwnerId();
+
+        for (int i = 0; i < 10; ++i)
+        {
+            sendGlobalMessage("Thread", getOwnerId());
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(millisecond_sleep));
+        }
+    }
+
     bool mInMiddleOfMessage;
     boost::thread mWorkThread;
 };

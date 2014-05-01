@@ -5,13 +5,10 @@ option(Kunlaboro_BOOST "Should Kunlaboro be built with boost (boost::any as mess
 option(Kunlaboro_GTEST "Build GTest tests?" OFF)
 
 if (Kunlaboro_BOOST)
-	FIND_PACKAGE(Boost REQUIRED COMPONENTS system thread)
+	FIND_PACKAGE(Boost REQUIRED)
 
 	include_directories(
 		${Boost_INCLUDE_DIR}
-	)
-	link_directories(
-		${Boost_LIBRARY_DIRS}
 	)
 endif()
 
@@ -22,6 +19,12 @@ endif()
 configure_file(
 	include/Kunlaboro/Defines.hpp.in
 	include/Kunlaboro/Defines.hpp
+)
+
+set(Kunlaboro_HEADERS
+	include/Kunlaboro/Component.hpp
+	include/Kunlaboro/EntitySystem.hpp
+	include/Kunlaboro/Kunlaboro.hpp
 )
 
 set(Kunlaboro_SOURCES
@@ -35,7 +38,7 @@ if (NOT WIN32)
 	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -Werror")
 endif()
 
-add_library(Kunlaboro STATIC ${Kunlaboro_SOURCES})
+add_library(Kunlaboro STATIC ${Kunlaboro_HEADERS} ${Kunlaboro_SOURCES})
 
 if (WIN32 OR CYGWIN OR APPLE OR WITH_PIC OR DISABLE_SHARED OR NOT CMAKE_SHARED_LIBRARY_C_FLAGS)
 	set(_SKIP_PIC 1)
