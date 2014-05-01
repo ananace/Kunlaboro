@@ -126,7 +126,8 @@ void EntitySystem::destroyEntity(EntityId entity)
 
 	for (auto& it : ent->components)
 	{
-		for (auto& comp : it.second)
+		auto copy = it.second;
+		for (auto& comp : copy)
 			destroyComponent(comp);
 	}
 
