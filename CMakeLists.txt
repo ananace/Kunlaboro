@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 project(Kunlaboro)
 
 option(Kunlaboro_BOOST "Should Kunlaboro be built with boost (boost::any as message payloads)" OFF)
-option(Kunlaboro_GTEST "Build GTest tests?" OFF)
+option(Kunlaboro_BUILD_TESTS "Build and run Kunlaboro tests?" OFF)
 
 if (Kunlaboro_BOOST)
 	FIND_PACKAGE(Boost REQUIRED)
@@ -12,7 +12,10 @@ if (Kunlaboro_BOOST)
 	)
 endif()
 
-if (Kunlaboro_GTEST)
+if (Kunlaboro_BUILD_TESTS)
+    if (NOT Kunlaboro_BOOST)
+        message(FATAL_ERROR "The tests require Kunlaboro to be built with Boost.")
+    endif()
 	add_subdirectory(tests)
 endif()
 

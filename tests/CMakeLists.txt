@@ -1,24 +1,25 @@
-enable_testing()
+set(SRCROOT "${PROJECT_SOURCE_DIR}/tests")
 
-find_package(GTest REQUIRED)
-FIND_PACKAGE(Threads REQUIRED)
-FIND_PACKAGE(Boost REQUIRED COMPONENTS system thread)
+SET(SRC
+    "${SRCROOT}/main.cpp"
 
-include_directories(
-	${GTEST_INCLUDE_DIRS}
-	../include
-	${CMAKE_CURRENT_BINARY_DIR}/../include
+    "${SRCROOT}/component.cpp"
+    "${SRCROOT}/entity.cpp"
+    "${SRCROOT}/system.cpp"
+    "${SRCROOT}/threading.cpp"
 )
 
-if (NOT WIN32)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-endif()
+include_directories("${PROJECT_SOURCE_DIR}/include")
+include_directories("${PROJECT_BINARY_DIR}/include")
+include_directories("${PROJECT_SOURCE_DIR}/tests")
 
-add_executable(Test "test.cpp")
-GTEST_ADD_TESTS(Test "" "test.cpp")
-target_link_libraries(Test
-	Kunlaboro
-	${GTEST_BOTH_LIBRARIES}
-	${CMAKE_THREAD_LIBS_INIT}
-	${Boost_LIBRARIES}
+add_executable(testsuite ${SRC})
+
+target_link_libraries(testsuite Kunlaboro)
+
+add_custom_target(runtests ALL
+	DEPENDS testsuite
+	WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/tests"
+	COMMAND ${CMAKE_COMMAND} -E echo_append "Running tests..."
+	COMMAND testsuite
 )
