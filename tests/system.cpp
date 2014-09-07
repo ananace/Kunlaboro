@@ -45,7 +45,7 @@ SCENARIO("Entity System creation")
 
         auto eid = es.createEntity();
         es.addComponent(eid, component);
-        es.finalizeEntity(eid);
+        CHECK(es.finalizeEntity(eid));
 
         THEN("The entity system only contains that entity")
         {

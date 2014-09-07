@@ -38,11 +38,11 @@ SCENARIO("Threaded message passing")
         auto eid1 = es.createEntity("TestEntity");
         auto eid2 = es.createEntity("TestEntity");
 
-        std::atomic_uint value;
-        value.store(0);
-
-        WHEN("Both entities recieve messages at the same time")
+        WHEN("Both entities are being spammed with messages")
         {
+            std::atomic_uint value;
+            value.store(0);
+
             std::list<std::thread*> threads = {
                 new std::thread([eid1, &es, &value]() {
                     auto rid = es.getMessageRequestId(Kunlaboro::Reason_Message, "Increment");
@@ -74,10 +74,49 @@ SCENARIO("Threaded message passing")
                 delete thread;
             }
 
-            THEN("All messages are recieved successfully")
+            THEN("All the messages are still recieved successfully")
             {
                 CHECK(value == 0);
             }
+        }
+
+        WHEN("One entity ends up stuck in a loop")
+        {
+            bool run = true;
+            es.getAllComponentsOnEntity(eid1)[0]->requestMessage("Stuck", [&run](const Kunlaboro::Message& msg) { while (run); });
+
+            std::thread send([&es]() {
+                es.sendGlobalMessage("Stuck");
+            });
+
+            THEN("Messages can still be sent to that entity from another thread")
+            {
+                uint16_t temp = 0;
+
+                es.getAllComponentsOnEntity(eid1)[0]->requestMessage("Test", [&temp](const Kunlaboro::Message& msg) { ++temp; });
+
+                for (uint16_t i = 0; i < 42; ++i)
+                    es.sendGlobalMessage("Test");
+
+                CHECK(temp == 42);
+            }
+
+            THEN("Messages can still be sent to the other entity")
+            {
+                uint16_t temp = 0;
+
+                es.getAllComponentsOnEntity(eid2)[0]->requestMessage("Test", [&temp](const Kunlaboro::Message& msg) { ++temp; });
+
+                for (uint16_t i = 0; i < 42; ++i)
+                    es.sendGlobalMessage("Test");
+
+                CHECK(temp == 42);
+            }
+
+            run = false;
+
+            if (send.joinable())
+                send.join();
         }
     }
 }
