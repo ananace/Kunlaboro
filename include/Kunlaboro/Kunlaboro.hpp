@@ -8,23 +8,22 @@
 
 /** \mainpage
 
-\section welcome Welcome
-So I see you've stumbled upon this little project of mine.
-Kunlaboro, which is esperanto for 'cooperation', is a C++ Entity System designed around a heavily modified RDBMS.
+\section kunlaboro Kunlaboro
+Kunlaboro is an Entity System loosely based on the RDBMS-beta paradigm, and written in C++11.
 
-It is designed to have a close to cost-free message passing system for communication between components, as well as a way for components to store pointers to each other for direct access.
+It started as a simple test of entity systems, but has by now grown into something I find myself using in many of my personal projects.
 
 \section getting Getting the code
-The code for Kunlaboro can be found on github at this link: https://github.com/ace13/Kunlaboro.
-With the code in your hand you can use the provided CMakeList to generate project files for your favourite platform.
+The code for Kunlaboro can be found on my github at this link: https://github.com/ace13/Kunlaboro. There you'll also find the issue tracker among other things.
 
-Feel free to send me issues, and/or patches for any problems you find in my code. Or provide me with constructive critisism, as I doubt this to be the most optimal code possible. Github has an excellent issue tracker for this exact function, also feel free to fork it and make your own changes to the code.
-
-Kunlaboro is designed to easily fit into your project and is therefore set up to be statically compiled as a small library, perfect to just stick into your already existing git project as a simple submodule.
+It's built using CMake to allow for easier cross-platform development, so you can generate solutions for your favourite build systems.
 
 \section requirements Requirements
-Kunlaboro is built with many of the c++0x/c++11 features that were provided both in the tr1 release, and before.
-Therefore Kunlaboro requires a reasonably modern compiler to work properly, it's been tested and made sure to compile with both Microsoft Visual Studio 2010 and GCC 4.6.3.
+Kunlaboro requires a reasonably modern compiler that supports C++11 to a great degree, tested examples of such compilers are: Visual Studio 2013, GCC 4.6.3, and Clang 4.3.
+It will probably compile and run on earlier compilers too, but they are untested and may give unexpected results.
+
+Right now Kunlaboro also uses Boost::any to store data in message passing, but that will likely change in the near future.
+If you don't feel like using Boost, then messages are set to fall back to passing void pointers.
 
 \section usage Code Example
 Here's a simple example of a Kunlaboro application using Boost for payloads:
@@ -78,10 +77,7 @@ int main()
     sys.registerComponent<PrintComponent>("Print");
     sys.registerComponent<AddComponent>("Add");
 
-    std::vector<std::string> exampleTemplate;
-    exampleTemplate.push_back("Print");
-    exampleTemplate.push_back("Add");
-    sys.registerTemplate("Example", exampleTemplate);
+    sys.registerTemplate("Example", { "Print", "Add" });
 
     EntityId eId = sys.createEntity("Example");
 
