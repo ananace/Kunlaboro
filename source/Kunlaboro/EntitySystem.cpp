@@ -194,7 +194,11 @@ Component* EntitySystem::createComponent(const std::string& name)
 void EntitySystem::destroyComponent(Component* component)
 {
     if (!component->isValid())
-        throw std::runtime_error("Can't destroy an invalid component");
+    {
+        delete component;
+        return;
+    }
+        //throw std::runtime_error("Can't destroy an invalid component");
 
     component->setDestroyed();
 
@@ -431,11 +435,6 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
         }
 
         insertedPush(mGlobalRequests[reqid], reg, RequestSort());
-
-        if (req.reason == Reason_Message)
-        {
-           insertedPush(mEntities[reg.component->getOwnerId()]->localRequests[reqid], reg, RequestSort());
-        }
 
         if (reg.required && !mEntities[reg.component->getOwnerId()]->finalised)
             mRequiredComponents[reg.component->getOwnerId()].push_back(req.name);
@@ -684,25 +683,6 @@ void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, Message& m
             break;
         }
     }
-
-	/*
-    if (!msg.handled)
-    {
-        for (auto it = mGlobalRequests[reqid].begin(); it != mGlobalRequests[reqid].end(); ++it)
-        {
-            if (it->component->getOwnerId() != entity)
-                continue;
-
-            it->callback(msg);
-
-            if (msg.handled)
-            {
-                msg.sender = it->component;
-                break;
-            }
-        }
-    }
-	*/
 
     unfreeze(reqid);
 }
