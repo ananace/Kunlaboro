@@ -19,7 +19,7 @@ elseif (UNIX)
 			message(FATAL_ERROR "You need at least GCC 4.3 to compile this project.")
 		endif ()
 	elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-		message(INFO "Assuming you have a recent enough Clang for now.")
+		message(WARNING "Assuming you have a recent enough Clang.")
 		set(C11 "-std=c++11")
 	endif ()
 
