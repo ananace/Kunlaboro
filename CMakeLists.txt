@@ -4,6 +4,28 @@ project(Kunlaboro)
 option(Kunlaboro_BOOST "Should Kunlaboro be built with boost (boost::any as message payloads)" OFF)
 option(Kunlaboro_BUILD_TESTS "Build and run Kunlaboro tests?" OFF)
 
+if (MSVC)
+	if (${MSVC_VERSION} VERSION_LESS 11.0)
+		message(FATAL_ERROR "You need to compile this project with at least Visual Studio 2012, 2010 does not provide the entire C++11 subset Kunlaboro needs")
+	endif ()
+elseif (UNIX)
+	if (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
+		execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
+		if (${GCC_VERSION} VERSION_GREATER 4.7 OR ${GCC_VERSION} VERSION_EQUAL 4.7)
+			set(C11 "-std=c++11")
+		elseif (${GCC_VERSION} VERSION_GREATER 4.3 OR ${GCC_VERSION} VERSION_EQUAL 4.3)
+			set(C11 "-std=c++0x")
+		else ()
+			message(FATAL_ERROR "You need at least GCC 4.3 to compile this project.")
+		endif ()
+	elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+		message(INFO "Assuming you have a recent enough Clang for now.")
+		set(C11 "-std=c++11")
+	endif ()
+
+	set(CMAKE_CXX_FLAGS "${C11}")
+endif ()
+
 if (Kunlaboro_BOOST)
 	FIND_PACKAGE(Boost REQUIRED)
 
@@ -13,9 +35,9 @@ if (Kunlaboro_BOOST)
 endif()
 
 if (Kunlaboro_BUILD_TESTS)
-    if (NOT Kunlaboro_BOOST)
-        message(FATAL_ERROR "The tests require Kunlaboro to be built with Boost.")
-    endif()
+	if (NOT Kunlaboro_BOOST)
+		message(FATAL_ERROR "The tests require Kunlaboro to be built with Boost.")
+	endif()
 	add_subdirectory(tests)
 endif()
 
@@ -34,12 +56,6 @@ set(Kunlaboro_SOURCES
 	source/Kunlaboro/Component.cpp
 	source/Kunlaboro/EntitySystem.cpp
 )
-
-if (NOT WIN32)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Wextra -pedantic")
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -Werror")
-endif()
 
 add_library(Kunlaboro STATIC ${Kunlaboro_HEADERS} ${Kunlaboro_SOURCES})
 

@@ -1,4 +1,4 @@
-set(SRCROOT "${PROJECT_SOURCE_DIR}/tests")
+SET(SRCROOT "${PROJECT_SOURCE_DIR}/tests")
 
 SET(SRC
     "${SRCROOT}/main.cpp"
