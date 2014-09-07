@@ -5,13 +5,10 @@
 
 using namespace Kunlaboro;
 
-struct RequestSort
+inline bool RequestSort(const ComponentRegistered& a, const ComponentRegistered& b)
 {
-    inline bool operator()(const ComponentRegistered& a, const ComponentRegistered& b) const
-    {
-        return a.priority < b.priority;
-    }
-};
+    return a.priority < b.priority;
+}
 
 struct RequestFind
 {
@@ -33,7 +30,7 @@ struct RequestFind
 };
 
 template<typename T, typename Y>
-inline void insertedPush(std::deque<T>& deque, const T& value, const Y& comp)
+inline void insertedPush(std::deque<T>& deque, const T& value, Y comp)
 {
     deque.insert(std::lower_bound(deque.begin(), deque.end(), value, comp), value);
 }
@@ -241,15 +238,18 @@ void EntitySystem::destroyComponent(Component* component)
 
     if (reqid != 0)
     {
-        freeze(reqid);
+        auto reqs = mGlobalRequests[reqid];
+        for (auto& it : reqs)
+        {
+            if (it.component != component)
+                it.callback(msg);
+        }
 
-        for (auto& it : mGlobalRequests[reqid])
+        reqs = ent->localRequests[reqid];
+        for (auto& it : reqs)
+        {
             it.callback(msg);
-
-        for (auto& it : ent->localRequests[reqid])
-            it.callback(msg);
-
-        unfreeze(reqid);
+        }
     }
 
     mComponentC--;
@@ -282,22 +282,19 @@ void EntitySystem::addComponent(EntityId entity, Component* component)
 
     Message msg(Type_Create, component);
 
-    freeze(reqid);
-
-    if (mGlobalRequests.count(reqid) > 0)
-        for (auto& it : mGlobalRequests[reqid])
-        {
-            if (it.component != component)
-                it.callback(msg);
-        }
-
-    if (ent->localRequests.count(reqid) > 0)
-        for (auto& it : ent->localRequests[reqid])
-        {
+    auto reqs = mGlobalRequests[reqid];
+    for (auto& it : reqs)
+    {
+        if (it.component != component)
             it.callback(msg);
-        }
+    }
 
-    unfreeze(reqid);
+    reqs = ent->localRequests[reqid];
+    for (auto& it : reqs)
+    {
+        it.callback(msg);
+    }
+
 }
 
 void EntitySystem::removeComponent(EntityId entity, Component* component)
@@ -341,28 +338,24 @@ void EntitySystem::removeComponent(EntityId entity, Component* component)
     component->setOwner(0);
 	comps.erase(std::remove(comps.begin(), comps.end(), component), comps.end());
 
-    Message msg(Type_Destroy, component);
-
     RequestId reqid = getExistingRequestId(Reason_Component, component->getName());
 
-    if (reqid != 0)
+    if (reqid == 0)
+        return;
+
+    Message msg(Type_Destroy, component);
+
+    auto requests = mGlobalRequests[reqid];
+    for (auto& it : requests)
     {
-        freeze(reqid);
+        if (it.component != component)
+            it.callback(msg);
+    }
 
-		if (mGlobalRequests.count(reqid) > 0)
-		for (auto& it : mGlobalRequests[reqid])
-		{
-			if (it.component != component)
-				it.callback(msg);
-		}
-
-		if (ent->localRequests.count(reqid) > 0)
-		for (auto& it : ent->localRequests[reqid])
-		{
-			it.callback(msg);
-		}
-
-        unfreeze(reqid);
+    requests = ent->localRequests[reqid];
+    for (auto& it : requests)
+    {
+        it.callback(msg);
     }
 }
 
@@ -402,9 +395,6 @@ std::vector<Component*> EntitySystem::getAllComponentsOnEntity(EntityId entity, 
 
 RequestId EntitySystem::getMessageRequestId(MessageReason reason, const std::string& name)
 {
-    if (reason == Reason_AllComponents)
-        reason = Reason_Component;
-
 	auto& nameMap = mNameMap[reason];
 	if (nameMap.count(name) == 0)
     {
@@ -424,22 +414,19 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
 
     RequestId reqid = getMessageRequestId(req.reason, req.name);
 
-    if (req.reason != Reason_AllComponents)
+    if (isFrozen(reqid))
     {
-        if (isFrozen(reqid))
-        {
-            mFrozenData.frozenRequests[reqid].globalRequests.push_back(std::pair<ComponentRequested, ComponentRegistered>(req, reg));
-            mFrozenData.needsProcessing = true;
-            return;
-        }
-
-        insertedPush(mGlobalRequests[reqid], reg, RequestSort());
-
-        if (reg.required && !mEntities[reg.component->getOwnerId()]->finalised)
-            mRequiredComponents[reg.component->getOwnerId()].push_back(req.name);
-
-        mRequestsByComponent[reg.component->getId()].push_back(req);
+        mFrozenData.frozenRequests[reqid].globalRequests.push_back(std::pair<ComponentRequested, ComponentRegistered>(req, reg));
+        mFrozenData.needsProcessing = true;
+        return;
     }
+
+    insertedPush(mGlobalRequests[reqid], reg, RequestSort);
+
+    if (reg.required && !mEntities[reg.component->getOwnerId()]->finalised)
+        mRequiredComponents[reg.component->getOwnerId()].push_back(req.name);
+
+    mRequestsByComponent[reg.component->getId()].push_back(req);
 
     if (req.reason == Reason_Message)
         return;
@@ -449,7 +436,7 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
     Message msg(Type_Create);
     for (auto& ent : mEntities)
     {
-		if (ent.second == nullptr || ent.second->components.count(req.name) == 0)
+        if (ent.second->components.count(req.name) == 0)
 			continue;
 
         std::deque<Component*>& comps = ent.second->components[req.name];
@@ -482,12 +469,12 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
     Entity* ent = mEntities[reg.component->getOwnerId()];
 
     std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
-    insertedPush(regs, reg, RequestSort());
+    insertedPush(regs, reg, RequestSort);
 
     if (reg.required && !ent->finalised)
         mRequiredComponents[ent->id].push_back(req.name);
 
-    if (req.reason != Reason_Component)
+    if (req.reason == Reason_Message)
         return;
 
     Message msg(Type_Create);
@@ -599,7 +586,6 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
     freeze(reqid);
 
     Entity* ent = mEntities[comp->getOwnerId()];
-	RequestSort sort;
 
 	if (ent->localRequests.count(reqid) > 0)
     {
@@ -612,7 +598,7 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
 
                 reg.priority = priority;
 
-                insertedPush(regs, reg, sort);
+                insertedPush(regs, reg, RequestSort);
                 break;
             }
     }
@@ -628,7 +614,7 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
 
                 reg.priority = priority;
 
-                insertedPush(regs, reg, sort);
+                insertedPush(regs, reg, RequestSort);
                 break;
             }
     }
@@ -641,9 +627,9 @@ void EntitySystem::sendGlobalMessage(RequestId reqid, Message& msg)
     if (msg.sender != 0 && !msg.sender->isValid())
         throw std::runtime_error("Invalid sender for global message");
 
-    freeze(reqid);
+    auto reqs = mGlobalRequests[reqid];
 
-    for (auto& it : mGlobalRequests[reqid])
+    for (auto& it : reqs)
     {
         it.callback(msg);
 
@@ -653,8 +639,6 @@ void EntitySystem::sendGlobalMessage(RequestId reqid, Message& msg)
             break;
         }
     }
-
-    unfreeze(reqid);
 }
 
 void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, Message& msg)
@@ -667,12 +651,9 @@ void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, Message& m
     if (ent == NULL)
         throw std::runtime_error("Can't send a message to a non-existant entity");
 
-    if (ent->localRequests.count(reqid) == 0)
-        return;
+    auto reqs = ent->localRequests[reqid];
 
-    freeze(reqid);
-
-	for (auto& it : ent->localRequests[reqid])
+	for (auto& it : reqs)
     {
         it.callback(msg);
 
@@ -682,8 +663,6 @@ void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, Message& m
             break;
         }
     }
-
-    unfreeze(reqid);
 }
 
 void EntitySystem::freeze(RequestId rid)
