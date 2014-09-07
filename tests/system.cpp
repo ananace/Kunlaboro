@@ -128,7 +128,7 @@ SCENARIO("Entity System usage")
                     es.destroyComponent(comp);
                 }
 
-                THEN("The only the entities remain")
+                THEN("Only the entities remain")
                 {
                     CHECK(es.numCom() == 0);
                     CHECK(es.numEnt() == 10);
@@ -146,8 +146,8 @@ SCENARIO("Entity System usage")
             {
                 if (last != 0)
                 {
-                    es.removeComponent(last, component);
-                    es.addComponent(eid, component);
+                    CHECK_NOTHROW(es.removeComponent(last, component));
+                    CHECK_NOTHROW(es.addComponent(eid, component));
                 }
 
                 last = eid;
