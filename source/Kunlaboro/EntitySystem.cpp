@@ -198,7 +198,6 @@ void EntitySystem::destroyComponent(Component* component)
         delete component;
         return;
     }
-        //throw std::runtime_error("Can't destroy an invalid component");
 
     component->setDestroyed();
 

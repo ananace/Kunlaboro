@@ -258,6 +258,22 @@ namespace Kunlaboro
             sendGlobalMessage(getMessageRequestId(Reason_Message, n), msg);
         }
 
+        /** \brief Send a local message to all the Component objects in the specified entity.
+        *
+        * This is a convenience function for sending a message without having to look up the RequestId or
+        * create a Message object, which means that it is marginally slower than the
+        * other sendLocalMessage() function.
+        *
+        * \param eid The EntityId to the send the message to.
+        * \param n The name of the RequestId to send.
+        * \param p The Payload to send.
+        */
+        inline void sendLocalMessage(EntityId eid, const std::string& n, const Payload& p = 0)
+        {
+            Message msg(Type_Message, NULL, p);
+            sendLocalMessage(eid, getMessageRequestId(Reason_Message, n), msg);
+        }
+
         /** \brief Freezes the EntitySystem, forcing all following modifications to be put on a queue.
          *
          * \param rid The RequestId that's going to be frozen
