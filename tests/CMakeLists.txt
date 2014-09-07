@@ -9,13 +9,15 @@ SET(SRC
     "${SRCROOT}/threading.cpp"
 )
 
+find_package (Threads)
+
 include_directories("${PROJECT_SOURCE_DIR}/include")
 include_directories("${PROJECT_BINARY_DIR}/include")
 include_directories("${PROJECT_SOURCE_DIR}/tests")
 
 add_executable(testsuite ${SRC})
 
-target_link_libraries(testsuite Kunlaboro)
+target_link_libraries(testsuite Kunlaboro ${CMAKE_THREAD_LIBS_INIT})
 
 add_custom_target(runtests ALL
 	DEPENDS testsuite
