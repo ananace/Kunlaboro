@@ -17,13 +17,13 @@ SCENARIO("Threaded message passing")
         void addedToEntity()
         {
             requestMessage("Increment", [](const Kunlaboro::Message& msg) {
-                std::atomic_uint32_t& value = *boost::any_cast<std::atomic_uint32_t*>(msg.payload);
+                std::atomic_uint& value = *boost::any_cast<std::atomic_uint*>(msg.payload);
 
                 ++value;
             }, true);
 
             requestMessage("Decrement", [](const Kunlaboro::Message& msg) {
-                std::atomic_uint32_t& value = *boost::any_cast<std::atomic_uint32_t*>(msg.payload);
+                std::atomic_uint& value = *boost::any_cast<std::atomic_uint*>(msg.payload);
 
                 --value;
             }, true);
@@ -38,7 +38,8 @@ SCENARIO("Threaded message passing")
         auto eid1 = es.createEntity("TestEntity");
         auto eid2 = es.createEntity("TestEntity");
 
-        std::atomic_uint32_t value = 0;
+        std::atomic_uint value;
+        value.store(0);
 
         WHEN("Both entities recieve messages at the same time")
         {
@@ -73,11 +74,10 @@ SCENARIO("Threaded message passing")
                 delete thread;
             }
 
-            THEN("All messages were recieved successfully")
+            THEN("All messages are recieved successfully")
             {
                 CHECK(value == 0);
             }
         }
-
     }
 }
