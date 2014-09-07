@@ -29,7 +29,7 @@ SCENARIO("Entities having their components messed with")
         es.createEntity("Basic")
     };
 
-    WHEN("Moving entities in the middle of calls")
+    WHEN("Moving components in the middle of calls")
     {
         auto c1 = es.getAllComponentsOnEntity(eids[0])[0];
         auto c2 = es.getAllComponentsOnEntity(eids[1])[0];
@@ -58,7 +58,7 @@ SCENARIO("Entities having their components messed with")
         {
             c1->changeRequestPriority("Pong", dist(dev));
             c2->changeRequestPriority("Pong", dist(dev));
-            
+
             do
             {
                 auto comps = es.getAllComponentsOnEntity(eids[dist(dev) % 4]);
@@ -73,60 +73,6 @@ SCENARIO("Entities having their components messed with")
         {
             CHECK(c1->isValid());
             CHECK(c2->isValid());
-        }
-    }
-
-    WHEN("Adding message requests in the middle of calls")
-    {
-        auto c1 = es.getAllComponentsOnEntity(eids[0])[0];
-        auto c2 = es.getAllComponentsOnEntity(eids[1])[0];
-
-        bool handled = false;
-
-        c1->requestMessage("Pong", [&](Kunlaboro::Message& msg) {
-            CHECK_NOTHROW(msg.sender->requestMessage("Pong", [&](const Kunlaboro::Message& msg) {
-                handled = true;
-            }, true));
-            msg.handle(true);
-        }, true);
-
-        THEN("The message doesn't exist to begin with")
-        {
-            c2->sendMessage("Pong");
-            CHECK(!handled);
-        }
-
-        c2->sendMessageToEntity(c1->getOwnerId(), "Pong");
-
-        THEN("The message exists afterwards")
-        {
-            c2->sendMessage("Pong");
-            CHECK(handled);
-        }
-    }
-
-    WHEN("Removing message requests in the middle of calls")
-    {
-        auto c1 = es.getAllComponentsOnEntity(eids[0])[0];
-
-        bool handled = false;
-
-        c1->requestMessage("Pong", [&](const Kunlaboro::Message& msg) {
-            handled = !handled;
-
-            c1->unrequestMessage("Pong", true);
-        }, true);
-
-        THEN("The message exist to begin with")
-        {
-            c1->sendMessage("Pong");
-            CHECK(handled);
-
-            AND_THEN("The message doesn't exist afterwards")
-            {
-                c1->sendMessage("Pong");
-                CHECK(handled);
-            }
         }
     }
 }

@@ -196,3 +196,113 @@ SCENARIO("Message passing")
         }
     }
 }
+
+SCENARIO("Requests changing during calls")
+{
+    Kunlaboro::EntitySystem es;
+    es.registerComponent<TestComponent>("TestComponent");
+    es.registerComponent<TestComponent2>("TestComponent2");
+
+    es.registerTemplate("Test", { "TestComponent" });
+
+    std::vector<Kunlaboro::EntityId> eids = {
+        es.createEntity("Test"),
+        es.createEntity("Test")
+    };
+
+    WHEN("Adding message requests in the middle of calls")
+    {
+        auto c1 = es.getAllComponentsOnEntity(eids[0])[0];
+        auto c2 = es.getAllComponentsOnEntity(eids[1])[0];
+
+        bool handled = false;
+
+        c1->requestMessage("Message", [&](Kunlaboro::Message& msg) {
+            CHECK_NOTHROW(msg.sender->requestMessage("Message", [&](const Kunlaboro::Message& msg) {
+                handled = true;
+            }, true));
+            msg.handle(true);
+        }, true);
+
+        THEN("The message doesn't exist to begin with")
+        {
+            c2->sendMessage("Message");
+            CHECK(!handled);
+        }
+
+        c2->sendMessageToEntity(c1->getOwnerId(), "Message");
+
+        THEN("The message exists afterwards")
+        {
+            c2->sendMessage("Message");
+            CHECK(handled);
+        }
+    }
+
+    WHEN("Removing message requests in the middle of calls")
+    {
+        auto c1 = es.getAllComponentsOnEntity(eids[0])[0];
+
+        bool handled = false;
+
+        c1->requestMessage("Message", [&](const Kunlaboro::Message& msg) {
+            handled = !handled;
+
+            CHECK_NOTHROW(c1->unrequestMessage("Message", true));
+        }, true);
+
+        THEN("The message exists to begin with")
+        {
+            c1->sendMessage("Message");
+            CHECK(handled);
+
+            AND_THEN("The message doesn't exist afterwards")
+            {
+                c1->sendMessage("Message");
+                CHECK(handled);
+            }
+        }
+    }
+
+    GIVEN("Two entities calling eachother")
+    {
+        auto c1 = es.getAllComponentsOnEntity(eids[0])[0];
+        auto c2 = es.getAllComponentsOnEntity(eids[1])[0];
+
+        Kunlaboro::Component* comps[2] = { c1, c2 };
+
+        bool add = true;
+
+        for (auto comp : comps)
+        {
+            comp->requestMessage("Ping", [&](const Kunlaboro::Message& msg) {
+                comp->sendMessageToEntity(msg.sender->getOwnerId(), "Pong");
+            }, true);
+
+            comp->requestMessage("Pong", [&](const Kunlaboro::Message& msg) {
+                if (msg.sender == comp)
+                    return;
+                
+                if (add)
+                    es.addComponent(msg.sender->getOwnerId(), "TestComponent");
+                else
+                    es.removeComponent(msg.sender->getOwnerId(), es.getAllComponentsOnEntity(msg.sender->getOwnerId())[0]);
+            }, true);
+
+            comp->requestComponent("TestComponent", [&](const Kunlaboro::Message& msg){
+                comp->sendMessage("Ping");
+            });
+        }
+
+        WHEN("A component is added during the call")
+        {
+            CHECK_NOTHROW(c2->sendMessageToEntity(c1->getOwnerId(), "Ping"));
+        }
+
+        WHEN("A component is removed during the call")
+        {
+            add = false;
+            CHECK_NOTHROW(c2->sendMessageToEntity(c1->getOwnerId(), "Ping"));
+        }
+    }
+}
