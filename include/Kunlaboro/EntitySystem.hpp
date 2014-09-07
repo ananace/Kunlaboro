@@ -127,8 +127,9 @@ namespace Kunlaboro
          */
         void addComponent(EntityId eid, Component* c);
         /** \brief Add a Component to an entity.
+         * \ingroup convenience
          *
-         * This will add an orphaned Component into the specified entity, calling the Components
+         * This will create and add a Component into the specified entity, calling the Components
          * addedToEntity() function and sending out creation messages to all Components that have
          * registered a request for them.
          *
@@ -243,6 +244,13 @@ namespace Kunlaboro
          */
         void sendLocalMessage(EntityId eid, RequestId rid, Message& msg);
 
+        /** \name Convenience functions
+         * These functions exist to cut down on the amount of code you need to write
+         * slightly.
+         *
+         * \note They are slower than their normal counterparts, especially if used several times in a row.
+         */
+        ///@{
         /** \brief Send a global message to all the Component objects in the EntitySystem.
          *
          * This is a convenience function for sending a message without having to look up the RequestId or
@@ -257,6 +265,23 @@ namespace Kunlaboro
             Message msg(Type_Message, NULL, p);
             sendGlobalMessage(getMessageRequestId(Reason_Message, n), msg);
         }
+
+        /** \brief Send a local message to all the Component objects in the specified entity.
+        *
+        * This is a convenience function for sending a message without having to look up the RequestId or
+        * create a Message object, which means that it is marginally slower than the
+        * other sendLocalMessage() function.
+        *
+        * \param eid The EntityId to the send the message to.
+        * \param n The name of the RequestId to send.
+        * \param p The Payload to send.
+        */
+        inline void sendLocalMessage(EntityId eid, const std::string& n, const Payload& p = 0)
+        {
+            Message msg(Type_Message, NULL, p);
+            sendLocalMessage(eid, getMessageRequestId(Reason_Message, n), msg);
+        }
+        ///@}
 
         /** \brief Freezes the EntitySystem, forcing all following modifications to be put on a queue.
          *
@@ -281,25 +306,32 @@ namespace Kunlaboro
          */
         inline bool isFrozen(RequestId rid) { return mFrozenData.frozenRequests[rid].locked; }
 
+        /** \brief Check if a specified entity is valid
+         * 
+         * \param eid The EntityId you want to check.
+         * \returns If the Entity exists in the Entity System.
+         */
         inline bool isValid(Kunlaboro::EntityId eid) { if (eid == 0) return false; return mEntities[eid] != NULL; }
 
+        /// The number of active Entities in the Entity System.
         inline unsigned int numEnt() { return mEntityC; }
+        /// The number of active Components in the Entity System.
         inline unsigned int numCom() { return mComponentC; }
 
     private:
-        /// A helper struct for containing Entity specific information.
+        /// A helper struct containing Entity specific information.
         struct Entity
         {
             EntityId id; ///< The EntityId of the Entity.
-            bool finalised; ///< If the Entity is finalized.
+            bool finalised; ///< If the Entity is finalised.
             ComponentMap components; ///< The Component objects stored in this Entity.
-            RequestMap localRequests; ///< The local requests stored inside the Entity.
+            RequestMap localRequests; ///< The local requests the Entity listens for.
         };
 
-        /// A container for all the requests that happened during a time when the EntitySystem was frozen.
+        /// A container for anything that happened during a frozen period.
         struct FrozenData
         {
-            /// A container for a locked request.
+            /// Storage for a locked request.
             struct RequestLock
             {
                 bool locked; ///< Is the request locked or not
@@ -354,8 +386,8 @@ namespace Kunlaboro
         bool mThreaded; ///< Should this EntitySystem allow for threading?
         int mFrozen; ///< Is the EntitySystem frozen.
 
-        unsigned int mEntityC;
-        unsigned int mComponentC;
+        unsigned int mEntityC; ///< Entity counter
+        unsigned int mComponentC; ///< Component counter
     };
 
     template<class T>
@@ -382,7 +414,7 @@ namespace Kunlaboro
 *     Kunlaboro::EntityId calc = entity_system.createEntity();
 *     entity_system.addComponent(calc, entity_system.createComponent("Calculator"));
 *     if (!entity_system.finalizeEntity(calc)) // This call is only really needed if the component requires another component to work.
-*         return 1; // The entity didn't get all of the components that were required for it.
+*         return 1; // The entity couldn't get all of the components that were needed.
 *
 *     entity_system.sendGlobalMessage("Calculator.Add", 500);
 *     entity_system.sendGlobalMessage("Calculator.Sub", 460);

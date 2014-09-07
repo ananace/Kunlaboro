@@ -177,8 +177,9 @@ namespace Kunlaboro
         Message sendQuestionToEntity(EntityId eid, RequestId rid, const Message& m) const;
 
 
-        // Convenience functions
-
+        /** \name Convenience functions
+         */
+        ///@{
         /** \brief Change the priority of a specific request.
          * \note Note that this is slightly slower than using a RequestId, as a call will have to be made
          * to look up the RequestId anyway. Store the RequestId somewhere if you're going to be using this often.
@@ -346,7 +347,7 @@ namespace Kunlaboro
         inline Message sendQuestionToEntity(EntityId eid, const std::string& name, const Payload& p) const { return sendQuestionToEntity(eid, getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), p)); }
         inline Message sendQuestionToEntity(EntityId eid, RequestId rid) const { return sendQuestionToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), 0)); }
         inline Message sendQuestionToEntity(EntityId eid, const std::string& name) const { return sendQuestionToEntity(eid, getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
-
+        ///@}
 
         // Utility functions
 
@@ -372,7 +373,7 @@ namespace Kunlaboro
          */
         void destroy();
 
-        /** \brief Returns if the Component is destroyed
+        /** \brief Returns if the Component is to be destroyed
          *
          * Checks if the component has been marked as destroyed, generally this function will only return
          * true when a component has been destroyed while the EntitySystem is frozen and before the EntitySystem
@@ -382,9 +383,9 @@ namespace Kunlaboro
          */
         inline bool isDestroyed() const { return mDestroyed; }
 
-        /** \brief Checks if the Component is valid.
+        /** \brief Checks if the Component is in a valid state.
          *
-         * This will check that the Component is in a valid state and is ready for use in the EntitySystem.
+         * This will check that the Component is constructed correctly, has an owner, and is ready for use in an EntitySystem.
          *
          * \returns Is the Component valid.
          */
@@ -475,7 +476,7 @@ namespace Kunlaboro
         inline void requireComponent(const std::string& name, void (T::*f)(const Message&), bool local = true) const;
 
     protected:
-        /// Constructor for the component
+        /// The constructor sets the name of the component and initializes default values.
         Component(const std::string&);
 
     private:
@@ -493,7 +494,7 @@ namespace Kunlaboro
 
         /// The name of the Component
         std::string mName;
-        /// Is the Component destroyed or not
+        /// Value storing if the component is to be destroyed
         bool mDestroyed;
 
         friend class EntitySystem;
