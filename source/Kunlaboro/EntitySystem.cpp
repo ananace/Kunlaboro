@@ -95,7 +95,7 @@ EntityId EntitySystem::createEntity(const std::string& templateName)
 
     EntityId ent = createEntity();
     
-    auto temp = mRegisteredTemplates[templateName];
+    auto& temp = mRegisteredTemplates[templateName];
 	std::for_each(temp.begin(), temp.end(), [this, ent](const std::string& comp) { addComponent(ent, comp); });
 
     if (finalizeEntity(ent))
@@ -431,8 +431,6 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
     if (req.reason == Reason_Message)
         return;
 
-    freeze(reqid);
-
     Message msg(Type_Create);
     for (auto& ent : mEntities)
     {
@@ -451,8 +449,6 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
             }
         }
     }
-
-    unfreeze(reqid);
 }
 
 void EntitySystem::registerLocalRequest(const ComponentRequested& req, const ComponentRegistered& reg)
@@ -482,8 +478,6 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
     if (ent->components.count(req.name) == 0)
         return;
 
-    freeze(reqid);
-
     std::deque<Component*>& comps = ent->components[req.name];
 	for (auto& it : comps)
 	{
@@ -495,8 +489,6 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
 			msg.handled = false;
 		}
 	}
-
-    unfreeze(reqid);
 }
 
 void EntitySystem::removeGlobalRequest(const ComponentRequested& req, const ComponentRegistered& reg)
@@ -512,8 +504,6 @@ void EntitySystem::removeGlobalRequest(const ComponentRequested& req, const Comp
         mFrozenData.needsProcessing = true;
         return;
     }
-
-    freeze(reqid);
 
     if (mGlobalRequests.count(reqid) > 0)
     {
@@ -543,8 +533,6 @@ void EntitySystem::removeGlobalRequest(const ComponentRequested& req, const Comp
         
 		regs.erase(toRemove, regs.end());
     }
-
-    unfreeze(reqid);
 }
 
 void EntitySystem::removeLocalRequest(const ComponentRequested& req, const ComponentRegistered& reg)
@@ -561,8 +549,6 @@ void EntitySystem::removeLocalRequest(const ComponentRequested& req, const Compo
         return;
     }
 
-    freeze(reqid);
-
     Entity* ent = mEntities[reg.component->getOwnerId()];
 
 	if (ent->localRequests.count(reqid) > 0)
@@ -570,8 +556,6 @@ void EntitySystem::removeLocalRequest(const ComponentRequested& req, const Compo
 		std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
 		regs.erase(std::remove_if(regs.begin(), regs.end(), [reg](ComponentRegistered& it) {return it.component == reg.component; }), regs.end());
 	}
-
-    unfreeze(reqid);
 }
 
 void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int priority)
@@ -582,8 +566,6 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
         mFrozenData.needsProcessing = true;
         return;
     }
-
-    freeze(reqid);
 
     Entity* ent = mEntities[comp->getOwnerId()];
 
@@ -618,8 +600,6 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
                 break;
             }
     }
-
-    unfreeze(reqid);
 }
 
 void EntitySystem::sendGlobalMessage(RequestId reqid, Message& msg)
