@@ -46,7 +46,12 @@ namespace Kunlaboro
 
         Payload(std::nullptr_t) : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
         Payload() : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
-        ~Payload() { if (mData) delete mData; }
+        ~Payload() {
+            char* test = new (mData) char[mSize];
+
+            if (mData)
+                delete[] test;
+        }
 
         Payload& operator=(Payload p)
         {
