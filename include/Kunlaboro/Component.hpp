@@ -1,7 +1,7 @@
-#ifndef _KUNLABORO_COMPONENT_HPP
-#define _KUNLABORO_COMPONENT_HPP
+#pragma once
 
 #include <Kunlaboro/Defines.hpp>
+#include <Kunlaboro/EntitySystem.hpp>
 #include <functional>
 #include <string>
 
@@ -89,16 +89,6 @@ namespace Kunlaboro
          */
         void changeRequestPriority(RequestId rid, int priority) const;
 
-        /** \brief Get the RequestId for the specified message.
-         *
-         * This function will ask the EntitySystem for the RequestId of the specified message,
-         * you can store the RequestId and use that later on when sending messages to speed up
-         * the message-sending process.
-         *
-         * \param message The message to get a RequestId for.
-         */
-        RequestId getMessageRequestId(const std::string& message) const;
-
 
         // Message sending functions
 
@@ -180,173 +170,43 @@ namespace Kunlaboro
         /** \name Convenience functions
          */
         ///@{
-        /** \brief Change the priority of a specific request.
-         * \note Note that this is slightly slower than using a RequestId, as a call will have to be made
-         * to look up the RequestId anyway. Store the RequestId somewhere if you're going to be using this often.
-         *
-         * \param name The request to change.
-         * \param priority The new priority of the request.
-         * \sa changeRequestPriority(RequestId, int) const
-         */
-        inline void changeRequestPriority(const std::string& name, int priority) const { changeRequestPriority(getMessageRequestId(name), priority); }
+        inline void changeRequestPriority(const std::string& name, int priority) const { changeRequestPriority(hash::hashString(name), priority); }
 
-        /** \brief Send a message to the local object with an empty payload.
-         * \note Note that this is slightly slower than having a Message object already assembled for sending.
-         *
-         * \param id The RequestId to send.
-         * \sa sendMessage(RequestId, const Message&) const
-         */
         inline void sendMessage(RequestId id) const { sendMessage(id, Message(Type_Message, const_cast<Component*>(this), 0)); }
-
-
-        inline void sendMessage(const std::string& name) const { sendMessage(getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
-
-        /** \brief Send a message to the local object.
-         * \note Note that this is slightly slower than having a Message object already assembled for sending.
-         *
-         * \param id The RequestId to send.
-         * \param p The payload to send.
-         * \sa sendMessage(RequestId, const Message&) const
-         */
+        inline void sendMessage(const std::string& name) const { sendMessage(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
         inline void sendMessage(RequestId id, const Payload& p) const { sendMessage(id, Message(Type_Message, const_cast<Component*>(this), p)); }
-
-        /** \brief A convenience function for sending a message to the local object.
-         * \note Note that this function is slower than using the RequestId as it has to run an ID
-         * lookup for every call, if you want to send many messages then you might want to consider grabbing the
-         * RequestId in advance and reusing it.
-         * \note Also note that this is slightly slower than having a Message object already assembled for sending.
-         *
-         * \param name The name of the message.
-         * \param p The payload to send.
-         * \sa sendMessage(RequestId, const Payload&) const
-         */
-        inline void sendMessage(const std::string& name, const Payload& p) const { sendMessage(getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-
-        /** \brief A convenience function for sending a message without first having to look up the RequestId.
-         * \note Note that this function is slower than using the RequestId as it has to run an ID
-         * lookup, if you want to send many messages then you might want to consider grabbing the
-         * RequestId in advance and reusing it.
-         *
-         * \param name The name of the message.
-         * \param msg The Message data to send.
-         * \sa sendMessage(RequestId, const Message&) const
-         */
-        inline void sendMessage(const std::string& name, const Message& msg) const { sendMessage(getMessageRequestId(name), msg); }
+        inline void sendMessage(const std::string& name, const Payload& p) const { sendMessage(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline void sendMessage(const std::string& name, const Message& msg) const { sendMessage(hash::hashString(name), msg); }
 
         inline Message sendQuestion(RequestId id) const { return sendQuestion(id, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        /** \brief A convenience function for sending a question to the local entity.
-         * \note Note that this is slightly slower than having a Message object already assembled for sending.
-         *
-         * \param id The RequestId to send.
-         * \param p The Payload to send.
-         * \sa sendQuestion(RequestId, const Message&) const
-         */
-        inline Message sendQuestion(const std::string& name) const { return sendQuestion(getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
+        inline Message sendQuestion(const std::string& name) const { return sendQuestion(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
         inline Message sendQuestion(RequestId id, const Payload& p) const { return sendQuestion(id, Message(Type_Message, const_cast<Component*>(this), p)); }
-        /** \brief A convenience function for sending a question to the local entity.
-         * \note Note that this function is slower than using the RequestId as it has to run an ID
-         * lookup, if you want to send many messages then you might want to consider grabbing the
-         * RequestId in advance and reusing it.
-         * \note Also note that this is slightly slower than having a Message object already assembled for sending.
-         *
-         * \param name The name of the question to send.
-         * \param p The Payload to send,
-         */
-        inline Message sendQuestion(const std::string& name, const Payload& p) const { return sendQuestion(getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        /** \brief A convenience function for sending a question to the local entity.
-         * \note Note that this function is slower than using the RequestId as it has to run an ID
-         * lookup, if you want to send many messages then you might want to consider grabbing the
-         * RequestId in advance and reusing it.
-         *
-         * \param name The name of the question to send.
-         * \param msg The Message data to send.
-         * \sa sendQuestion(RequestId, const Message&) const
-         */
-        inline Message sendQuestion(const std::string& name, const Message& msg) const { return sendQuestion(getMessageRequestId(name), msg); }
+        inline Message sendQuestion(const std::string& name, const Payload& p) const { return sendQuestion(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline Message sendQuestion(const std::string& name, const Message& msg) const { return sendQuestion(hash::hashString(name), msg); }
 
         inline void sendGlobalMessage(RequestId id) const { sendGlobalMessage(id, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline void sendGlobalMessage(const std::string& name) const { sendGlobalMessage(getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
-        /** \brief Send a message to the entire EntitySystem that the local entity is a part of.
-         * \note Note that this is slightly slower than having a Message object already assembled for sending.
-         *
-         * \param id The RequestId to send.
-         * \param p The Payload to send.
-         * \sa sendGlobalMessage(RequestId) const
-         * \sa sendGlobalMessage(RequestId, const Message&) const
-         */
+        inline void sendGlobalMessage(const std::string& name) const { sendGlobalMessage(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
         inline void sendGlobalMessage(RequestId id, const Payload& p) const { sendGlobalMessage(id, Message(Type_Message, const_cast<Component*>(this), p)); }
-        /** \brief A convenience function for sending a message to the entire EntitySystem that the
-         * local entity is part of.
-         * \note Note that this function is slower than using the RequestId as it has to run an ID
-         * lookup, if you want to send many messages then you might want to consider grabbing the
-         * RequestId in advance and reusing it.
-         * \note Also note that this is slightly slower than having a Message object already assembled for sending.
-         *
-         * \param name The name of the message to send.
-         * \param p The Payload to send.
-         * \sa sendGlobalMessage(RequestId, const Payload&) const
-         */
-        inline void sendGlobalMessage(const std::string& name, const Payload& p) const { sendGlobalMessage(getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        /** \brief A convenience function for sending a message to the entire EntitySystem that the
-         * local entity is part of.
-         * \note Note that this function is slower than using the RequestId as it has to run an ID
-         * lookup, if you want to send many messages then you might want to consider grabbing the
-         * RequestId in advance and reusing it.
-         *
-         * \param name The name of the message to send.
-         * \param msg The Message data to send.
-         * \sa sendGlobalMessage(RequestId, const Message&) const
-         */
-        inline void sendGlobalMessage(const std::string& name, const Message& msg) const { sendGlobalMessage(getMessageRequestId(name), msg); }
+        inline void sendGlobalMessage(const std::string& name, const Payload& p) const { sendGlobalMessage(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline void sendGlobalMessage(const std::string& name, const Message& msg) const { sendGlobalMessage(hash::hashString(name), msg); }
 
         inline Message sendGlobalQuestion(RequestId id) const { return sendGlobalQuestion(id, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline Message sendGlobalQuestion(const std::string& name) const { return sendGlobalQuestion(getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
+        inline Message sendGlobalQuestion(const std::string& name) const { return sendGlobalQuestion(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
         inline Message sendGlobalQuestion(RequestId id, const Payload& p) const { return sendGlobalQuestion(id, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendGlobalQuestion(const std::string& name, const Payload& p) const { return sendGlobalQuestion(getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendGlobalQuestion(const std::string& name, const Message& msg) const { return sendGlobalQuestion(getMessageRequestId(name), msg); }
-        /** \brief Send a message to a specific entity.
-         *
-         * \param eid The EntityId to send the RequestId to.
-         * \param rid The RequestId to send.
-         * \sa sendMessageToEntity(EntityId, RequestId, const Payload&) const
-         * \sa sendMessageToEntity(EntityId, RequestId, const Message&) const
-         */
+        inline Message sendGlobalQuestion(const std::string& name, const Payload& p) const { return sendGlobalQuestion(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline Message sendGlobalQuestion(const std::string& name, const Message& msg) const { return sendGlobalQuestion(hash::hashString(name), msg); }
+
         inline void sendMessageToEntity(EntityId eid, RequestId rid) const { sendMessageToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline void sendMessageToEntity(EntityId eid, const std::string& name) const { sendMessageToEntity(eid, getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
-        /** \brief Send a message to a specific entity.
-         *
-         * \param eid The EntityId to send the RequestId to.
-         * \param rid The RequestId to send.
-         * \param p The Payload to send.
-         * \sa sendMessageToEntity(EntityId, RequestId) const
-         * \sa sendMessageToEntity(EntityId, RequestId, const Message&) const
-         */
+        inline void sendMessageToEntity(EntityId eid, const std::string& name) const { sendMessageToEntity(eid, hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
         inline void sendMessageToEntity(EntityId eid, RequestId rid, const Payload& p) const { sendMessageToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), p)); }
-        /** \brief A convenience function for sending a message to a specific entity.
-         *
-         * \param eid The EntityId to send the message to.
-         * \param name The name of the message to send.
-         * \param p The Payload to send
-         */
-        inline void sendMessageToEntity(EntityId eid, const std::string& name, const Payload& p) const { sendMessageToEntity(eid, getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline void sendMessageToEntity(EntityId eid, const std::string& name, const Payload& p) const { sendMessageToEntity(eid, hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline void sendMessageToEntity(EntityId eid, const std::string& name, const Message& m) const { sendMessageToEntity(eid, hash::hashString(name), m); }
 
-        /** \brief A convenience function for sending a message to an entity.
-         * \note Note that this function is slower than using the RequestId as it has to run an ID
-         * lookup, if you want to send many messages then you might want to consider grabbing the
-         * RequestId in advance and reusing it.
-         *
-         * \param eid The EntityId to send the message to.
-         * \param name The name of the message to send.
-         * \param m The Message data to send.
-         * \sa sendMessageToEntity(EntityId, RequestId, const Message&) const
-         */
-        inline void sendMessageToEntity(EntityId eid, const std::string& name, const Message& m) const { sendMessageToEntity(eid, getMessageRequestId(name), m); }
-
-        inline Message sendQuestionToEntity(EntityId eid, const std::string& name, const Message& m) const { return sendQuestionToEntity(eid, getMessageRequestId(name), m); }
-        inline Message sendQuestionToEntity(EntityId eid, RequestId rid, const Payload& p) const { return sendQuestionToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendQuestionToEntity(EntityId eid, const std::string& name, const Payload& p) const { return sendQuestionToEntity(eid, getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), p)); }
         inline Message sendQuestionToEntity(EntityId eid, RequestId rid) const { return sendQuestionToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline Message sendQuestionToEntity(EntityId eid, const std::string& name) const { return sendQuestionToEntity(eid, getMessageRequestId(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
+        inline Message sendQuestionToEntity(EntityId eid, const std::string& name, const Message& m) const { return sendQuestionToEntity(eid, hash::hashString(name), m); }
+        inline Message sendQuestionToEntity(EntityId eid, RequestId rid, const Payload& p) const { return sendQuestionToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline Message sendQuestionToEntity(EntityId eid, const std::string& name, const Payload& p) const { return sendQuestionToEntity(eid, hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline Message sendQuestionToEntity(EntityId eid, const std::string& name) const { return sendQuestionToEntity(eid, hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
         ///@}
 
         // Utility functions
@@ -389,7 +249,7 @@ namespace Kunlaboro
          *
          * \returns Is the Component valid.
          */
-        inline bool isValid() const { return mOwner != 0 && mId != 0 && mEntitySystem != NULL && !mName.empty()/* && !mDestroyed*/; }
+        inline bool isValid() const { return mOwner != 0 && mId != 0 && mEntitySystem != NULL && !mName.empty() && mEntitySystem->isValid(getOwnerId()) /* && !mDestroyed*/; }
 
         /** \brief Get the name of the Component.
          *
@@ -504,43 +364,41 @@ namespace Kunlaboro
     template<class T>
     void Component::requestMessage(const std::string& name, void (T::*f)(Message&), bool local) const
     {
-        requestMessage(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
+        requestMessage(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::requestMessage(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        requestMessage(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
+        requestMessage(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::unrequestMessage(const std::string& name, void (T::*f)(Message&), bool local) const
     {
-        unrequestMessage(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
+        unrequestMessage(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::unrequestMessage(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        unrequestMessage(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
+        unrequestMessage(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::requestComponent(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        requestComponent(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
+        requestComponent(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::requireComponent(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        requireComponent(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
+        requireComponent(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 }
 
 std::ostream& operator<<(std::ostream& os, const Kunlaboro::Component& c);
-
-#endif // _KUNLABORO_COMPONENT_HPP
 
 /** \class Kunlaboro::Component
 *

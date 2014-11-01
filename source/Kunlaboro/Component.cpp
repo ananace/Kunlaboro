@@ -26,6 +26,7 @@ void Component::requestMessage(const std::string& name, MessageFunction callback
 {
     ComponentRequested req;
     req.name = name;
+    req.hash = hash::hashString(name);
     req.reason = Reason_Message;
 
     ComponentRegistered reg;
@@ -44,6 +45,7 @@ void Component::unrequestMessage(const std::string& name, bool local) const
 {
     ComponentRequested req;
     req.name = name;
+    req.hash = hash::hashString(name);
     req.reason = Reason_Message;
 
     ComponentRegistered reg;
@@ -61,6 +63,7 @@ void Component::requestComponent(const std::string& name, MessageFunction callba
 {
     ComponentRequested req;
     req.name = name;
+    req.hash = hash::hashString(name);
     req.reason = Reason_Component;
 
     ComponentRegistered reg;
@@ -79,6 +82,7 @@ void Component::requireComponent(const std::string& name, MessageFunction callba
 {
     ComponentRequested req;
     req.name = name;
+    req.hash = hash::hashString(name);
     req.reason = Reason_Component;
 
     ComponentRegistered reg;
@@ -98,11 +102,6 @@ void Component::changeRequestPriority(RequestId rid, int priority) const
     mEntitySystem->reprioritizeRequest(const_cast<Component*>(this), rid, priority);
 }
 
-RequestId Component::getMessageRequestId(const std::string& name) const
-{
-    return mEntitySystem->getMessageRequestId(Reason_Message, name);
-}
-
 void Component::sendMessage(RequestId id, const Message& m) const
 {
     Message msg = m;
@@ -120,7 +119,7 @@ Message Component::sendQuestion(RequestId id, const Message& m) const
 void Component::sendGlobalMessage(RequestId id, const Message& m) const
 {
     Message msg = m;
-    mEntitySystem->sendGlobalMessage(id, msg);
+    mEntitySystem->sendSafeGlobalMessage(id, msg);
 }
 
 Message Component::sendGlobalQuestion(RequestId id, const Message& m) const

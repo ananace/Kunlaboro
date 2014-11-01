@@ -45,7 +45,7 @@ SCENARIO("Threaded message passing")
 
             std::list<std::thread*> threads = {
                 new std::thread([eid1, &es, &value]() {
-                    auto rid = es.getMessageRequestId(Kunlaboro::Reason_Message, "Increment");
+                    auto rid = Kunlaboro::hash::hashString("Increment");
                     Kunlaboro::Message msg;
                     msg.payload = &value;
 
@@ -55,7 +55,7 @@ SCENARIO("Threaded message passing")
                     }
                 }),
                 new std::thread([eid2, &es, &value]() {
-                    auto rid = es.getMessageRequestId(Kunlaboro::Reason_Message, "Decrement");
+                    auto rid = Kunlaboro::hash::hashString("Decrement");
                     Kunlaboro::Message msg;
                     msg.payload = &value;
 

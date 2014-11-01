@@ -1,5 +1,4 @@
-#ifndef _KUNLABORO_ENTITYSYSTEM_HPP
-#define _KUNLABORO_ENTITYSYSTEM_HPP
+#pragma once
 
 #include <Kunlaboro/Defines.hpp>
 
@@ -214,16 +213,6 @@ namespace Kunlaboro
          */
         void reprioritizeRequest(Component* comp, RequestId rid, int priority);
 
-        /** \brief Get a RequestId for the specified reason and string.
-         *
-         * This will return the RequestId for the specified message, you can use such a RequestId
-         * to speed up the calling of message sending.
-         *
-         * \param reason The reason for the request.
-         * \param name The name of the request.
-         */
-        RequestId getMessageRequestId(MessageReason reason, const std::string& name);
-
         /** \brief Send a global message to all the Component objects in the EntitySystem.
          *
          * This function will send a message to all the Component objects that have been registered
@@ -232,7 +221,23 @@ namespace Kunlaboro
          * \param id The RequestId to send.
          * \param msg The Message to send.
          */
-        void sendGlobalMessage(RequestId id, Message& msg);
+        void sendSafeGlobalMessage(RequestId id, Message& msg)
+        {
+            auto& reqs = mGlobalMessageRequests[id];
+
+            for (auto& it : reqs)
+            {
+                it.callback(msg);
+
+                if (msg.handled)
+                {
+                    msg.sender = it.component;
+                    break;
+                }
+            }
+        }
+        void sendUnsafeGlobalMessage(RequestId id, Message& msg);
+        inline void sendGlobalMessage(RequestId id, Message& msg) { sendUnsafeGlobalMessage(id, msg); }
         /** \brief Send a local message to all the Component objects in the specified entity.
          *
          * This function will send a message to the specified entity and all the Component objects
@@ -242,7 +247,23 @@ namespace Kunlaboro
          * \param rid The RequestId to send.
          * \param msg The Message to send.
          */
-        void sendLocalMessage(EntityId eid, RequestId rid, Message& msg);
+        inline void sendSafeLocalMessage(EntityId eid, RequestId rid, Message& msg)
+        {
+            auto& reqs = mEntities[eid]->localMessageRequests[rid];
+
+            for (auto& it : reqs)
+            {
+                it.callback(msg);
+
+                if (msg.handled)
+                {
+                    msg.sender = it.component;
+                    break;
+                }
+            }
+        }
+        void sendUnsafeLocalMessage(EntityId eid, RequestId id, Message& msg);
+        inline void sendLocalMessage(EntityId eid, RequestId id, Message& msg) { sendUnsafeLocalMessage(eid, id, msg); }
 
         /** \name Convenience functions
          * These functions exist to cut down on the amount of code you need to write
@@ -263,7 +284,7 @@ namespace Kunlaboro
         inline void sendGlobalMessage(const std::string& n, const Payload& p = 0)
         {
             Message msg(Type_Message, NULL, p);
-            sendGlobalMessage(getMessageRequestId(Reason_Message, n), msg);
+            sendUnsafeGlobalMessage(hash::hashString(n), msg);
         }
 
         /** \brief Send a local message to all the Component objects in the specified entity.
@@ -279,7 +300,7 @@ namespace Kunlaboro
         inline void sendLocalMessage(EntityId eid, const std::string& n, const Payload& p = 0)
         {
             Message msg(Type_Message, NULL, p);
-            sendLocalMessage(eid, getMessageRequestId(Reason_Message, n), msg);
+            sendUnsafeLocalMessage(eid, hash::hashString(n), msg);
         }
         ///@}
 
@@ -325,7 +346,9 @@ namespace Kunlaboro
             EntityId id; ///< The EntityId of the Entity.
             bool finalised; ///< If the Entity is finalised.
             ComponentMap components; ///< The Component objects stored in this Entity.
-            RequestMap localRequests; ///< The local requests the Entity listens for.
+
+            RequestMap localComponentRequests; ///< The local requests the Entity listens for.
+            RequestMap localMessageRequests; ///< The local requests the Entity listens for.
         };
 
         /// A container for anything that happened during a frozen period.
@@ -359,16 +382,6 @@ namespace Kunlaboro
             bool needsProcessing;
         } mFrozenData;
 
-        /** \brief Get an existing RequestId for a message.
-         *
-         * If a RequestId does not exist for the specified reason and name, then this function will return 0.
-         *
-         * \param reason The reason for the request.
-         * \param name The name of the request.
-         * \returns The RequestId of the existing request.
-         */
-        RequestId getExistingRequestId(MessageReason reason, const std::string& name);
-
         ComponentId mComponentCounter; ///< The Component counter.
         RequestId mRequestCounter; ///< The Request counter.
         EntityId mEntityCounter; ///< The Entity counter.
@@ -379,7 +392,10 @@ namespace Kunlaboro
         std::unordered_map<std::string, ComponentFactory> mRegisteredComponents; ///< Registered Components in the EntitySystem
         std::unordered_map<std::string, std::vector<std::string>> mRegisteredTemplates; ///< Registered Templates in the EntitySystem
         std::unordered_map<EntityId, std::vector<std::string> > mRequiredComponents; ///< Required Components in entities.
-        RequestMap mGlobalRequests; ///< Globally registered requests.
+        
+        RequestMap mGlobalMessageRequests; ///< Globally registered requests.
+        RequestMap mGlobalComponentRequests; ///< Globally registered requests.
+
         std::unordered_map<ComponentId, std::vector<ComponentRequested> > mRequestsByComponent; ///< Requests by component.
         std::unordered_map<EntityId,Entity*> mEntities; ///< List of created entities.
 
@@ -396,8 +412,6 @@ namespace Kunlaboro
         registerComponent(name, [](){ return new T(); });
     }
 }
-
-#endif
 
 /** \class Kunlaboro::EntitySystem
 *

@@ -25,7 +25,7 @@ struct RequestFind
 
     inline bool operator()(const ComponentRequested& b) const
     {
-        return req->name == b.name && req->reason == b.reason;
+        return req->hash == b.hash && req->reason == b.reason;
     }
 };
 
@@ -208,14 +208,23 @@ void EntitySystem::destroyComponent(Component* component)
     std::vector<ComponentRequested>& reqs = mRequestsByComponent[component->getId()];
     for (auto& it : reqs)
     {
-        RequestId reqid = getExistingRequestId(it.reason, it.name);
+        RequestId reqid = it.hash;
 
         if (reqid == 0)
             continue;
 
-		auto& reqList = mGlobalRequests[reqid];
-		auto toRemove = std::remove_if(reqList.begin(), reqList.end(), [component](ComponentRegistered& req) { return req.component == component; });
-		reqList.erase(toRemove, reqList.end());
+        if (it.reason == Reason_Component)
+        {
+            auto& reqList = mGlobalComponentRequests[reqid];
+            auto toRemove = std::remove_if(reqList.begin(), reqList.end(), [component](ComponentRegistered& req) { return req.component == component; });
+            reqList.erase(toRemove, reqList.end());
+        }
+        else
+        {
+            auto& reqList = mGlobalComponentRequests[reqid];
+            auto toRemove = std::remove_if(reqList.begin(), reqList.end(), [component](ComponentRegistered& req) { return req.component == component; });
+            reqList.erase(toRemove, reqList.end());
+        }
     }
 
 	Entity* ent = mEntities[component->getOwnerId()];
@@ -226,7 +235,12 @@ void EntitySystem::destroyComponent(Component* component)
 		comps.erase(toRemove, comps.end());
 	}
 
-	for (auto& regs : ent->localRequests)
+    for (auto& regs : ent->localComponentRequests)
+    {
+        auto toRemove = std::remove_if(regs.second.begin(), regs.second.end(), [component](ComponentRegistered& req) { return req.component == component; });
+        regs.second.erase(toRemove, regs.second.end());
+    }
+	for (auto& regs : ent->localMessageRequests)
 	{
 		auto toRemove = std::remove_if(regs.second.begin(), regs.second.end(), [component](ComponentRegistered& req) { return req.component == component; });
 		regs.second.erase(toRemove, regs.second.end());
@@ -234,18 +248,18 @@ void EntitySystem::destroyComponent(Component* component)
 
     Message msg(Type_Destroy, component);
 
-    RequestId reqid = getExistingRequestId(Reason_Component, component->getName());
+    RequestId reqid = hash::hashString(component->getName().c_str());
 
     if (reqid != 0)
     {
-        auto reqs = mGlobalRequests[reqid];
+        auto reqs = mGlobalComponentRequests[reqid];
         for (auto& it : reqs)
         {
             if (it.component != component)
                 it.callback(msg);
         }
 
-        reqs = ent->localRequests[reqid];
+        reqs = ent->localComponentRequests[reqid];
         for (auto& it : reqs)
         {
             it.callback(msg);
@@ -275,21 +289,21 @@ void EntitySystem::addComponent(EntityId entity, Component* component)
 
     component->addedToEntity();
 
-    RequestId reqid = getExistingRequestId(Reason_Component, component->getName());
+    RequestId reqid = hash::hashString(component->getName().c_str());
 
     if (reqid == 0)
         return;
 
     Message msg(Type_Create, component);
 
-    auto reqs = mGlobalRequests[reqid];
+    auto reqs = mGlobalComponentRequests[reqid];
     for (auto& it : reqs)
     {
         if (it.component != component)
             it.callback(msg);
     }
 
-    reqs = ent->localRequests[reqid];
+    reqs = ent->localComponentRequests[reqid];
     for (auto& it : reqs)
     {
         it.callback(msg);
@@ -316,43 +330,57 @@ void EntitySystem::removeComponent(EntityId entity, Component* component)
     std::vector<ComponentRequested>& reqs = mRequestsByComponent[component->getId()];
     for (auto& it : reqs)
     {
-        RequestId reqid = getExistingRequestId(it.reason, it.name);
+        RequestId reqid = it.hash;
 
         if (reqid == 0)
             continue;
 
-		auto& reqList = mGlobalRequests[reqid];
-		auto toRemove = std::remove_if(reqList.begin(), reqList.end(), [component](ComponentRegistered& req) { return req.component == component; });
-		reqList.erase(toRemove, reqList.end());
+        if (it.reason == Reason_Component)
+        {
+            auto& reqList = mGlobalComponentRequests[reqid];
+            auto toRemove = std::remove_if(reqList.begin(), reqList.end(), [component](ComponentRegistered& req) { return req.component == component; });
+            reqList.erase(toRemove, reqList.end());
+        }
+        else
+        {
+            auto& reqList = mGlobalComponentRequests[reqid];
+            auto toRemove = std::remove_if(reqList.begin(), reqList.end(), [component](ComponentRegistered& req) { return req.component == component; });
+            reqList.erase(toRemove, reqList.end());
+        }
     }
 
 	auto toRemove = std::remove_if(comps.begin(), comps.end(), [component](Component* req) { return req == component; });
 	comps.erase(toRemove, comps.end());
 
-    for (auto& regs : ent->localRequests)
+    for (auto& regs : ent->localComponentRequests)
 	{
 		auto toRemove = std::remove_if(regs.second.begin(), regs.second.end(), [component](ComponentRegistered& req) { return req.component == component; });
 		regs.second.erase(toRemove, regs.second.end());
 	}
+    for (auto& regs : ent->localMessageRequests)
+    {
+        auto toRemove = std::remove_if(regs.second.begin(), regs.second.end(), [component](ComponentRegistered& req) { return req.component == component; });
+        regs.second.erase(toRemove, regs.second.end());
+    }
 
     component->setOwner(0);
 	comps.erase(std::remove(comps.begin(), comps.end(), component), comps.end());
 
-    RequestId reqid = getExistingRequestId(Reason_Component, component->getName());
+    RequestId reqid = hash::hashString(component->getName().c_str());
 
     if (reqid == 0)
         return;
 
     Message msg(Type_Destroy, component);
 
-    auto requests = mGlobalRequests[reqid];
+    auto requests = mGlobalComponentRequests[reqid];
     for (auto& it : requests)
     {
         if (it.component != component)
             it.callback(msg);
     }
 
-    requests = ent->localRequests[reqid];
+    requests = ent->localComponentRequests[reqid];
     for (auto& it : requests)
     {
         it.callback(msg);
@@ -393,26 +421,15 @@ std::vector<Component*> EntitySystem::getAllComponentsOnEntity(EntityId entity, 
 	return components;
 }
 
-RequestId EntitySystem::getMessageRequestId(MessageReason reason, const std::string& name)
-{
-	auto& nameMap = mNameMap[reason];
-	if (nameMap.count(name) == 0)
-    {
-		nameMap[name] = mRequestCounter;
-        mIdMap[reason][mRequestCounter] = name;
-
-        return mRequestCounter++;
-    }
-
-	return nameMap[name];
-}
-
 void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const ComponentRegistered& reg)
 {
     if (!reg.component->isValid())
         throw std::runtime_error("Can't register a request from an invalid component");
 
-    RequestId reqid = getMessageRequestId(req.reason, req.name);
+    RequestId reqid = req.hash;
+
+    if (reqid == 0)
+        throw std::runtime_error("Invalid request hash");
 
     if (isFrozen(reqid))
     {
@@ -421,7 +438,10 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
         return;
     }
 
-    insertedPush(mGlobalRequests[reqid], reg, RequestSort);
+    if (req.reason == Reason_Component)
+        insertedPush(mGlobalComponentRequests[reqid], reg, RequestSort);
+    else
+        insertedPush(mGlobalMessageRequests[reqid], reg, RequestSort);
 
     if (reg.required && !mEntities[reg.component->getOwnerId()]->finalised)
         mRequiredComponents[reg.component->getOwnerId()].push_back(req.name);
@@ -434,6 +454,8 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
     Message msg(Type_Create);
     for (auto& ent : mEntities)
     {
+        if (!ent.second)
+            continue;
         if (ent.second->components.count(req.name) == 0)
 			continue;
 
@@ -453,7 +475,10 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
 
 void EntitySystem::registerLocalRequest(const ComponentRequested& req, const ComponentRegistered& reg)
 {
-    RequestId reqid = getMessageRequestId(req.reason, req.name);
+    RequestId reqid = req.hash;
+
+    if (reqid == 0)
+        throw std::runtime_error("Invalid request hash");
 
     if (isFrozen(reqid))
     {
@@ -464,8 +489,10 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
 
     Entity* ent = mEntities[reg.component->getOwnerId()];
 
-    std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
-    insertedPush(regs, reg, RequestSort);
+    if (req.reason == Reason_Component)
+        insertedPush(ent->localComponentRequests[reqid], reg, RequestSort);
+    else
+        insertedPush(ent->localMessageRequests[reqid], reg, RequestSort);
 
     if (reg.required && !ent->finalised)
         mRequiredComponents[ent->id].push_back(req.name);
@@ -496,7 +523,10 @@ void EntitySystem::removeGlobalRequest(const ComponentRequested& req, const Comp
     if (!reg.component->isValid())
         throw std::runtime_error("Can't remove a request from an invalid component");
 
-    RequestId reqid = getMessageRequestId(req.reason, req.name);
+    RequestId reqid = req.hash;
+
+    if (reqid == 0)
+        throw std::runtime_error("Invalid request hash");
 
     if (isFrozen(reqid))
     {
@@ -505,9 +535,15 @@ void EntitySystem::removeGlobalRequest(const ComponentRequested& req, const Comp
         return;
     }
 
-    if (mGlobalRequests.count(reqid) > 0)
+    RequestMap* chooser = &mGlobalComponentRequests;
+    if (req.reason == Reason_Message)
+        chooser = &mGlobalMessageRequests;
+
+    RequestMap& reqMap = *chooser;
+
+    if (reqMap.count(reqid) > 0)
     {
-        std::deque<ComponentRegistered>& regs = mGlobalRequests[reqid];
+        std::deque<ComponentRegistered>& regs = reqMap[reqid];
 		auto toRemove = std::remove_if(regs.begin(), regs.end(), [this, reg, req, reqid](ComponentRegistered& it) {
 			if (it.component != reg.component)
 				return false;
@@ -516,9 +552,9 @@ void EntitySystem::removeGlobalRequest(const ComponentRequested& req, const Comp
 			{
 				Entity* ent = mEntities[reg.component->getOwnerId()];
 
-				if (ent->localRequests.count(reqid) > 0)
+				if (ent->localMessageRequests.count(reqid) > 0)
 				{
-					std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
+					std::deque<ComponentRegistered>& regs = ent->localMessageRequests[reqid];
 					regs.erase(std::remove_if(regs.begin(), regs.end(), [reg](ComponentRegistered& it) {return it.component == reg.component; }), regs.end());
 				}
 			}
@@ -540,7 +576,10 @@ void EntitySystem::removeLocalRequest(const ComponentRequested& req, const Compo
     if (!reg.component->isValid())
         throw std::runtime_error("Can't remove a request from an invalid component");
 
-    RequestId reqid = getMessageRequestId(req.reason, req.name);
+    RequestId reqid = req.hash;
+
+    if (reqid == 0)
+        throw std::runtime_error("Invalid request hash");
 
     if (isFrozen(reqid))
     {
@@ -551,15 +590,24 @@ void EntitySystem::removeLocalRequest(const ComponentRequested& req, const Compo
 
     Entity* ent = mEntities[reg.component->getOwnerId()];
 
-	if (ent->localRequests.count(reqid) > 0)
+    RequestMap* chooser = &ent->localComponentRequests;
+    if (req.reason == Reason_Message)
+        chooser = &ent->localMessageRequests;
+
+    RequestMap& reqMap = *chooser;
+
+    if (reqMap.count(reqid) > 0)
 	{
-		std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
+        std::deque<ComponentRegistered>& regs = reqMap[reqid];
 		regs.erase(std::remove_if(regs.begin(), regs.end(), [reg](ComponentRegistered& it) {return it.component == reg.component; }), regs.end());
 	}
 }
 
 void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int priority)
 {
+    if (reqid == 0)
+        throw std::runtime_error("Invalid request hash");
+
     if (isFrozen(reqid))
     {
         mFrozenData.frozenRequests[reqid].repriorities.push_back(std::pair<Component*, std::pair<RequestId, int> >(comp, std::pair<RequestId, int>(reqid, priority)));
@@ -569,9 +617,9 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
 
     Entity* ent = mEntities[comp->getOwnerId()];
 
-	if (ent->localRequests.count(reqid) > 0)
+	if (ent->localMessageRequests.count(reqid) > 0)
     {
-        std::deque<ComponentRegistered>& regs = ent->localRequests[reqid];
+        std::deque<ComponentRegistered>& regs = ent->localMessageRequests[reqid];
         for (auto it = regs.begin(); it != regs.end(); ++it)
             if (it->component == comp)
             {
@@ -585,9 +633,9 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
             }
     }
 
-    if (mGlobalRequests.count(reqid) > 0)
+    if (mGlobalMessageRequests.count(reqid) > 0)
     {
-        std::deque<ComponentRegistered>& regs = mGlobalRequests[reqid];
+        std::deque<ComponentRegistered>& regs = mGlobalMessageRequests[reqid];
         for (auto it = regs.begin(); it != regs.end(); ++it)
             if (it->component == comp)
             {
@@ -602,12 +650,16 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
     }
 }
 
-void EntitySystem::sendGlobalMessage(RequestId reqid, Message& msg)
+void EntitySystem::sendUnsafeGlobalMessage(RequestId reqid, Message& msg)
 {
     if (msg.sender != 0 && !msg.sender->isValid())
         throw std::runtime_error("Invalid sender for global message");
+    if (reqid == 0)
+        throw std::runtime_error("Invalid request hash");
+    if (msg.type != Type_Message)
+        throw std::runtime_error("Invalid message type");
 
-    auto reqs = mGlobalRequests[reqid];
+    std::deque<ComponentRegistered> reqs = mGlobalMessageRequests[reqid];
 
     for (auto& it : reqs)
     {
@@ -621,17 +673,21 @@ void EntitySystem::sendGlobalMessage(RequestId reqid, Message& msg)
     }
 }
 
-void EntitySystem::sendLocalMessage(EntityId entity, RequestId reqid, Message& msg)
+void EntitySystem::sendUnsafeLocalMessage(EntityId entity, RequestId reqid, Message& msg)
 {
     if (entity == 0)
         throw std::runtime_error("Can't send a message to a non-existant entity");
+    if (reqid == 0)
+        throw std::runtime_error("Invalid request hash");
+    if (msg.type != Type_Message)
+        throw std::runtime_error("Invalid message type");
 
     Entity* ent = mEntities[entity];
 
     if (ent == NULL)
         throw std::runtime_error("Can't send a message to a non-existant entity");
 
-    auto reqs = ent->localRequests[reqid];
+    std::deque<ComponentRegistered> reqs = ent->localMessageRequests[reqid];
 
 	for (auto& it : reqs)
     {
@@ -710,17 +766,4 @@ void EntitySystem::unfreeze(RequestId rid)
 
     if (mThreaded)
         lock.mutex.unlock();
-}
-
-RequestId EntitySystem::getExistingRequestId(MessageReason reason, const std::string& name)
-{
-	auto& nameMap = mNameMap[reason];
-    if (nameMap.count(name) == 0)
-        return 0;
-
-	RequestId reqid = nameMap[name];
-    //if (mGlobalRequests.count(reqid) == 0)
-    //    return 0;
-
-    return reqid;
 }

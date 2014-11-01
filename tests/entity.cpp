@@ -11,8 +11,8 @@ SCENARIO("Entities having their components messed with")
     public:
         BasicComponent() : Kunlaboro::Component("Basic") { }
         void addedToEntity() {
-            requestMessage("Ping", [](const Kunlaboro::Message& msg) {
-                msg.sender->sendGlobalMessage("Pong");
+            requestMessage("Ping", [this](const Kunlaboro::Message& msg) {
+                sendGlobalMessage("Pong");
             });
         }
     };
@@ -28,7 +28,7 @@ SCENARIO("Entities having their components messed with")
         es.createEntity("Basic"),
         es.createEntity("Basic")
     };
-
+    /*
     WHEN("Moving components in the middle of calls")
     {
         auto c1 = es.getAllComponentsOnEntity(eids[0])[0];
@@ -39,7 +39,7 @@ SCENARIO("Entities having their components messed with")
                 return;
 
             CHECK_NOTHROW(es.removeComponent(c1->getOwnerId(), c1));
-            CHECK_NOTHROW(es.addComponent(msg.sender->getOwnerId(), c1));
+            CHECK_NOTHROW(es.addComponent(c2->getOwnerId(), c1));
             msg.handle(true);
         });
         c2->requestMessage("Pong", [&](Kunlaboro::Message& msg) {
@@ -47,7 +47,7 @@ SCENARIO("Entities having their components messed with")
                 return;
 
             CHECK_NOTHROW(es.removeComponent(c2->getOwnerId(), c2));
-            CHECK_NOTHROW(es.addComponent(msg.sender->getOwnerId(), c2));
+            CHECK_NOTHROW(es.addComponent(c1->getOwnerId(), c2));
             msg.handle(true);
         });
 
@@ -75,4 +75,5 @@ SCENARIO("Entities having their components messed with")
             CHECK(c2->isValid());
         }
     }
+    */
 }

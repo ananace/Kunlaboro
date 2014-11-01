@@ -29,6 +29,7 @@ SCENARIO("Message passing benchmark",
     };
 
     Kunlaboro::Message msg;
+    Kunlaboro::RequestId rid = Kunlaboro::hash::hash_func1::hash("Ping");
     for (uint32_t i = 0; i < 1000000; ++i)
-        es.sendGlobalMessage(es.getMessageRequestId("Ping"), msg);
+        es.sendSafeGlobalMessage(rid, msg);
 }

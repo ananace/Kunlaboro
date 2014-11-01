@@ -111,7 +111,7 @@ SCENARIO("Message passing")
         {
             Kunlaboro::Message msg;
 
-            es.sendGlobalMessage(es.getMessageRequestId(Kunlaboro::Reason_Message, "GlobalTestMessage"), msg);
+            es.sendGlobalMessage(Kunlaboro::hash::hashString("GlobalTestMessage"), msg);
 
             THEN("The message is handled correctly")
             {
@@ -124,7 +124,7 @@ SCENARIO("Message passing")
         {
             Kunlaboro::Message msg;
 
-            es.sendLocalMessage(eid, es.getMessageRequestId(Kunlaboro::Reason_Message, "LocalTestMessage"), msg);
+            es.sendLocalMessage(eid, Kunlaboro::hash::hashString("LocalTestMessage"), msg);
 
             THEN("The message is handled correctly")
             {
@@ -137,7 +137,7 @@ SCENARIO("Message passing")
         {
             Kunlaboro::Message msg;
 
-            es.sendGlobalMessage(es.getMessageRequestId(Kunlaboro::Reason_Message, "LocalTestMessage"), msg);
+            es.sendGlobalMessage(Kunlaboro::hash::hashString("LocalTestMessage"), msg);
 
             THEN("The message is left unhandled")
             {
@@ -149,7 +149,7 @@ SCENARIO("Message passing")
         {
             Kunlaboro::Message msg;
 
-            es.sendLocalMessage(eid, es.getMessageRequestId(Kunlaboro::Reason_Message, "GlobalTestMessage"), msg);
+            es.sendLocalMessage(eid, Kunlaboro::hash::hashString("GlobalTestMessage"), msg);
 
             THEN("The message is left unhandled")
             {
@@ -172,7 +172,7 @@ SCENARIO("Message passing")
         {
             Kunlaboro::Message msg;
 
-            es.sendGlobalMessage(es.getMessageRequestId(Kunlaboro::Reason_Message, "GlobalTestMessage"), msg);
+            es.sendGlobalMessage(Kunlaboro::hash::hashString("GlobalTestMessage"), msg);
 
             THEN("The message is handled correctly")
             {
@@ -186,7 +186,7 @@ SCENARIO("Message passing")
 
             Kunlaboro::Message msg;
 
-            es.sendGlobalMessage(es.getMessageRequestId(Kunlaboro::Reason_Message, "GlobalTestMessage"), msg);
+            es.sendGlobalMessage(Kunlaboro::hash::hashString("GlobalTestMessage"), msg);
 
             THEN("The message is recieved by the correct component")
             {
