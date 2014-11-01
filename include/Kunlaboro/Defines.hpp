@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <cstdint>
 #include <string>
 #include <deque>
@@ -40,8 +41,11 @@ namespace Kunlaboro
         template<typename T>
         Payload(const T& data) : mData(new T(data)), mSize(sizeof(T)), mType(typeid(T)) { }
 
-        Payload(nullptr_t null) : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
-        explicit Payload() : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
+        template<typename T>
+        Payload(const T* data) : mData(new T(data)), mSize(sizeof(T)), mType(typeid(T)) { }
+
+        Payload(std::nullptr_t) : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
+        Payload() : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
         ~Payload() { if (mData) delete mData; }
 
         Payload& operator=(Payload p)
