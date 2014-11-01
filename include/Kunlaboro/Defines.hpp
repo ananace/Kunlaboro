@@ -39,10 +39,18 @@ namespace Kunlaboro
 
         template<typename T>
         Payload(const T& data) : mData(new T(data)), mSize(sizeof(T)), mType(typeid(T)) { }
+        template<typename T>
+        Payload(const T* data) : mData(new T(*data)), mSize(sizeof(T)), mType(typeid(T)) { }
 
-        Payload(nullptr_t null) : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
-        explicit Payload() : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
-        ~Payload() { if (mData) delete mData; }
+        Payload(std::nullptr_t null) : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
+        Payload() : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
+        ~Payload()
+        {
+            char* test = new (mData) char[mSize];
+
+            if (mData)
+                delete[] test;
+        }
 
         Payload& operator=(Payload p)
         {
@@ -68,10 +76,20 @@ namespace Kunlaboro
     class Optional
     {
     public:
-        explicit Optional() : mVal(nullptr) { }
-        explicit Optional(const T& val) : mVal(new T(val)) { }
+        Optional() : mVal(nullptr) { }
+        Optional(std::nullptr_t) : mVal(nullptr) { }
 
-        Optional(const Optional<T>& copy) : mVal(new T(*copy.mVal)) { }
+        Optional(const T& val) : mVal(new T(val)) { }
+
+        Optional(const Optional<T>& copy) : mVal(nullptr)
+        {
+            if (copy.mVal)
+                mVal = new T(*copy.mVal);
+        }
+        Optional(Optional<T>&& rhs) : mVal(std::move(rhs.mVal))
+        {
+            rhs.mVal = nullptr;
+        }
         ~Optional() {
             if (mVal) delete mVal;
         }
@@ -82,6 +100,12 @@ namespace Kunlaboro
         T get() const {
             return *mVal;
         }
+
+        operator bool() const { return mVal != nullptr; }
+        bool operator!() const { return mVal == nullptr; }
+
+        T operator*() const { return *mVal; }
+        T* operator->() const { return mVal; }
 
     private:
         T* mVal;
@@ -128,6 +152,7 @@ namespace Kunlaboro
     {
         Component* component;     ///< The Component the registered a request.
         std::function<void()> callback; ///< The callback in question.
+        const std::type_info* type;
         bool required;            ///< Is this a requirement and not a request.
         int priority;             ///< The priority of this request.
     };

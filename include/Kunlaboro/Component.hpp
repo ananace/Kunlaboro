@@ -229,7 +229,7 @@ namespace Kunlaboro
          * \param local Should this request only listen to local message?
          */
         template<class T, class R, typename... Args>
-        inline void requestMessage(const std::string& name, R (T::*f)(Args...), bool local = false) const;
+        inline void requestMessage(const std::string& name, R (T::*f)(Args...), bool local = false);
         /** \brief Add a request to be told whenever a specific component is added.
          *
          * This is a convenience function that lets you use a class method as a MessageFunction
@@ -240,7 +240,7 @@ namespace Kunlaboro
          * \param local Should the component only care about locally added components.
          */
         template<class T>
-        inline void requestComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local = true) const;
+        inline void requestComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local = true);
         /** \brief Add a request to be told whenever a specific component is added, and if it's not then don't create the component.
          *
          * This is a convenience function that lets you use a class method as a MessageFunction
@@ -251,7 +251,7 @@ namespace Kunlaboro
          * \param local Should the component only care about locally added components.
          */
         template<class T>
-        inline void requireComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local = true) const;
+        inline void requireComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local = true);
 
     protected:
         /// The constructor sets the name of the component and initializes default values.
@@ -277,25 +277,6 @@ namespace Kunlaboro
 
         friend class EntitySystem;
     };
-
-
-    template<class T, class R, typename... Args>
-    void Component::requestMessage(const std::string& name, R(T::*f)(Args...), bool local) const
-    {
-        requestMessage(hash::hashString(name), std::bind(f, (T*)(this)), local);
-    }
-
-    template<class T>
-    void Component::requestComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local) const
-    {
-        requestComponent(hash::hashString(name), std::bind1st(f, (T*)(this)), local);
-    }
-
-    template<class T>
-    void Component::requireComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local) const
-    {
-        requireComponent(hash::hashString(name), std::bind1st(f, (T*)(this)), local);
-    }
 }
 
 std::ostream& operator<<(std::ostream& os, const Kunlaboro::Component& c);

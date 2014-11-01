@@ -29,10 +29,7 @@ void Component::unrequestMessage(const std::string& name, bool local) const
     req.hash = hash::hashString(name);
     req.reason = Reason_Message;
 
-    ComponentRegistered reg;
-    reg.component = const_cast<Component*>(this);
-    reg.required = false;
-    reg.priority = 0;
+    ComponentRegistered reg = { const_cast<Component*>(this), [](){}, false, 0 };
 
     if (local)
         mEntitySystem->removeLocalRequest(req, reg);
