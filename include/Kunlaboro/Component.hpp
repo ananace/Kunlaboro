@@ -46,7 +46,20 @@ namespace Kunlaboro
          * \param func The function to call when the message is sent.
          * \param local Should this request only listen to messages directed to the local entity?
          */
-        void requestMessage(const std::string& message, MessageFunction func, bool local = false) const;
+        template<typename R, typename... Args>
+        void requestMessage(RequestId rid, const std::function<R(Args...)>& func, bool local = false) const
+        {
+            if (local)
+                getEntitySystem()->registerLocalMessage(*this, rid, func);
+            else
+                getEntitySystem()->registerGlobalMessage(*this, rid, func);
+        }
+
+        template<typename R, typename... Args>
+        void requestMessage(const std::string& request, const std::function<R(Args...)>& func, bool local = false) const
+        {
+            requestMessage(hash::hashString(request), func, local);
+        }
         /** \brief Removes a request for a specific message.
          *
          * This function will remove a request that was created by the requestMessage() function.
@@ -66,7 +79,7 @@ namespace Kunlaboro
          * \param local Should the component only care about locally added components.
          * \sa requireComponent()
          */
-        void requestComponent(const std::string& name, MessageFunction func, bool local = true) const;
+        void requestComponent(const std::string& name, const std::function<void(Component*, MessageType)>& func, bool local = true) const;
         /** \brief Add a request to be told whenever a specific component is added, and if it's not then don't create the component.
          *
          * This function takes the same parameters as requestParameter(), the difference
@@ -80,7 +93,7 @@ namespace Kunlaboro
          * \param local Should the component only care about locally added components.
          * \sa requestComponent()
          */
-        void requireComponent(const std::string& name, MessageFunction func, bool local = true) const;
+        void requireComponent(const std::string& name, const ComponentCallback& func, bool local = true) const;
 
         /** \brief Change the priority of a specific request.
          *
@@ -104,19 +117,11 @@ namespace Kunlaboro
          * \sa sendMessage(RequestId) const
          * \sa sendMessage(RequestId, const Payload&) const
          */
-        void sendMessage(RequestId id, const Message& msg) const;
-
-        /** \brief Send a question to the local entity.
-         *
-         * This function will send a question with the specified RequestId and Message object
-         * to the entity that contains the current Component.
-         *
-         * \param id The RequestId to send.
-         * \param msg The Message to send.
-         * \returns The response that was recieved, check if handled is set to true before
-         * assuming that something actually responded.
-         */
-        Message sendQuestion(RequestId id, const Message& msg) const;
+        template<typename R, typename... Args>
+        R sendMessage(RequestId id, Args... args) const
+        {
+            return getEntitySystem()->sendUnsafeLocalMessage(mOwner, id, args);
+        }
 
         /** \brief Send a message to the entire EntitySystem that the local entity is a part of.
          *
@@ -129,17 +134,11 @@ namespace Kunlaboro
          * \sa sendGlobalMessage(RequestId) const
          * \sa sendGlobalMessage(RequestId, const Payload&) const
          */
-        void sendGlobalMessage(RequestId id, const Message& msg) const;
-
-        /** \brief Send a message to the entire EntitySystem that the local entity is a part of.
-         *
-         *
-         * \param id The RequestId to send.
-         * \param msg The Message to send.
-         * \returns The response that was recieved, check if handled is set to true before
-         * assuming that something actually responded.
-         */
-        Message sendGlobalQuestion(RequestId id, const Message& msg) const;
+        template<typename R, typename... Args>
+        R sendGlobalMessage(RequestId id, Args... args) const
+        {
+            return getEntitySystem()->sendUnsafeGlobalMessage(id, args);
+        }
 
         /** \brief Send a message to a specific entity.
          *
@@ -153,61 +152,13 @@ namespace Kunlaboro
          * \sa sendMessageToEntity(EntityId, RequestId) const
          * \sa sendMessageToEntity(EntityId, RequestId, const Payload&) const
          */
-        void sendMessageToEntity(EntityId eid, RequestId rid, const Message& m) const;
+        template<typename R, typename... Args>
+        R sendMessageToEntity(EntityId eid, RequestId id, Args... args) const
+        {
+            return getEntitySystem()->sendUnsafeLocalMessage(eid, id, args);
+        }
 
-        /** \brief Send a question to a specific entity.
-         *
-         *
-         * \param eid The EntityId to send the RequestId to.
-         * \param rid The RequestId to send.
-         * \param m The Message to send.
-         * \returns The response that was recieved, check if handled is set to true before
-         * assuming that something actually responded.
-         */
-        Message sendQuestionToEntity(EntityId eid, RequestId rid, const Message& m) const;
-
-
-        /** \name Convenience functions
-         */
-        ///@{
         inline void changeRequestPriority(const std::string& name, int priority) const { changeRequestPriority(hash::hashString(name), priority); }
-
-        inline void sendMessage(RequestId id) const { sendMessage(id, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline void sendMessage(const std::string& name) const { sendMessage(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline void sendMessage(RequestId id, const Payload& p) const { sendMessage(id, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline void sendMessage(const std::string& name, const Payload& p) const { sendMessage(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline void sendMessage(const std::string& name, const Message& msg) const { sendMessage(hash::hashString(name), msg); }
-
-        inline Message sendQuestion(RequestId id) const { return sendQuestion(id, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline Message sendQuestion(const std::string& name) const { return sendQuestion(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline Message sendQuestion(RequestId id, const Payload& p) const { return sendQuestion(id, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendQuestion(const std::string& name, const Payload& p) const { return sendQuestion(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendQuestion(const std::string& name, const Message& msg) const { return sendQuestion(hash::hashString(name), msg); }
-
-        inline void sendGlobalMessage(RequestId id) const { sendGlobalMessage(id, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline void sendGlobalMessage(const std::string& name) const { sendGlobalMessage(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline void sendGlobalMessage(RequestId id, const Payload& p) const { sendGlobalMessage(id, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline void sendGlobalMessage(const std::string& name, const Payload& p) const { sendGlobalMessage(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline void sendGlobalMessage(const std::string& name, const Message& msg) const { sendGlobalMessage(hash::hashString(name), msg); }
-
-        inline Message sendGlobalQuestion(RequestId id) const { return sendGlobalQuestion(id, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline Message sendGlobalQuestion(const std::string& name) const { return sendGlobalQuestion(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline Message sendGlobalQuestion(RequestId id, const Payload& p) const { return sendGlobalQuestion(id, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendGlobalQuestion(const std::string& name, const Payload& p) const { return sendGlobalQuestion(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendGlobalQuestion(const std::string& name, const Message& msg) const { return sendGlobalQuestion(hash::hashString(name), msg); }
-
-        inline void sendMessageToEntity(EntityId eid, RequestId rid) const { sendMessageToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline void sendMessageToEntity(EntityId eid, const std::string& name) const { sendMessageToEntity(eid, hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline void sendMessageToEntity(EntityId eid, RequestId rid, const Payload& p) const { sendMessageToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline void sendMessageToEntity(EntityId eid, const std::string& name, const Payload& p) const { sendMessageToEntity(eid, hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline void sendMessageToEntity(EntityId eid, const std::string& name, const Message& m) const { sendMessageToEntity(eid, hash::hashString(name), m); }
-
-        inline Message sendQuestionToEntity(EntityId eid, RequestId rid) const { return sendQuestionToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline Message sendQuestionToEntity(EntityId eid, const std::string& name, const Message& m) const { return sendQuestionToEntity(eid, hash::hashString(name), m); }
-        inline Message sendQuestionToEntity(EntityId eid, RequestId rid, const Payload& p) const { return sendQuestionToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendQuestionToEntity(EntityId eid, const std::string& name, const Payload& p) const { return sendQuestionToEntity(eid, hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendQuestionToEntity(EntityId eid, const std::string& name) const { return sendQuestionToEntity(eid, hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
-        ///@}
 
         // Utility functions
 
@@ -249,7 +200,7 @@ namespace Kunlaboro
          *
          * \returns Is the Component valid.
          */
-        inline bool isValid() const { return mOwner != 0 && mId != 0 && mEntitySystem != NULL && !mName.empty() && mEntitySystem->isValid(getOwnerId()) /* && !mDestroyed*/; }
+        inline bool isValid() const { return mOwner != 0 && mId != 0 && mEntitySystem != NULL && !mName.empty() /* && !mDestroyed*/; }
 
         /** \brief Get the name of the Component.
          *
@@ -277,41 +228,8 @@ namespace Kunlaboro
          * \param f The function to call when the message is sent.
          * \param local Should this request only listen to local message?
          */
-        template<class T>
-        inline void requestMessage(const std::string& name, void (T::*f)(Message&), bool local = false) const;
-        /** \brief Adds a request for a specific message.
-         *
-         * This is a convenience function that lets you use a class method as a MessageFunction
-         * for the requestMessage(const std::string&, MessageFunction) const function.
-         *
-         * \param name The message in question.
-         * \param f The function to call when the message is sent.
-         * \param local Should this request only listen to local message?
-         */
-        template<class T>
-        inline void requestMessage(const std::string& name, void (T::*f)(const Message&), bool local = false) const;
-        /** \brief Removes a request for a specific message.
-         *
-         * This is a convenience function that lets you use a class method as a MessageFunction
-         * for the unrequestMessage(const std::string&, MessageFunction) const function.
-         *
-         * \param name The message in question.
-         * \param f The function that was registered for the request.
-         * \param local Should this request only listen to local message?
-         */
-        template<class T>
-        inline void unrequestMessage(const std::string& name, void (T::*f)(Message&), bool local = false) const;
-        /** \brief Removes a request for a specific message.
-         *
-         * This is a convenience function that lets you use a class method as a MessageFunction
-         * for the unrequestMessage(const std::string&, MessageFunction) const function.
-         *
-         * \param name The message in question.
-         * \param f The function that was registered for the request.
-         * \param local Should this request only listen to local message?
-         */
-        template<class T>
-        inline void unrequestMessage(const std::string& name, void (T::*f)(const Message&), bool local = false) const;
+        template<class T, class R, typename... Args>
+        inline void requestMessage(const std::string& name, R (T::*f)(Args...), bool local = false) const;
         /** \brief Add a request to be told whenever a specific component is added.
          *
          * This is a convenience function that lets you use a class method as a MessageFunction
@@ -322,7 +240,7 @@ namespace Kunlaboro
          * \param local Should the component only care about locally added components.
          */
         template<class T>
-        inline void requestComponent(const std::string& name, void (T::*f)(const Message&), bool local = true) const;
+        inline void requestComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local = true) const;
         /** \brief Add a request to be told whenever a specific component is added, and if it's not then don't create the component.
          *
          * This is a convenience function that lets you use a class method as a MessageFunction
@@ -333,7 +251,7 @@ namespace Kunlaboro
          * \param local Should the component only care about locally added components.
          */
         template<class T>
-        inline void requireComponent(const std::string& name, void (T::*f)(const Message&), bool local = true) const;
+        inline void requireComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local = true) const;
 
     protected:
         /// The constructor sets the name of the component and initializes default values.
@@ -361,44 +279,28 @@ namespace Kunlaboro
     };
 
 
-    template<class T>
-    void Component::requestMessage(const std::string& name, void (T::*f)(Message&), bool local) const
+    template<class T, class R, typename... Args>
+    void Component::requestMessage(const std::string& name, R(T::*f)(Args...), bool local) const
     {
-        requestMessage(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
+        requestMessage(hash::hashString(name), std::bind(f, (T*)(this)), local);
     }
 
     template<class T>
-    void Component::requestMessage(const std::string& name, void (T::*f)(const Message&), bool local) const
+    void Component::requestComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local) const
     {
-        requestMessage(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
+        requestComponent(hash::hashString(name), std::bind1st(f, (T*)(this)), local);
     }
 
     template<class T>
-    void Component::unrequestMessage(const std::string& name, void (T::*f)(Message&), bool local) const
+    void Component::requireComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local) const
     {
-        unrequestMessage(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
-    }
-
-    template<class T>
-    void Component::unrequestMessage(const std::string& name, void (T::*f)(const Message&), bool local) const
-    {
-        unrequestMessage(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
-    }
-
-    template<class T>
-    void Component::requestComponent(const std::string& name, void (T::*f)(const Message&), bool local) const
-    {
-        requestComponent(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
-    }
-
-    template<class T>
-    void Component::requireComponent(const std::string& name, void (T::*f)(const Message&), bool local) const
-    {
-        requireComponent(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
+        requireComponent(hash::hashString(name), std::bind1st(f, (T*)(this)), local);
     }
 }
 
 std::ostream& operator<<(std::ostream& os, const Kunlaboro::Component& c);
+
+#include "Component.inl"
 
 /** \class Kunlaboro::Component
 *

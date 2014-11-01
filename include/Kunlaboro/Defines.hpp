@@ -64,10 +64,33 @@ namespace Kunlaboro
         std::type_index mType;
     };
 
-    /// The MessageFunction.
-    typedef std::function<void(Message&)> MessageFunction;
+    template<typename T>
+    class Optional
+    {
+    public:
+        explicit Optional() : mVal(nullptr) { }
+        explicit Optional(const T& val) : mVal(new T(val)) { }
+
+        Optional(const Optional<T>& copy) : mVal(new T(*copy.mVal)) { }
+        ~Optional() {
+            if (mVal) delete mVal;
+        }
+
+        bool has() const {
+            return mVal != nullptr;
+        }
+        T get() const {
+            return *mVal;
+        }
+
+    private:
+        T* mVal;
+    };
+
     /// The factory function for a Component.
     typedef std::function<Component*()> ComponentFactory;
+
+    
 
     /// A ComponentMap to store and access Component objects against their names.
     typedef std::unordered_map<std::string, std::deque<Component*> > ComponentMap;
@@ -104,26 +127,15 @@ namespace Kunlaboro
     struct ComponentRegistered
     {
         Component* component;     ///< The Component the registered a request.
-        MessageFunction callback; ///< The callback in question.
+        std::function<void()> callback; ///< The callback in question.
         bool required;            ///< Is this a requirement and not a request.
         int priority;             ///< The priority of this request.
     };
 
+    typedef std::function<void(Component*, MessageType)> ComponentCallback;
+
     /// A map of requests
     typedef std::unordered_map<GUID, std::deque<ComponentRegistered> > RequestMap;
-
-    /// A message that is sent through the EntitySystem.
-    struct Message {
-        MessageType type;  ///< The type of the message.
-        Component* sender; ///< The sender of the message, can be NULL.
-        Payload payload;   ///< The payload of the message, can be empty.
-        bool handled;      ///< Has the message been handled?
-        Message(MessageType t = Type_Message, Component *c = nullptr, const Payload& p = nullptr) : type(t), sender(c), payload(p), handled(false) {} ///< Create an empty message of the specified type.
-
-        /// Helper function to handle a message.
-        template<typename T>
-        void handle(const T& ret);
-    };
 
     // Only supported in the November 2013 CTP at the moment
 #if !_MSC_VER || _MSC_PLATFORM_TOOLSET_CTP_Nov2013
@@ -194,16 +206,4 @@ namespace Kunlaboro
 #undef CONSTEXPR
 }
 
-/// Only here for backwards compatibility
-namespace boost
-{
-    template<typename T>
-    inline T any_cast(const Kunlaboro::Payload& p) { return p.get<T>(); }
-}
-
-template<typename T>
-void Kunlaboro::Message::handle(const T& ret)
-{
-    payload = ret;
-    handled = true;
-}
+#include "Defines.inl"

@@ -34,8 +34,11 @@ endif()
 
 set(Kunlaboro_HEADERS
 	include/Kunlaboro/Component.hpp
+    include/Kunlaboro/Component.inl
     include/Kunlaboro/Defines.hpp
+    include/Kunlaboro/Defines.inl
 	include/Kunlaboro/EntitySystem.hpp
+    include/Kunlaboro/EntitySystem.inl
 	include/Kunlaboro/Kunlaboro.hpp
 )
 

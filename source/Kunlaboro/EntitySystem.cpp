@@ -246,8 +246,6 @@ void EntitySystem::destroyComponent(Component* component)
 		regs.second.erase(toRemove, regs.second.end());
 	}
 
-    Message msg(Type_Destroy, component);
-
     RequestId reqid = hash::hashString(component->getName().c_str());
 
     if (reqid != 0)
@@ -256,13 +254,14 @@ void EntitySystem::destroyComponent(Component* component)
         for (auto& it : reqs)
         {
             if (it.component != component)
-                it.callback(msg);
+                it.callback.target<ComponentCallback>()->operator()(component, Type_Destroy);
+                
         }
 
         reqs = ent->localComponentRequests[reqid];
         for (auto& it : reqs)
         {
-            it.callback(msg);
+            it.callback.target<ComponentCallback>()->operator()(component, Type_Destroy);
         }
     }
 
@@ -294,19 +293,17 @@ void EntitySystem::addComponent(EntityId entity, Component* component)
     if (reqid == 0)
         return;
 
-    Message msg(Type_Create, component);
-
     auto reqs = mGlobalComponentRequests[reqid];
     for (auto& it : reqs)
     {
         if (it.component != component)
-            it.callback(msg);
+            it.callback.target<ComponentCallback>()->operator()(component, Type_Create);
     }
 
     reqs = ent->localComponentRequests[reqid];
     for (auto& it : reqs)
     {
-        it.callback(msg);
+        it.callback.target<ComponentCallback>()->operator()(component, Type_Create);
     }
 
 }
@@ -371,19 +368,17 @@ void EntitySystem::removeComponent(EntityId entity, Component* component)
     if (reqid == 0)
         return;
 
-    Message msg(Type_Destroy, component);
-
     auto requests = mGlobalComponentRequests[reqid];
     for (auto& it : requests)
     {
         if (it.component != component)
-            it.callback(msg);
+            it.callback.target<ComponentCallback>()->operator()(component, Type_Destroy);
     }
 
     requests = ent->localComponentRequests[reqid];
     for (auto& it : requests)
     {
-        it.callback(msg);
+        it.callback.target<ComponentCallback>()->operator()(component, Type_Destroy);
     }
 }
 
@@ -451,7 +446,6 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
     if (req.reason == Reason_Message)
         return;
 
-    Message msg(Type_Create);
     for (auto& ent : mEntities)
     {
         if (!ent.second)
@@ -464,10 +458,7 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
         {
             if (it->isValid() && reg.component->getId() != it->getId())
             {
-                msg.sender = it;
-                reg.callback(msg);
-
-				msg.handled = false;
+                reg.callback.target<ComponentCallback>()->operator()(it, Type_Create);
             }
         }
     }
@@ -500,8 +491,6 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
     if (req.reason == Reason_Message)
         return;
 
-    Message msg(Type_Create);
-
     if (ent->components.count(req.name) == 0)
         return;
 
@@ -510,10 +499,7 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
 	{
 		if (it->isValid() && reg.component->getId() != it->getId())
 		{
-			msg.sender = it;
-			reg.callback(msg);
-
-			msg.handled = false;
+            reg.callback.target<ComponentCallback>()->operator()(it, Type_Destroy);
 		}
 	}
 }
@@ -647,57 +633,6 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
                 insertedPush(regs, reg, RequestSort);
                 break;
             }
-    }
-}
-
-void EntitySystem::sendUnsafeGlobalMessage(RequestId reqid, Message& msg)
-{
-    if (msg.sender != 0 && !msg.sender->isValid())
-        throw std::runtime_error("Invalid sender for global message");
-    if (reqid == 0)
-        throw std::runtime_error("Invalid request hash");
-    if (msg.type != Type_Message)
-        throw std::runtime_error("Invalid message type");
-
-    std::deque<ComponentRegistered> reqs = mGlobalMessageRequests[reqid];
-
-    for (auto& it : reqs)
-    {
-        it.callback(msg);
-
-        if (msg.handled)
-        {
-            msg.sender = it.component;
-            break;
-        }
-    }
-}
-
-void EntitySystem::sendUnsafeLocalMessage(EntityId entity, RequestId reqid, Message& msg)
-{
-    if (entity == 0)
-        throw std::runtime_error("Can't send a message to a non-existant entity");
-    if (reqid == 0)
-        throw std::runtime_error("Invalid request hash");
-    if (msg.type != Type_Message)
-        throw std::runtime_error("Invalid message type");
-
-    Entity* ent = mEntities[entity];
-
-    if (ent == NULL)
-        throw std::runtime_error("Can't send a message to a non-existant entity");
-
-    std::deque<ComponentRegistered> reqs = ent->localMessageRequests[reqid];
-
-	for (auto& it : reqs)
-    {
-        it.callback(msg);
-
-        if (msg.handled)
-        {
-            msg.sender = it.component;
-            break;
-        }
     }
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Kunlaboro/Component.hpp>
 #include <Kunlaboro/Defines.hpp>
 
 #include <unordered_map>
@@ -171,6 +172,23 @@ namespace Kunlaboro
          * \param reg The Callback registration to store.
          */
         void registerGlobalRequest(const ComponentRequested& req, const ComponentRegistered& reg);
+
+        template<typename R, typename... Args>
+        void registerGlobalMessage(const Component& component, RequestId rid, const std::function<R(Args...)>& callback)
+        {
+            ComponentRegistered reg = { const_cast<Component*>(&component), (std::function<void()>)callback, false, 0 };
+            mGlobalMessageRequests[rid].push_back(reg);
+        }
+
+        template<typename R, typename... Args>
+        void registerLocalMessage(const Component& component, RequestId rid, const std::function<R(Args...)>& callback)
+        {
+            ComponentRegistered reg = { const_cast<Component*>(&component), (std::function<void()>)callback, false, 0 };
+            mEntities[component->getOwnerId()]->localMessageRequests[rid].push_back(reg);
+        }
+
+        void reprioritizeGlobalMessage(const Component& component, RequestId rid, int priority);
+        void reprioritizeLocalMessage(const Component& component, RequestId rid, int priority);
         /** \brief Register a local request into the EntitySystem.
          *
          * This function will register a local request inside the entity that created the request.
@@ -221,23 +239,50 @@ namespace Kunlaboro
          * \param id The RequestId to send.
          * \param msg The Message to send.
          */
-        void sendSafeGlobalMessage(RequestId id, Message& msg)
+        template<typename R, typename... Args>
+        R sendSafeGlobalMessage(RequestId id, Args... arguments)
         {
             auto& reqs = mGlobalMessageRequests[id];
 
             for (auto& it : reqs)
             {
-                it.callback(msg);
-
-                if (msg.handled)
-                {
-                    msg.sender = it.component;
-                    break;
-                }
+                return ((std::function<R(Args...)>)it.callback)(arguments...);
             }
         }
-        void sendUnsafeGlobalMessage(RequestId id, Message& msg);
-        inline void sendGlobalMessage(RequestId id, Message& msg) { sendUnsafeGlobalMessage(id, msg); }
+
+        template<typename R, typename... Args>
+        R sendUnsafeGlobalMessage(RequestId id, Args... arguments)
+        {
+            auto reqs = mGlobalMessageRequests[id];
+
+            for (auto& it : reqs)
+            {
+                return ((std::function<R(Args...)>)it.callback)(arguments...);
+            }
+        }
+
+        template<typename R, typename... Args>
+        R sendSafeLocalMessage(EntityId eid, RequestId id, Args... arguments)
+        {
+            auto& reqs = mGlobalMessageRequests[id];
+
+            for (auto& it : reqs)
+            {
+                return ((std::function<R(Args...)>)it.callback)(arguments...);
+            }
+        }
+
+        template<typename R, typename... Args>
+        R sendUnsafeLocalMessage(EntityId eid, RequestId id, Args... arguments)
+        {
+            auto reqs = mGlobalMessageRequests[id];
+
+            for (auto& it : reqs)
+            {
+                return ((std::function<R(Args...)>)it.callback)(arguments...);
+            }
+        }
+
         /** \brief Send a local message to all the Component objects in the specified entity.
          *
          * This function will send a message to the specified entity and all the Component objects
@@ -247,6 +292,7 @@ namespace Kunlaboro
          * \param rid The RequestId to send.
          * \param msg The Message to send.
          */
+        /*
         inline void sendSafeLocalMessage(EntityId eid, RequestId rid, Message& msg)
         {
             auto& reqs = mEntities[eid]->localMessageRequests[rid];
@@ -264,44 +310,6 @@ namespace Kunlaboro
         }
         void sendUnsafeLocalMessage(EntityId eid, RequestId id, Message& msg);
         inline void sendLocalMessage(EntityId eid, RequestId id, Message& msg) { sendUnsafeLocalMessage(eid, id, msg); }
-
-        /** \name Convenience functions
-         * These functions exist to cut down on the amount of code you need to write
-         * slightly.
-         *
-         * \note They are slower than their normal counterparts, especially if used several times in a row.
-         */
-        ///@{
-        /** \brief Send a global message to all the Component objects in the EntitySystem.
-         *
-         * This is a convenience function for sending a message without having to look up the RequestId or
-         * create a Message object, which means it should not be used repeatedly as it is slower than the
-         * other sendGlobalMessage() function.
-         *
-         * \param n The name of the RequestId to send.
-         * \param p The Payload to send.
-         */
-        inline void sendGlobalMessage(const std::string& n, const Payload& p = 0)
-        {
-            Message msg(Type_Message, NULL, p);
-            sendUnsafeGlobalMessage(hash::hashString(n), msg);
-        }
-
-        /** \brief Send a local message to all the Component objects in the specified entity.
-        *
-        * This is a convenience function for sending a message without having to look up the RequestId or
-        * create a Message object, which means that it is marginally slower than the
-        * other sendLocalMessage() function.
-        *
-        * \param eid The EntityId to the send the message to.
-        * \param n The name of the RequestId to send.
-        * \param p The Payload to send.
-        */
-        inline void sendLocalMessage(EntityId eid, const std::string& n, const Payload& p = 0)
-        {
-            Message msg(Type_Message, NULL, p);
-            sendUnsafeLocalMessage(eid, hash::hashString(n), msg);
-        }
         ///@}
 
         /** \brief Freezes the EntitySystem, forcing all following modifications to be put on a queue.
@@ -340,6 +348,7 @@ namespace Kunlaboro
         inline unsigned int numCom() { return mComponentC; }
 
     private:
+
         /// A helper struct containing Entity specific information.
         struct Entity
         {
@@ -404,6 +413,8 @@ namespace Kunlaboro
 
         unsigned int mEntityC; ///< Entity counter
         unsigned int mComponentC; ///< Component counter
+
+        friend class Component;
     };
 
     template<class T>
@@ -412,6 +423,8 @@ namespace Kunlaboro
         registerComponent(name, [](){ return new T(); });
     }
 }
+
+#include "EntitySystem.inl"
 
 /** \class Kunlaboro::EntitySystem
 *
