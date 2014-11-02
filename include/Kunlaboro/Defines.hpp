@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstring>
 #include <cstdint>
 #include <string>
 #include <deque>
@@ -11,7 +12,7 @@
 namespace Kunlaboro
 {
     class Component;
-    struct Message;
+    class EntitySystem;
 
     /// A Globally Unique IDentifier.
     typedef unsigned int GUID;
@@ -220,13 +221,6 @@ namespace Kunlaboro
 
         inline GUID hashString(const std::string& str) { return hash_func2::hashF(str.c_str(), str.size()); }
     }
-
-#if !defined(_MSC_VER)
-    inline CONSTEXPR uint32_t operator "" _rid(const char* str, const size_t strLen)
-    {
-        return hash_func1::hashF(str, strLen);
-    }
-#endif
 
 #undef CONSTEXPR
 }

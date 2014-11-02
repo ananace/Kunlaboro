@@ -7,8 +7,6 @@
 
 namespace Kunlaboro
 {
-    class EntitySystem;
-
     /** \brief A Component inside of an EntitySystem
      *
      * This class is used as a base class of Components inside of an EntitySystem in Kunlaboro,
@@ -120,7 +118,7 @@ namespace Kunlaboro
         template<typename R, typename... Args>
         R sendMessage(RequestId id, Args... args) const
         {
-            return getEntitySystem()->sendUnsafeLocalMessage(mOwner, id, args);
+            return getEntitySystem()->sendUnsafeLocalMessage(mOwner, id, args...);
         }
 
         /** \brief Send a message to the entire EntitySystem that the local entity is a part of.
@@ -137,7 +135,7 @@ namespace Kunlaboro
         template<typename R, typename... Args>
         R sendGlobalMessage(RequestId id, Args... args) const
         {
-            return getEntitySystem()->sendUnsafeGlobalMessage(id, args);
+            return getEntitySystem()->sendUnsafeGlobalMessage(id, args...);
         }
 
         /** \brief Send a message to a specific entity.
@@ -155,7 +153,7 @@ namespace Kunlaboro
         template<typename R, typename... Args>
         R sendMessageToEntity(EntityId eid, RequestId id, Args... args) const
         {
-            return getEntitySystem()->sendUnsafeLocalMessage(eid, id, args);
+            return getEntitySystem()->sendUnsafeLocalMessage(eid, id, args...);
         }
 
         inline void changeRequestPriority(const std::string& name, int priority) const { changeRequestPriority(hash::hashString(name), priority); }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Kunlaboro/Component.hpp>
 #include <Kunlaboro/Defines.hpp>
+#include <Kunlaboro/Component.hpp>
 
 #include <unordered_map>
 #include <vector>
@@ -11,9 +11,6 @@
 
 namespace Kunlaboro
 {
-    class Component;
-    class Template;
-
     /** \brief A class containing an entire EntitySystem based on RDBMS.
      *
      * Only one instance of this class needs to exist at any given time unless you want
@@ -174,17 +171,33 @@ namespace Kunlaboro
         void registerGlobalRequest(const ComponentRequested& req, const ComponentRegistered& reg);
 
         template<typename R, typename... Args>
-        void registerGlobalMessage(Component* component, RequestId rid, const std::function<R(Args...)>& callback)
+        void registerGlobalMessage(Component* component, RequestId rid, const std::function<Optional<R>(Args...)>& callback)
         {
-            ComponentRegistered reg = { component, *reinterpret_cast<std::function<void()>*>(const_cast<std::function<R(Args...)>*>(&callback)), &typeid(callback), false, 0 };
+            ComponentRegistered reg = { component, *reinterpret_cast<std::function<void()>*>(const_cast<std::function<Optional<R>(Args...)>*>(&callback)), &typeid(callback), false, 0 };
+
+            mGlobalMessageRequests[rid].push_back(std::move(reg));
+        }
+
+        template<typename... Args>
+        void registerGlobalMessage(Component* component, RequestId rid, const std::function<void(Args...)>& callback)
+        {
+            ComponentRegistered reg = { component, *reinterpret_cast<std::function<void()>*>(const_cast<std::function<void(Args...)>*>(&callback)), &typeid(callback), false, 0 };
 
             mGlobalMessageRequests[rid].push_back(std::move(reg));
         }
 
         template<typename R, typename... Args>
-        void registerLocalMessage(Component* component, RequestId rid, const std::function<R(Args...)>& callback)
+        void registerLocalMessage(Component* component, RequestId rid, const std::function<Optional<R>(Args...)>& callback)
         {
-            ComponentRegistered reg = { component, *reinterpret_cast<std::function<void()>*>(const_cast<std::function<R(Args...)>*>(&callback)), &typeid(callback), false, 0 };
+            ComponentRegistered reg = { component, *reinterpret_cast<std::function<void()>*>(const_cast<std::function<Optional<R>(Args...)>*>(&callback)), &typeid(callback), false, 0 };
+
+            mEntities[component->getOwnerId()]->localMessageRequests[rid].push_back(reg);
+        }
+
+        template<typename... Args>
+        void registerLocalMessage(Component* component, RequestId rid, const std::function<void(Args...)>& callback)
+        {
+            ComponentRegistered reg = { component, *reinterpret_cast<std::function<void()>*>(const_cast<std::function<void(Args...)>*>(&callback)), &typeid(callback), false, 0 };
 
             mEntities[component->getOwnerId()]->localMessageRequests[rid].push_back(reg);
         }
