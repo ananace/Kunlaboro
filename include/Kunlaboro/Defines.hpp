@@ -98,7 +98,7 @@ namespace Kunlaboro
     struct ComponentRegistered
     {
         Component* component;     ///< The Component the registered a request.
-        std::function<void()> callback; ///< The callback in question.
+        std::function<void()> functional;
         const std::type_info* type;
         bool required;            ///< Is this a requirement and not a request.
         int priority;             ///< The priority of this request.

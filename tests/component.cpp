@@ -16,7 +16,7 @@ SCENARIO("Testing")
         }
 
     private:
-        Kunlaboro::Optional<int> add(int a, int b)
+        Kunlaboro::Optional<int> add(float a, float b)
         {
             if (a > 0)
                 return a + b;

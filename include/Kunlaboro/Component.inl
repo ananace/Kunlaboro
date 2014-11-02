@@ -49,9 +49,9 @@ namespace
             );
 
             if (mLocal)
-                mES->registerLocalMessage(object_ref, mRID, std::function<Ret(Params&&...)>(func));
+                mES->registerLocalMessage(object_ref, mRID, std::function<Ret(Params...)>(func));
             else
-                mES->registerGlobalMessage(object_ref, mRID, std::function<Ret(Params&&...)>(func));
+                mES->registerGlobalMessage(object_ref, mRID, std::function<Ret(Params...)>(func));
         }
 
         template<typename CLASS, int... Is>
@@ -65,9 +65,9 @@ namespace
                 );
 
             if (mLocal)
-                mES->registerLocalMessage(object_ref, mRID, std::function<Ret(Params&&...)>(func));
+                mES->registerLocalMessage(object_ref, mRID, std::function<Ret(Params...)>(func));
             else
-                mES->registerGlobalMessage(object_ref, mRID, std::function<Ret(Params&&...)>(func));
+                mES->registerGlobalMessage(object_ref, mRID, std::function<Ret(Params...)>(func));
         }
 
     private:
@@ -80,37 +80,37 @@ namespace
 template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type*>
 Kunlaboro::Optional<R> Kunlaboro::Component::sendMessage(RequestId id, Args... args) const
 {
-    return getEntitySystem()->sendUnsafeLocalMessage<R>(mOwner, id, std::forward<Args>(args)...);
+    return getEntitySystem()->sendUnsafeLocalMessage<R>(mOwner, id, args...);
 }
 
 template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type*>
 void Kunlaboro::Component::sendMessage(RequestId id, Args... args) const
 {
-    getEntitySystem()->sendUnsafeLocalMessage<void>(mOwner, id, std::forward<Args>(args)...);
+    getEntitySystem()->sendUnsafeLocalMessage<void>(mOwner, id, args...);
 }
 
 template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type*>
 Kunlaboro::Optional<R> Kunlaboro::Component::sendGlobalMessage(RequestId id, Args... args) const
 {
-    return getEntitySystem()->sendUnsafeGlobalMessage<R>(id, std::forward<Args>(args)...);
+    return getEntitySystem()->sendUnsafeGlobalMessage<R>(id, args...);
 }
 
 template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type*>
 void Kunlaboro::Component::sendGlobalMessage(RequestId id, Args... args) const
 {
-    getEntitySystem()->sendUnsafeGlobalMessage<void>(id, std::forward<Args>(args)...);
+    getEntitySystem()->sendUnsafeGlobalMessage<void>(id, args...);
 }
 
 template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type*>
 Kunlaboro::Optional<R> Kunlaboro::Component::sendMessageToEntity(EntityId eid, RequestId id, Args... args) const
 {
-    return getEntitySystem()->sendUnsafeLocalMessage<R>(eid, id, std::forward<Args>(args)...);
+    return getEntitySystem()->sendUnsafeLocalMessage<R>(eid, id, args...);
 }
 
 template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type*>
 void Kunlaboro::Component::sendMessageToEntity(EntityId eid, RequestId id, Args... args) const
 {
-    return getEntitySystem()->sendUnsafeLocalMessage<void>(eid, id, std::forward<Args>(args)...);
+    return getEntitySystem()->sendUnsafeLocalMessage<void>(eid, id, args...);
 }
 
 template<typename R, typename... Args>

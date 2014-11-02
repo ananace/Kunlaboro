@@ -196,14 +196,14 @@ void EntitySystem::destroyComponent(Component* component)
         for (auto& it : reqs)
         {
             if (it.component != component)
-                (*reinterpret_cast<ComponentCallback*>(&it.callback))(component, Type_Destroy);
+                (*reinterpret_cast<ComponentCallback*>(&it.functional))(component, Type_Destroy);
                 
         }
 
         reqs = ent->localComponentRequests[reqid];
         for (auto& it : reqs)
         {
-            (*reinterpret_cast<ComponentCallback*>(&it.callback))(component, Type_Destroy);
+            (*reinterpret_cast<ComponentCallback*>(&it.functional))(component, Type_Destroy);
         }
     }
 
@@ -241,7 +241,7 @@ void EntitySystem::addComponent(EntityId entity, Component* component)
         for (auto& it : reqs)
         {
             if (it.component != component)
-                (*reinterpret_cast<ComponentCallback*>(&it.callback))(component, Type_Create);
+                (*reinterpret_cast<ComponentCallback*>(&it.functional))(component, Type_Create);
         }
     }
 
@@ -250,7 +250,7 @@ void EntitySystem::addComponent(EntityId entity, Component* component)
         auto reqs = ent->localComponentRequests.at(reqid);
         for (auto& it : reqs)
         {
-            (*reinterpret_cast<ComponentCallback*>(&it.callback))(component, Type_Create);
+            (*reinterpret_cast<ComponentCallback*>(&it.functional))(component, Type_Create);
         }
     }
 }
@@ -301,7 +301,7 @@ void EntitySystem::removeComponent(EntityId entity, Component* component)
         for (auto& it : requests)
         {
             if (it.component != component)
-                (*reinterpret_cast<ComponentCallback*>(&it.callback))(component, Type_Destroy);
+                (*reinterpret_cast<ComponentCallback*>(&it.functional))(component, Type_Destroy);
         }
     }
 
@@ -310,7 +310,7 @@ void EntitySystem::removeComponent(EntityId entity, Component* component)
         auto requests = ent->localComponentRequests.at(reqid);
         for (auto& it : requests)
         {
-            (*reinterpret_cast<ComponentCallback*>(&it.callback))(component, Type_Destroy);
+            (*reinterpret_cast<ComponentCallback*>(&it.functional))(component, Type_Destroy);
         }
     }
 }
@@ -384,7 +384,7 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
         {
             if (it->isValid() && reg.component->getId() != it->getId())
             {
-                (*reinterpret_cast<ComponentCallback*>(const_cast<std::function<void()>*>(&reg.callback)))(it, Type_Create);
+                (*reinterpret_cast<ComponentCallback*>(const_cast<std::function<void()>*>(&reg.functional)))(it, Type_Create);
             }
         }
     }
@@ -418,7 +418,7 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
 	{
 		if (it->isValid() && reg.component->getId() != it->getId())
 		{
-            (*reinterpret_cast<ComponentCallback*>(const_cast<std::function<void()>*>(&reg.callback)))(it, Type_Destroy);
+            (*reinterpret_cast<ComponentCallback*>(const_cast<std::function<void()>*>(&reg.functional)))(it, Type_Destroy);
 		}
 	}
 }
