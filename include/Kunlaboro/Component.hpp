@@ -364,37 +364,37 @@ namespace Kunlaboro
     template<class T>
     void Component::requestMessage(const std::string& name, void (T::*f)(Message&), bool local) const
     {
-        requestMessage(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
+        requestMessage(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::requestMessage(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        requestMessage(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
+        requestMessage(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::unrequestMessage(const std::string& name, void (T::*f)(Message&), bool local) const
     {
-        unrequestMessage(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
+        unrequestMessage(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::unrequestMessage(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        unrequestMessage(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
+        unrequestMessage(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::requestComponent(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        requestComponent(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
+        requestComponent(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 
     template<class T>
     void Component::requireComponent(const std::string& name, void (T::*f)(const Message&), bool local) const
     {
-        requireComponent(hash::hashString(name), std::bind(f, (T*)(this), std::placeholders::_1), local);
+        requireComponent(name, std::bind(f, (T*)(this), std::placeholders::_1), local);
     }
 }
 
