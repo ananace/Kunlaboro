@@ -49,9 +49,9 @@ namespace
             );
 
             if (mLocal)
-                mES->registerLocalMessage(object_ref, mRID, std::function<Ret(Params...)>(func));
+                mES->registerLocalMessage(object_ref, mRID, std::function<Ret(Params&&...)>(func));
             else
-                mES->registerGlobalMessage(object_ref, mRID, std::function<Ret(Params...)>(func));
+                mES->registerGlobalMessage(object_ref, mRID, std::function<Ret(Params&&...)>(func));
         }
 
         template<typename CLASS, int... Is>
@@ -65,9 +65,9 @@ namespace
                 );
 
             if (mLocal)
-                mES->registerLocalMessage(object_ref, mRID, std::function<Ret(Params...)>(func));
+                mES->registerLocalMessage(object_ref, mRID, std::function<Ret(Params&&...)>(func));
             else
-                mES->registerGlobalMessage(object_ref, mRID, std::function<Ret(Params...)>(func));
+                mES->registerGlobalMessage(object_ref, mRID, std::function<Ret(Params&&...)>(func));
         }
 
     private:
@@ -77,40 +77,40 @@ namespace
     };
 }
 
-template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type*, typename... Args>
+template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type*>
 Kunlaboro::Optional<R> Kunlaboro::Component::sendMessage(RequestId id, Args... args) const
 {
-    return getEntitySystem()->sendUnsafeLocalMessage<R>(mOwner, id, args...);
+    return getEntitySystem()->sendUnsafeLocalMessage<R>(mOwner, id, std::forward<Args>(args)...);
 }
 
-template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type*, typename... Args>
+template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type*>
 void Kunlaboro::Component::sendMessage(RequestId id, Args... args) const
 {
-    getEntitySystem()->sendUnsafeLocalMessage<void>(mOwner, id, args...);
+    getEntitySystem()->sendUnsafeLocalMessage<void>(mOwner, id, std::forward<Args>(args)...);
 }
 
-template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type*, typename... Args>
+template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type*>
 Kunlaboro::Optional<R> Kunlaboro::Component::sendGlobalMessage(RequestId id, Args... args) const
 {
-    return getEntitySystem()->sendUnsafeGlobalMessage<R>(id, args...);
+    return getEntitySystem()->sendUnsafeGlobalMessage<R>(id, std::forward<Args>(args)...);
 }
 
-template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type*, typename... Args>
+template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type*>
 void Kunlaboro::Component::sendGlobalMessage(RequestId id, Args... args) const
 {
-    getEntitySystem()->sendUnsafeGlobalMessage<void>(id, args...);
+    getEntitySystem()->sendUnsafeGlobalMessage<void>(id, std::forward<Args>(args)...);
 }
 
-template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type*, typename... Args>
+template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type*>
 Kunlaboro::Optional<R> Kunlaboro::Component::sendMessageToEntity(EntityId eid, RequestId id, Args... args) const
 {
-    return getEntitySystem()->sendUnsafeLocalMessage<R>(eid, id, args...);
+    return getEntitySystem()->sendUnsafeLocalMessage<R>(eid, id, std::forward<Args>(args)...);
 }
 
-template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type*, typename... Args>
+template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type*>
 void Kunlaboro::Component::sendMessageToEntity(EntityId eid, RequestId id, Args... args) const
 {
-    return getEntitySystem()->sendUnsafeLocalMessage<void>(eid, id, args...);
+    return getEntitySystem()->sendUnsafeLocalMessage<void>(eid, id, std::forward<Args>(args)...);
 }
 
 template<typename R, typename... Args>
@@ -141,23 +141,23 @@ void Kunlaboro::Component::requestMessage(const std::string& name, R(T::*f)(Args
 template<class T>
 void Kunlaboro::Component::requestComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local)
 {
-    requestComponent(hash::hashString(name), std::bind(f, std::ref(*this), std::placeholders::_1, std::placeholders::_2), local);
+    requestComponent(name, std::function<void(Component*, MessageType)>(std::bind(f, std::ref(*(T*)this), std::placeholders::_1, std::placeholders::_2)), local);
 }
 
 template<class T>
 void Kunlaboro::Component::requestComponent(const std::string& name, void (T::*f)(Component*, MessageType) const, bool local)
 {
-    requestComponent(hash::hashString(name), std::bind(f, std::ref(*this), std::placeholders::_1, std::placeholders::_2), local);
+    requestComponent(name, std::function<void(Component*, MessageType)>(std::bind(f, std::ref(*(T*)this), std::placeholders::_1, std::placeholders::_2)), local);
 }
 
 template<class T>
 void Kunlaboro::Component::requireComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local)
 {
-    requireComponent(hash::hashString(name), std::bind(f, std::ref(*this), std::placeholders::_1, std::placeholders::_2), local);
+    requireComponent(name, std::function<void(Component*, MessageType)>(std::bind(f, std::ref(*(T*)this), std::placeholders::_1, std::placeholders::_2)), local);
 }
 
 template<class T>
 void Kunlaboro::Component::requireComponent(const std::string& name, void (T::*f)(Component*, MessageType) const, bool local)
 {
-    requireComponent(hash::hashString(name), std::bind(f, std::ref(*this), std::placeholders::_1, std::placeholders::_2), local);
+    requireComponent(name, std::function<void(Component*, MessageType)>(std::bind(f, std::ref(*(T*)this), std::placeholders::_1, std::placeholders::_2)), local);
 }

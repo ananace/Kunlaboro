@@ -36,6 +36,35 @@ void Component::unrequestMessage(RequestId rid, bool local) const
         mEntitySystem->removeGlobalRequest(req, reg);
 }
 
+void Component::requestComponent(const std::string& name, const ComponentCallback& func, bool local) const
+{
+    ComponentRequested req;
+    req.name = name;
+    req.hash = Kunlaboro::hash::hashString(name);
+    req.reason = Reason_Component;
+
+    ComponentRegistered reg = { const_cast<Component*>(this), *reinterpret_cast<std::function<void()>*>(const_cast<ComponentCallback*>(&func)), &typeid(func), false, 0 };
+
+    if (local)
+        mEntitySystem->registerLocalRequest(req, reg);
+    else
+        mEntitySystem->registerGlobalRequest(req, reg);
+}
+void Component::requireComponent(const std::string& name, const ComponentCallback& func, bool local) const
+{
+    ComponentRequested req;
+    req.name = name;
+    req.hash = Kunlaboro::hash::hashString(name);
+    req.reason = Reason_Component;
+
+    ComponentRegistered reg = { const_cast<Component*>(this), *reinterpret_cast<std::function<void()>*>(const_cast<ComponentCallback*>(&func)), &typeid(func), true, 0 };
+
+    if (local)
+        mEntitySystem->registerLocalRequest(req, reg);
+    else
+        mEntitySystem->registerGlobalRequest(req, reg);
+}
+
 void Component::changeRequestPriority(RequestId rid, int priority) const
 {
     mEntitySystem->reprioritizeRequest(const_cast<Component*>(this), rid, priority);

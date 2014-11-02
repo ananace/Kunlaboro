@@ -35,17 +35,14 @@ void Kunlaboro::EntitySystem::registerLocalMessage(Component* component, Request
     mEntities[component->getOwnerId()]->localMessageRequests[rid].push_back(reg);
 }
 
-template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type*, typename... Args>
-Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendSafeGlobalMessage(RequestId id, Args... arguments)
+template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type*>
+Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendSafeGlobalMessage(RequestId id, Args...arguments)
 {
     auto& reqs = mGlobalMessageRequests[id];
 
     for (auto& it : reqs)
     {
-        if (typeid(std::function<Optional<R>(Args...)>) != *it.type)
-            continue;
-
-        Optional<R> ret = (*reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.callback))(arguments...);
+        Optional<R> ret = (*reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.callback))(std::forward<Args>(arguments)...);
 
         if (ret)
             return ret;
@@ -54,31 +51,25 @@ Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendSafeGlobalMessage(RequestId 
     return nullptr;
 }
 
-template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type*, typename... Args>
-void Kunlaboro::EntitySystem::sendSafeGlobalMessage(RequestId id, Args... arguments)
+template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type*>
+void Kunlaboro::EntitySystem::sendSafeGlobalMessage(RequestId id, Args...arguments)
 {
     auto& reqs = mGlobalMessageRequests[id];
 
     for (auto& it : reqs)
     {
-        if (typeid(std::function<void(Args...)>) != *it.type)
-            continue;
-
-        (*reinterpret_cast<std::function<void(Args...)>*>(&it.callback))(arguments...);
+        (*reinterpret_cast<std::function<void(Args...)>*>(&it.callback))(std::forward<Args>(arguments)...);
     }
 }
 
-template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type*, typename... Args>
-Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendUnsafeGlobalMessage(RequestId id, Args... arguments)
+template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type*>
+Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendUnsafeGlobalMessage(RequestId id, Args...arguments)
 {
     auto reqs = mGlobalMessageRequests[id];
 
     for (auto& it : reqs)
     {
-        if (typeid(std::function<Optional<R>(Args...)>) != *it.type)
-            continue;
-
-        Optional<R> ret = (*reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.callback))(arguments...);
+        Optional<R> ret = (*reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.callback))(std::forward<Args>(arguments)...);
 
         if (ret)
             return ret;
@@ -87,31 +78,25 @@ Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendUnsafeGlobalMessage(RequestI
     return nullptr;
 }
 
-template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type*, typename... Args>
-void Kunlaboro::EntitySystem::sendUnsafeGlobalMessage(RequestId id, Args... arguments)
+template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type*>
+void Kunlaboro::EntitySystem::sendUnsafeGlobalMessage(RequestId id, Args...arguments)
 {
     auto reqs = mGlobalMessageRequests[id];
 
     for (auto& it : reqs)
     {
-        if (typeid(std::function<void(Args...)>) != *it.type)
-            continue;
-
-        (*reinterpret_cast<std::function<void(Args...)>*>(&it.callback))(arguments...);
+        (*reinterpret_cast<std::function<void(Args...)>*>(&it.callback))(std::forward<Args>(arguments)...);
     }
 }
 
-template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type*, typename... Args>
-Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendSafeLocalMessage(EntityId eid, RequestId id, Args... arguments)
+template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type*>
+Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendSafeLocalMessage(EntityId eid, RequestId id, Args...arguments)
 {
-    auto& reqs = mGlobalMessageRequests[id];
+    auto& reqs = mEntities[eid]->localMessageRequests[id];
 
     for (auto& it : reqs)
     {
-        if (typeid(std::function<Optional<R>(Args...)>) != *it.type)
-            continue;
-
-        auto ret = (*reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.callback))(arguments...);
+        auto ret = (*reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.callback))(std::forward<Args>(arguments)...);
 
         if (ret)
             return ret;
@@ -120,31 +105,25 @@ Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendSafeLocalMessage(EntityId ei
     return nullptr;
 }
 
-template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type*, typename... Args>
-void Kunlaboro::EntitySystem::sendSafeLocalMessage(EntityId eid, RequestId id, Args... arguments)
+template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type*>
+void Kunlaboro::EntitySystem::sendSafeLocalMessage(EntityId eid, RequestId id, Args...arguments)
 {
-    auto& reqs = mGlobalMessageRequests[id];
+    auto& reqs = mEntities[eid]->localMessageRequests[id];
 
     for (auto& it : reqs)
     {
-        if (typeid(std::function<void(Args...)>) != *it.type)
-            continue;
-
-        (*reinterpret_cast<std::function<void(Args...)>*>(&it.callback))(arguments...);
+        (*reinterpret_cast<std::function<void(Args...)>*>(&it.callback))(std::forward<Args>(arguments)...);
     }
 }
 
-template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type*, typename... Args>
-Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendUnsafeLocalMessage(EntityId eid, RequestId id, Args... arguments)
+template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type*>
+Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendUnsafeLocalMessage(EntityId eid, RequestId id, Args...arguments)
 {
-    auto reqs = mGlobalMessageRequests[id];
+    auto reqs = mEntities[eid]->localMessageRequests[id];
 
     for (auto& it : reqs)
     {
-        if (typeid(std::function<Optional<R>(Args...)>) != *it.type)
-            continue;
-
-        auto ret = (*reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.callback))(arguments...);
+        auto ret = (*reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.callback))(std::forward<Args>(arguments)...);
 
         if (ret)
             return ret;
@@ -153,16 +132,13 @@ Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendUnsafeLocalMessage(EntityId 
     return nullptr;
 }
 
-template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type*, typename... Args>
-void Kunlaboro::EntitySystem::sendUnsafeLocalMessage(EntityId eid, RequestId id, Args... arguments)
+template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type*>
+void Kunlaboro::EntitySystem::sendUnsafeLocalMessage(EntityId eid, RequestId id, Args...arguments)
 {
-    auto reqs = mGlobalMessageRequests[id];
+    auto reqs = mEntities[eid]->localMessageRequests[id];
 
     for (auto& it : reqs)
     {
-        if (typeid(std::function<void(Args...)>) != *it.type)
-            continue;
-
-        (*reinterpret_cast<std::function<void(Args...)>*>(&it.callback))(arguments...);
+        (*reinterpret_cast<std::function<void(Args...)>*>(&it.callback))(std::forward<Args>(arguments)...);
     }
 }
