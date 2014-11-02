@@ -11,13 +11,18 @@ SCENARIO("Message passing benchmark",
         BasicComponent() : Kunlaboro::Component("Basic") { }
 
         void addedToEntity() {
-            requestMessage("Ping", std::function<void()>([this]() {
-                sendGlobalMessage<void>("Pong");
-            }));
+            requestMessage("Ping", &BasicComponent::ping);
+            requestMessage("Pong", &BasicComponent::pong);
+        }
 
-            requestMessage("Pong", std::function<void()>([this]() {
+        void ping() const
+        {
+            sendGlobalMessage<void>("Pong");
+        }
 
-            }));
+        void pong()
+        {
+
         }
     };
 
@@ -34,5 +39,5 @@ SCENARIO("Message passing benchmark",
 
     Kunlaboro::RequestId rid = Kunlaboro::hash::hash_func1::hash("Ping");
     for (uint32_t i = 0; i < 1000000; ++i)
-        es.sendSafeGlobalMessage(rid);
+        es.sendSafeGlobalMessage<void>(rid);
 }

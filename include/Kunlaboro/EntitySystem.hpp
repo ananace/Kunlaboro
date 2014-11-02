@@ -233,28 +233,28 @@ namespace Kunlaboro
          * \param id The RequestId to send.
          * \param msg The Message to send.
          */
-        template<typename R, typename... Args>
+        template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr, typename... Args>
         Optional<R> sendSafeGlobalMessage(RequestId id, Args... arguments);
 
-        template<typename... Args>
+        template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr, typename... Args>
         void sendSafeGlobalMessage(RequestId id, Args... arguments);
 
-        template<typename R, typename... Args>
+        template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr, typename... Args>
         Optional<R> sendUnsafeGlobalMessage(RequestId id, Args... arguments);
 
-        template<typename... Args>
+        template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr, typename... Args>
         void sendUnsafeGlobalMessage(RequestId id, Args... arguments);
 
-        template<typename R, typename... Args>
+        template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr, typename... Args>
         Optional<R> sendSafeLocalMessage(EntityId eid, RequestId id, Args... arguments);
 
-        template<typename... Args>
+        template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr, typename... Args>
         void sendSafeLocalMessage(EntityId eid, RequestId id, Args... arguments);
 
-        template<typename R, typename... Args>
+        template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr, typename... Args>
         Optional<R> sendUnsafeLocalMessage(EntityId eid, RequestId id, Args... arguments);
 
-        template<typename... Args>
+        template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr, typename... Args>
         void sendUnsafeLocalMessage(EntityId eid, RequestId id, Args... arguments);
 
         ///@}

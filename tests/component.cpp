@@ -53,6 +53,7 @@ SCENARIO("Testing")
     es.addComponent(eid, "Test2");
     es.finalizeEntity(eid);
 
+    es.sendSafeGlobalMessage<void>(Kunlaboro::hash::hashString("Help"));
     auto ret = es.sendSafeGlobalMessage<int>(Kunlaboro::hash::hashString("Add"), 0.2f, 5.2f);
 
     if (ret)

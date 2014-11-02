@@ -113,10 +113,18 @@ namespace Kunlaboro
          * \sa sendMessage(RequestId) const
          * \sa sendMessage(RequestId, const Payload&) const
          */
-        template<typename R, typename... Args>
-        R sendMessage(RequestId id, Args... args) const;
-        template<typename R, typename... Args>
-        R sendMessage(const std::string& id, Args... args) const
+        template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr, typename... Args>
+        void sendMessage(RequestId id, Args... args) const;
+        template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr, typename... Args>
+        Optional<R> sendMessage(RequestId id, Args... args) const;
+
+        template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr, typename... Args>
+        void sendMessage(const std::string& id, Args... args) const
+        {
+            sendMessage<void>(hash::hashString(id), args...);
+        }
+        template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr, typename... Args>
+        Optional<R> sendMessage(const std::string& id, Args... args) const
         {
             return sendMessage<R>(hash::hashString(id), args...);
         }
@@ -132,10 +140,18 @@ namespace Kunlaboro
          * \sa sendGlobalMessage(RequestId) const
          * \sa sendGlobalMessage(RequestId, const Payload&) const
          */
-        template<typename R, typename... Args>
-        R sendGlobalMessage(RequestId id, Args... args) const;
-        template<typename R, typename... Args>
-        R sendGlobalMessage(const std::string& id, Args... args) const
+        template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr, typename... Args>
+        void sendGlobalMessage(RequestId id, Args... args) const;
+        template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr, typename... Args>
+        Optional<R> sendGlobalMessage(RequestId id, Args... args) const;
+
+        template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr, typename... Args>
+        void sendGlobalMessage(const std::string& id, Args... args) const
+        {
+            sendGlobalMessage<void>(hash::hashString(id), args...);
+        }
+        template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr, typename... Args>
+        Optional<R> sendGlobalMessage(const std::string& id, Args... args) const
         {
             return sendGlobalMessage<R>(hash::hashString(id), args...);
         }
@@ -152,10 +168,18 @@ namespace Kunlaboro
          * \sa sendMessageToEntity(EntityId, RequestId) const
          * \sa sendMessageToEntity(EntityId, RequestId, const Payload&) const
          */
-        template<typename R, typename... Args>
-        R sendMessageToEntity(EntityId eid, RequestId id, Args... args) const;
-        template<typename R, typename... Args>
-        R sendMessageToEntity(EntityId eid, const std::string& id, Args... args) const
+        template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr, typename... Args>
+        void sendMessageToEntity(EntityId eid, RequestId id, Args... args) const;
+        template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr, typename... Args>
+        Optional<R> sendMessageToEntity(EntityId eid, RequestId id, Args... args) const;
+
+        template<typename R, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr, typename... Args>
+        void sendMessageToEntity(EntityId eid, const std::string& id, Args... args) const
+        {
+            return sendMessageToEntity<void>(eid, hash::hashString(id), args...);
+        }
+        template<typename R, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr, typename... Args>
+        Optional<R> sendMessageToEntity(EntityId eid, const std::string& id, Args... args) const
         {
             return sendMessageToEntity<R>(eid, hash::hashString(id), args...);
         }
@@ -232,6 +256,8 @@ namespace Kunlaboro
          */
         template<class T, class R, typename... Args>
         inline void requestMessage(const std::string& name, R (T::*f)(Args...), bool local = false);
+        template<class T, class R, typename... Args>
+        inline void requestMessage(const std::string& name, R(T::*f)(Args...) const, bool local = false);
         /** \brief Add a request to be told whenever a specific component is added.
          *
          * This is a convenience function that lets you use a class method as a MessageFunction
@@ -243,6 +269,8 @@ namespace Kunlaboro
          */
         template<class T>
         inline void requestComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local = true);
+        template<class T>
+        inline void requestComponent(const std::string& name, void (T::*f)(Component*, MessageType) const, bool local = true);
         /** \brief Add a request to be told whenever a specific component is added, and if it's not then don't create the component.
          *
          * This is a convenience function that lets you use a class method as a MessageFunction
@@ -254,6 +282,8 @@ namespace Kunlaboro
          */
         template<class T>
         inline void requireComponent(const std::string& name, void (T::*f)(Component*, MessageType), bool local = true);
+        template<class T>
+        inline void requireComponent(const std::string& name, void (T::*f)(Component*, MessageType) const, bool local = true);
 
     protected:
         /// The constructor sets the name of the component and initializes default values.
