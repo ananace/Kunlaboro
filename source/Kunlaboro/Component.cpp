@@ -22,11 +22,10 @@ void Component::addLocalComponent(Component* comp)
     mEntitySystem->addComponent(mOwner, comp);
 }
 
-void Component::unrequestMessage(const std::string& name, bool local) const
+void Component::unrequestMessage(RequestId rid, bool local) const
 {
     ComponentRequested req;
-    req.name = name;
-    req.hash = hash::hashString(name);
+    req.hash = rid;
     req.reason = Reason_Message;
 
     ComponentRegistered reg = { const_cast<Component*>(this), [](){}, &typeid(nullptr), false, 0 };

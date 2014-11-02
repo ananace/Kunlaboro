@@ -65,9 +65,9 @@ template<typename R, typename... Args>
 void Kunlaboro::Component::requestMessage(RequestId rid, const std::function<R(Args...)>& func, bool local) const
 {
     if (local)
-        getEntitySystem()->registerLocalMessage(*this, rid, func);
+        getEntitySystem()->registerLocalMessage(const_cast<Component*>(this), rid, func);
     else
-        getEntitySystem()->registerGlobalMessage(*this, rid, func);
+        getEntitySystem()->registerGlobalMessage(const_cast<Component*>(this), rid, func);
 }
 
 template<typename R, typename... Args>

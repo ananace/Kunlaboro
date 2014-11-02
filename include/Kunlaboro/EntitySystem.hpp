@@ -257,33 +257,6 @@ namespace Kunlaboro
         template<typename... Args>
         void sendUnsafeLocalMessage(EntityId eid, RequestId id, Args... arguments);
 
-        /** \brief Send a local message to all the Component objects in the specified entity.
-         *
-         * This function will send a message to the specified entity and all the Component objects
-         * contained inside of that entity,
-         *
-         * \param eid The EntityId to send the message to.
-         * \param rid The RequestId to send.
-         * \param msg The Message to send.
-         */
-        /*
-        inline void sendSafeLocalMessage(EntityId eid, RequestId rid, Message& msg)
-        {
-            auto& reqs = mEntities[eid]->localMessageRequests[rid];
-
-            for (auto& it : reqs)
-            {
-                it.callback(msg);
-
-                if (msg.handled)
-                {
-                    msg.sender = it.component;
-                    break;
-                }
-            }
-        }
-        void sendUnsafeLocalMessage(EntityId eid, RequestId id, Message& msg);
-        inline void sendLocalMessage(EntityId eid, RequestId id, Message& msg) { sendUnsafeLocalMessage(eid, id, msg); }
         ///@}
 
         /** \brief Freezes the EntitySystem, forcing all following modifications to be put on a queue.

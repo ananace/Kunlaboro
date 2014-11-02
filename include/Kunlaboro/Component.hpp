@@ -60,7 +60,11 @@ namespace Kunlaboro
          * \param func The function that was registered for the request.
          * \param local Should this request only listen to messages directed to the local entity?
          */
-        void unrequestMessage(const std::string& message, bool local = false) const;
+        void unrequestMessage(RequestId rid, bool local = false) const;
+        void unrequestMessage(const std::string& message, bool local = false) const
+        {
+            unrequestMessage(hash::hashString(message), local);
+        }
         /** \brief Add a request to be told whenever a specific component is added.
          *
          * Whenever the requested component is added to the local entity or the global
@@ -71,7 +75,7 @@ namespace Kunlaboro
          * \param local Should the component only care about locally added components.
          * \sa requireComponent()
          */
-        void requestComponent(const std::string& name, const std::function<void(Component*, MessageType)>& func, bool local = true) const;
+        void requestComponent(const std::string& name, const ComponentCallback& func, bool local = true) const;
         /** \brief Add a request to be told whenever a specific component is added, and if it's not then don't create the component.
          *
          * This function takes the same parameters as requestParameter(), the difference
@@ -111,6 +115,11 @@ namespace Kunlaboro
          */
         template<typename R, typename... Args>
         R sendMessage(RequestId id, Args... args) const;
+        template<typename R, typename... Args>
+        R sendMessage(const std::string& id, Args... args) const
+        {
+            return sendMessage<R>(hash::hashString(id), args...);
+        }
 
         /** \brief Send a message to the entire EntitySystem that the local entity is a part of.
          *
@@ -125,6 +134,11 @@ namespace Kunlaboro
          */
         template<typename R, typename... Args>
         R sendGlobalMessage(RequestId id, Args... args) const;
+        template<typename R, typename... Args>
+        R sendGlobalMessage(const std::string& id, Args... args) const
+        {
+            return sendGlobalMessage<R>(hash::hashString(id), args...);
+        }
 
         /** \brief Send a message to a specific entity.
          *
@@ -140,6 +154,11 @@ namespace Kunlaboro
          */
         template<typename R, typename... Args>
         R sendMessageToEntity(EntityId eid, RequestId id, Args... args) const;
+        template<typename R, typename... Args>
+        R sendMessageToEntity(EntityId eid, const std::string& id, Args... args) const
+        {
+            return sendMessageToEntity<R>(eid, hash::hashString(id), args...);
+        }
 
         inline void changeRequestPriority(const std::string& name, int priority) const { changeRequestPriority(hash::hashString(name), priority); }
 
