@@ -24,55 +24,6 @@ namespace Kunlaboro
     /// A RequestId.
     typedef GUID RequestId;
 
-    /// The Payload type to use.
-    class Payload
-    {
-    public:
-        Payload(const Payload& rhs) : mData(nullptr), mSize(rhs.mSize), mType(rhs.mType)
-        {
-            if (rhs.mData != nullptr)
-            {
-                mData = new char[mSize];
-                std::memcpy(mData, rhs.mData, mSize);
-            }
-        }
-        Payload(Payload&& rhs) : mData(std::move(rhs.mData)), mSize(std::move(rhs.mSize)), mType(std::move(rhs.mType)) { }
-
-        template<typename T>
-        Payload(const T& data) : mData(new T(data)), mSize(sizeof(T)), mType(typeid(T)) { }
-        template<typename T>
-        Payload(const T* data) : mData(new T(*data)), mSize(sizeof(T)), mType(typeid(T)) { }
-
-        Payload(std::nullptr_t null) : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
-        Payload() : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
-        ~Payload()
-        {
-            char* test = new (mData) char[mSize];
-
-            if (mData)
-                delete[] test;
-        }
-
-        Payload& operator=(Payload p)
-        {
-            std::swap(mData, p.mData);
-            std::swap(mSize, p.mSize);
-            std::swap(mType, p.mType);
-
-            return *this;
-        }
-
-        template<typename T>
-        T get() const { return *static_cast<const T*>(mData); }
-        template<typename T>
-        bool is() const { return mType == typeid(T); }
-
-    private:
-        void* mData;
-        size_t mSize;
-        std::type_index mType;
-    };
-
     template<typename T>
     class Optional
     {
@@ -119,11 +70,6 @@ namespace Kunlaboro
 
     /// A ComponentMap to store and access Component objects against their names.
     typedef std::unordered_map<std::string, std::deque<Component*> > ComponentMap;
-
-    /// A NameToIdMap to store GUID values of strings.
-    typedef std::unordered_map<std::string, GUID> NameToIdMap;
-    /// A IdToNameMap to store the string value that a GUID points to.
-    typedef std::unordered_map<GUID, std::string> IdToNameMap;
 
     /// The type of a message.
     enum MessageType

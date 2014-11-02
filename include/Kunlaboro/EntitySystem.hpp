@@ -259,29 +259,6 @@ namespace Kunlaboro
 
         ///@}
 
-        /** \brief Freezes the EntitySystem, forcing all following modifications to be put on a queue.
-         *
-         * \param rid The RequestId that's going to be frozen
-         */
-        void freeze(RequestId rid);
-        /** \brief Unfreezes the EntitySystem and lets it process all the queued modifications.
-         *
-         * \param rid The RequestId that's going to be unfrozen.
-         */
-        void unfreeze(RequestId rid);
-
-        /** \brief Check if the EntitySystem is frozen
-         *
-         * \returns If the EntitySystem has any frozen requests.
-         */
-        inline bool isFrozen() { return mFrozen > 0; }
-        /** \brief Check if the EntitySystem is frozen for the specified request.
-         *
-         * \param rid The RequestId you want to check.
-         * \returns If the given RequestId is frozen.
-         */
-        inline bool isFrozen(RequestId rid) { return mFrozenData.frozenRequests[rid].locked; }
-
         /** \brief Check if a specified entity is valid
          * 
          * \param eid The EntityId you want to check.
@@ -307,43 +284,8 @@ namespace Kunlaboro
             RequestMap localMessageRequests; ///< The local requests the Entity listens for.
         };
 
-        /// A container for anything that happened during a frozen period.
-        struct FrozenData
-        {
-            /// Storage for a locked request.
-            struct RequestLock
-            {
-                bool locked; ///< Is the request locked or not
-                std::recursive_mutex mutex; ///< The mutex for this request.
-                std::list<std::pair<Component*, std::pair<RequestId, int> > > repriorities; ///< A list of all the locked calls to reprioritize requests.
-                std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequests; ///< A list of all the locked calls to register local requests.
-                std::list<std::pair<ComponentRequested, ComponentRegistered>> localRequestRemoves; ///< A list of all the locked calls to remove local requests.
-                std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequests; ///< A list of all the locked calls to register global requests.
-                std::list<std::pair<ComponentRequested, ComponentRegistered>> globalRequestRemoves; ///< A list of all the locked calls to remove global requests.
-                RequestLock() : locked(false) { } ///< The standard constructor
-                ~RequestLock() { }
-                RequestLock(const RequestLock&);
-                RequestLock& operator=(const RequestLock&);
-            };
-
-            /// A map of all the frozen requests that have been made.
-            std::unordered_map<RequestId, RequestLock> frozenRequests;
-
-            /// Component destructions that were frozen.
-            std::list<Component*> frozenComponentDestructions;
-            /// Entity destructions that were frozen.
-            std::list<EntityId> frozenEntityDestructions;
-
-            /// Have any requests been frozen and need processing when the system is unfrozen?
-            bool needsProcessing;
-        } mFrozenData;
-
         ComponentId mComponentCounter; ///< The Component counter.
-        RequestId mRequestCounter; ///< The Request counter.
         EntityId mEntityCounter; ///< The Entity counter.
-
-        NameToIdMap mNameMap[2]; ///< Maps for getting GUIDs from names.
-        IdToNameMap mIdMap[2]; ///< Maps for converting GUIDs back to names.
 
         std::unordered_map<std::string, ComponentFactory> mRegisteredComponents; ///< Registered Components in the EntitySystem
         std::unordered_map<std::string, std::vector<std::string>> mRegisteredTemplates; ///< Registered Templates in the EntitySystem
@@ -356,7 +298,6 @@ namespace Kunlaboro
         std::unordered_map<EntityId,Entity*> mEntities; ///< List of created entities.
 
         bool mThreaded; ///< Should this EntitySystem allow for threading?
-        int mFrozen; ///< Is the EntitySystem frozen.
 
         unsigned int mEntityC; ///< Entity counter
         unsigned int mComponentC; ///< Component counter

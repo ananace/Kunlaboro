@@ -35,34 +35,10 @@ inline void insertedPush(std::deque<T>& deque, const T& value, Y comp)
     deque.insert(std::lower_bound(deque.begin(), deque.end(), value, comp), value);
 }
 
-EntitySystem::FrozenData::RequestLock::RequestLock(const RequestLock& b)
-{
-    locked = b.locked;
-    repriorities = b.repriorities;
-    localRequests = b.localRequests;
-    localRequestRemoves = b.localRequestRemoves;
-    globalRequests = b.globalRequests;
-    globalRequestRemoves = b.globalRequestRemoves;
-}
-EntitySystem::FrozenData::RequestLock& EntitySystem::FrozenData::RequestLock::operator=(const EntitySystem::FrozenData::RequestLock& b)
-{
-    if (this == &b)
-        return *this;
-
-    locked = b.locked;
-    repriorities = b.repriorities;
-    localRequests = b.localRequests;
-    localRequestRemoves = b.localRequestRemoves;
-    globalRequests = b.globalRequests;
-    globalRequestRemoves = b.globalRequestRemoves;
-    
-    return *this;
-}
-
 EntitySystem::EntitySystem(bool thread) :
-    mComponentCounter(1), mRequestCounter(1), mEntityCounter(1), mThreaded(thread), mFrozen(0), mEntityC(0), mComponentC(0)
+    mComponentCounter(1), mEntityCounter(1), mThreaded(thread), mEntityC(0), mComponentC(0)
 {
-    mFrozenData.needsProcessing = false;
+    
 }
 
 EntitySystem::~EntitySystem()
@@ -113,13 +89,6 @@ void EntitySystem::destroyEntity(EntityId entity)
 
     if (ent == NULL)
         throw std::runtime_error("Can't destroy a non-existant entity");
-
-    if (isFrozen())
-    {
-        mFrozenData.frozenEntityDestructions.push_back(entity);
-        mFrozenData.needsProcessing = true;
-        return;
-    }
 
 	for (auto& it : ent->components)
 	{
@@ -197,13 +166,6 @@ void EntitySystem::destroyComponent(Component* component)
     }
 
     component->setDestroyed();
-
-    if (isFrozen())
-    {
-        mFrozenData.frozenComponentDestructions.push_back(component);
-        mFrozenData.needsProcessing = true;
-        return;
-    }
 
     std::vector<ComponentRequested>& reqs = mRequestsByComponent[component->getId()];
     for (auto& it : reqs)
@@ -426,13 +388,6 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
     if (reqid == 0)
         throw std::runtime_error("Invalid request hash");
 
-    if (isFrozen(reqid))
-    {
-        mFrozenData.frozenRequests[reqid].globalRequests.push_back(std::pair<ComponentRequested, ComponentRegistered>(req, reg));
-        mFrozenData.needsProcessing = true;
-        return;
-    }
-
     if (req.reason == Reason_Component)
         insertedPush(mGlobalComponentRequests[reqid], reg, RequestSort);
     else
@@ -471,13 +426,6 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
     if (reqid == 0)
         throw std::runtime_error("Invalid request hash");
 
-    if (isFrozen(reqid))
-    {
-        mFrozenData.frozenRequests[reqid].localRequests.push_back(std::pair<ComponentRequested, ComponentRegistered>(req, reg));
-        mFrozenData.needsProcessing = true;
-        return;
-    }
-
     Entity* ent = mEntities[reg.component->getOwnerId()];
 
     if (req.reason == Reason_Component)
@@ -513,13 +461,6 @@ void EntitySystem::removeGlobalRequest(const ComponentRequested& req, const Comp
 
     if (reqid == 0)
         throw std::runtime_error("Invalid request hash");
-
-    if (isFrozen(reqid))
-    {
-        mFrozenData.frozenRequests[reqid].globalRequestRemoves.push_back(std::pair<ComponentRequested, ComponentRegistered>(req, reg));
-        mFrozenData.needsProcessing = true;
-        return;
-    }
 
     RequestMap* chooser = &mGlobalComponentRequests;
     if (req.reason == Reason_Message)
@@ -567,13 +508,6 @@ void EntitySystem::removeLocalRequest(const ComponentRequested& req, const Compo
     if (reqid == 0)
         throw std::runtime_error("Invalid request hash");
 
-    if (isFrozen(reqid))
-    {
-        mFrozenData.frozenRequests[reqid].localRequestRemoves.push_back(std::pair<ComponentRequested, ComponentRegistered>(req, reg));
-        mFrozenData.needsProcessing = true;
-        return;
-    }
-
     Entity* ent = mEntities[reg.component->getOwnerId()];
 
     RequestMap* chooser = &ent->localComponentRequests;
@@ -593,13 +527,6 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
 {
     if (reqid == 0)
         throw std::runtime_error("Invalid request hash");
-
-    if (isFrozen(reqid))
-    {
-        mFrozenData.frozenRequests[reqid].repriorities.push_back(std::pair<Component*, std::pair<RequestId, int> >(comp, std::pair<RequestId, int>(reqid, priority)));
-        mFrozenData.needsProcessing = true;
-        return;
-    }
 
     Entity* ent = mEntities[comp->getOwnerId()];
 
@@ -634,71 +561,4 @@ void EntitySystem::reprioritizeRequest(Component* comp, RequestId reqid, int pri
                 break;
             }
     }
-}
-
-void EntitySystem::freeze(RequestId rid)
-{
-    FrozenData::RequestLock& lock = mFrozenData.frozenRequests[rid];
-
-    if (mThreaded)
-        lock.mutex.lock();
-    else if (lock.locked)
-        return;
-
-    mFrozen++;
-    lock.locked = true;
-}
-
-void EntitySystem::unfreeze(RequestId rid)
-{
-    FrozenData::RequestLock& lock = mFrozenData.frozenRequests[rid];
-
-    if (!lock.locked) throw std::runtime_error("Tried to unfreeze a request that wasn't frozen!");
-
-    if (--mFrozen < 0) mFrozen = 0;
-
-    auto& repriorities = lock.repriorities;
-	auto& localRequests = lock.localRequests;
-	auto& localRequestRemoves = lock.localRequestRemoves;
-	auto& globalRequests = lock.globalRequests;
-	auto& globalRequestRemoves = lock.globalRequestRemoves;
-
-    for (auto& it : localRequests)
-        registerLocalRequest(it.first, it.second);
-
-    for (auto& it : globalRequests)
-        registerGlobalRequest(it.first, it.second);
-
-    for (auto& it : repriorities)
-        reprioritizeRequest(it.first, it.second.first, it.second.second);
-
-    for (auto& it : localRequestRemoves)
-        removeLocalRequest(it.first, it.second);
-
-    for (auto& it : globalRequestRemoves)
-        removeGlobalRequest(it.first, it.second);
-
-    //mFrozenData.frozenRequests.erase(rid);
-
-    if (mFrozen <= 0 && mFrozenData.needsProcessing)
-    {
-        mFrozenData.needsProcessing = false;
-        //Process frozen queues
-
-        auto frozenComponentDestructions = mFrozenData.frozenComponentDestructions;
-        auto frozenEntityDestructions = mFrozenData.frozenEntityDestructions;
-        mFrozenData.frozenComponentDestructions.clear();
-        mFrozenData.frozenEntityDestructions.clear();
-
-        for (auto& it : frozenComponentDestructions)
-            destroyComponent(it);
-
-        for (auto& it : frozenEntityDestructions)
-            destroyEntity(it);
-    }
-
-    lock.locked = false;
-
-    if (mThreaded)
-        lock.mutex.unlock();
 }
