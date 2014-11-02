@@ -1,5 +1,7 @@
 #pragma once
 
+#include "EntitySystem.hpp"
+
 #include <functional>
 #include <type_traits>
 
@@ -57,6 +59,33 @@ namespace
         Kunlaboro::RequestId mRID;
         bool mLocal;
     };
+}
+
+template<typename R, typename... Args>
+void Kunlaboro::Component::requestMessage(RequestId rid, const std::function<R(Args...)>& func, bool local) const
+{
+    if (local)
+        getEntitySystem()->registerLocalMessage(*this, rid, func);
+    else
+        getEntitySystem()->registerGlobalMessage(*this, rid, func);
+}
+
+template<typename R, typename... Args>
+R Kunlaboro::Component::sendMessage(RequestId id, Args... args) const
+{
+    return getEntitySystem()->sendUnsafeLocalMessage(mOwner, id, args...);
+}
+
+template<typename R, typename... Args>
+R Kunlaboro::Component::sendGlobalMessage(RequestId id, Args... args) const
+{
+    return getEntitySystem()->sendUnsafeGlobalMessage(id, args...);
+}
+
+template<typename R, typename... Args>
+R Kunlaboro::Component::sendMessageToEntity(EntityId eid, RequestId id, Args... args) const
+{
+    return getEntitySystem()->sendUnsafeLocalMessage(eid, id, args...);
 }
 
 template<class T, class R, typename... Args>

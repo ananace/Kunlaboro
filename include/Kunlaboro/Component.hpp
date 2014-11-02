@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Kunlaboro/Defines.hpp>
-#include <Kunlaboro/EntitySystem.hpp>
+
 #include <functional>
 #include <string>
 
@@ -45,13 +45,7 @@ namespace Kunlaboro
          * \param local Should this request only listen to messages directed to the local entity?
          */
         template<typename R, typename... Args>
-        void requestMessage(RequestId rid, const std::function<R(Args...)>& func, bool local = false) const
-        {
-            if (local)
-                getEntitySystem()->registerLocalMessage(*this, rid, func);
-            else
-                getEntitySystem()->registerGlobalMessage(*this, rid, func);
-        }
+        void requestMessage(RequestId rid, const std::function<R(Args...)>& func, bool local = false) const;
 
         template<typename R, typename... Args>
         void requestMessage(const std::string& request, const std::function<R(Args...)>& func, bool local = false) const
@@ -116,10 +110,7 @@ namespace Kunlaboro
          * \sa sendMessage(RequestId, const Payload&) const
          */
         template<typename R, typename... Args>
-        R sendMessage(RequestId id, Args... args) const
-        {
-            return getEntitySystem()->sendUnsafeLocalMessage(mOwner, id, args...);
-        }
+        R sendMessage(RequestId id, Args... args) const;
 
         /** \brief Send a message to the entire EntitySystem that the local entity is a part of.
          *
@@ -133,10 +124,7 @@ namespace Kunlaboro
          * \sa sendGlobalMessage(RequestId, const Payload&) const
          */
         template<typename R, typename... Args>
-        R sendGlobalMessage(RequestId id, Args... args) const
-        {
-            return getEntitySystem()->sendUnsafeGlobalMessage(id, args...);
-        }
+        R sendGlobalMessage(RequestId id, Args... args) const;
 
         /** \brief Send a message to a specific entity.
          *
@@ -151,10 +139,7 @@ namespace Kunlaboro
          * \sa sendMessageToEntity(EntityId, RequestId, const Payload&) const
          */
         template<typename R, typename... Args>
-        R sendMessageToEntity(EntityId eid, RequestId id, Args... args) const
-        {
-            return getEntitySystem()->sendUnsafeLocalMessage(eid, id, args...);
-        }
+        R sendMessageToEntity(EntityId eid, RequestId id, Args... args) const;
 
         inline void changeRequestPriority(const std::string& name, int priority) const { changeRequestPriority(hash::hashString(name), priority); }
 

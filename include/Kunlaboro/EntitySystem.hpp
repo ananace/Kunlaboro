@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Kunlaboro/Defines.hpp>
-#include <Kunlaboro/Component.hpp>
 
 #include <unordered_map>
 #include <vector>
@@ -171,36 +170,16 @@ namespace Kunlaboro
         void registerGlobalRequest(const ComponentRequested& req, const ComponentRegistered& reg);
 
         template<typename R, typename... Args>
-        void registerGlobalMessage(Component* component, RequestId rid, const std::function<Optional<R>(Args...)>& callback)
-        {
-            ComponentRegistered reg = { component, *reinterpret_cast<std::function<void()>*>(const_cast<std::function<Optional<R>(Args...)>*>(&callback)), &typeid(callback), false, 0 };
-
-            mGlobalMessageRequests[rid].push_back(std::move(reg));
-        }
+        void registerGlobalMessage(Component* component, RequestId rid, const std::function<Optional<R>(Args...)>& callback);
 
         template<typename... Args>
-        void registerGlobalMessage(Component* component, RequestId rid, const std::function<void(Args...)>& callback)
-        {
-            ComponentRegistered reg = { component, *reinterpret_cast<std::function<void()>*>(const_cast<std::function<void(Args...)>*>(&callback)), &typeid(callback), false, 0 };
-
-            mGlobalMessageRequests[rid].push_back(std::move(reg));
-        }
+        void registerGlobalMessage(Component* component, RequestId rid, const std::function<void(Args...)>& callback);
 
         template<typename R, typename... Args>
-        void registerLocalMessage(Component* component, RequestId rid, const std::function<Optional<R>(Args...)>& callback)
-        {
-            ComponentRegistered reg = { component, *reinterpret_cast<std::function<void()>*>(const_cast<std::function<Optional<R>(Args...)>*>(&callback)), &typeid(callback), false, 0 };
-
-            mEntities[component->getOwnerId()]->localMessageRequests[rid].push_back(reg);
-        }
+        void registerLocalMessage(Component* component, RequestId rid, const std::function<Optional<R>(Args...)>& callback);
 
         template<typename... Args>
-        void registerLocalMessage(Component* component, RequestId rid, const std::function<void(Args...)>& callback)
-        {
-            ComponentRegistered reg = { component, *reinterpret_cast<std::function<void()>*>(const_cast<std::function<void(Args...)>*>(&callback)), &typeid(callback), false, 0 };
-
-            mEntities[component->getOwnerId()]->localMessageRequests[rid].push_back(reg);
-        }
+        void registerLocalMessage(Component* component, RequestId rid, const std::function<void(Args...)>& callback);
 
         void reprioritizeGlobalMessage(const Component& component, RequestId rid, int priority);
         void reprioritizeLocalMessage(const Component& component, RequestId rid, int priority);
@@ -255,136 +234,28 @@ namespace Kunlaboro
          * \param msg The Message to send.
          */
         template<typename R, typename... Args>
-        Optional<R> sendSafeGlobalMessage(RequestId id, Args... arguments)
-        {
-            auto& reqs = mGlobalMessageRequests[id];
-
-            for (auto& it : reqs)
-            {
-                if (typeid(std::function<Optional<R>(Args...)>) != *it.type)
-                    continue;
-
-                Optional<R> ret = (*reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.callback))(arguments...);
-
-                if (ret)
-                    return ret;
-            }
-
-            return nullptr;
-        }
+        Optional<R> sendSafeGlobalMessage(RequestId id, Args... arguments);
 
         template<typename... Args>
-        void sendSafeGlobalMessage(RequestId id, Args... arguments)
-        {
-            auto& reqs = mGlobalMessageRequests[id];
-
-            for (auto& it : reqs)
-            {
-                if (typeid(std::function<void(Args...)>) != *it.type)
-                    continue;
-
-                (*reinterpret_cast<std::function<void(Args...)>*>(&it.callback))(arguments...);
-            }
-        }
+        void sendSafeGlobalMessage(RequestId id, Args... arguments);
 
         template<typename R, typename... Args>
-        Optional<R> sendUnsafeGlobalMessage(RequestId id, Args... arguments)
-        {
-            auto reqs = mGlobalMessageRequests[id];
-
-            for (auto& it : reqs)
-            {
-                if (typeid(std::function<Optional<R>(Args...)>) != *it.type)
-                    continue;
-
-                Optional<R> ret = (*reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.callback))(arguments...);
-
-                if (ret)
-                    return ret;
-            }
-
-            return nullptr;
-        }
+        Optional<R> sendUnsafeGlobalMessage(RequestId id, Args... arguments);
 
         template<typename... Args>
-        void sendUnsafeGlobalMessage(RequestId id, Args... arguments)
-        {
-            auto reqs = mGlobalMessageRequests[id];
-
-            for (auto& it : reqs)
-            {
-                if (typeid(std::function<void(Args...)>) != *it.type)
-                    continue;
-
-                (*reinterpret_cast<std::function<void(Args...)>*>(&it.callback))(arguments...);
-            }
-        }
+        void sendUnsafeGlobalMessage(RequestId id, Args... arguments);
 
         template<typename R, typename... Args>
-        Optional<R> sendSafeLocalMessage(EntityId eid, RequestId id, Args... arguments)
-        {
-            auto& reqs = mGlobalMessageRequests[id];
-
-            for (auto& it : reqs)
-            {
-                if (typeid(std::function<Optional<R>(Args...)>) != *it.type)
-                    continue;
-
-                auto ret = (*reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.callback))(arguments...);
-
-                if (ret)
-                    return ret;
-            }
-
-            return nullptr;
-        }
+        Optional<R> sendSafeLocalMessage(EntityId eid, RequestId id, Args... arguments);
 
         template<typename... Args>
-        void sendSafeLocalMessage(EntityId eid, RequestId id, Args... arguments)
-        {
-            auto& reqs = mGlobalMessageRequests[id];
-
-            for (auto& it : reqs)
-            {
-                if (typeid(std::function<void(Args...)>) != *it.type)
-                    continue;
-
-                (*reinterpret_cast<std::function<void(Args...)>*>(&it.callback))(arguments...);
-            }
-        }
+        void sendSafeLocalMessage(EntityId eid, RequestId id, Args... arguments);
 
         template<typename R, typename... Args>
-        Optional<R> sendUnsafeLocalMessage(EntityId eid, RequestId id, Args... arguments)
-        {
-            auto reqs = mGlobalMessageRequests[id];
-
-            for (auto& it : reqs)
-            {
-                if (typeid(std::function<Optional<R>(Args...)>) != *it.type)
-                    continue;
-
-                auto ret = (*reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.callback))(arguments...);
-
-                if (ret)
-                    return ret;
-            }
-
-            return nullptr;
-        }
+        Optional<R> sendUnsafeLocalMessage(EntityId eid, RequestId id, Args... arguments);
 
         template<typename... Args>
-        void sendUnsafeLocalMessage(EntityId eid, RequestId id, Args... arguments)
-        {
-            auto reqs = mGlobalMessageRequests[id];
-
-            for (auto& it : reqs)
-            {
-                if (typeid(std::function<void(Args...)>) != *it.type)
-                    continue;
-
-                (*reinterpret_cast<std::function<void(Args...)>*>(&it.callback))(arguments...);
-            }
-        }
+        void sendUnsafeLocalMessage(EntityId eid, RequestId id, Args... arguments);
 
         /** \brief Send a local message to all the Component objects in the specified entity.
          *
