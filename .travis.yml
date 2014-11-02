@@ -17,4 +17,6 @@ before_script:
 
 script: 
   - make Kunlaboro
-  - make runtests
+  - make testsuite
+  - cd tests
+  - ./testsuite
