@@ -2,6 +2,7 @@
 #include <Kunlaboro/Component.hpp>
 #include <stdexcept>
 #include <algorithm>
+#include <iterator>
 
 using namespace Kunlaboro;
 
