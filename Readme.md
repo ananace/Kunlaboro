@@ -1,4 +1,4 @@
-Kunlaboro [![Build Status](https://travis-ci.org/ace13/Kunlaboro.svg)](https://travis-ci.org/ace13/Kunlaboro)
+Kunlaboro [![Build Status](https://travis-ci.org/ace13/Kunlaboro.svg?branch=master)](https://travis-ci.org/ace13/Kunlaboro)
 =========
 
 [Source](https://github.com/ace13/Kunlaboro) | [Issues](https://github.com/ace13/Kunlaboro/issues) | [Documentation](https://ace13.github.io/Kunlaboro)
