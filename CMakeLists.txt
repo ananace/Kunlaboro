@@ -47,6 +47,10 @@ set(Kunlaboro_SOURCES
 	source/Kunlaboro/EntitySystem.cpp
 )
 
+include_directories(
+	${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
 add_library(Kunlaboro STATIC ${Kunlaboro_HEADERS} ${Kunlaboro_SOURCES})
 
 if (WIN32 OR CYGWIN OR APPLE OR WITH_PIC OR DISABLE_SHARED OR NOT CMAKE_SHARED_LIBRARY_C_FLAGS)
@@ -56,8 +60,3 @@ endif()
 if (NOT _SKIP_PIC)
   set_target_properties(Kunlaboro PROPERTIES COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}")
 endif()
-
-include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR}/include
-	${CMAKE_CURRENT_BINARY_DIR}/include
-)

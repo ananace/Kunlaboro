@@ -233,29 +233,29 @@ namespace Kunlaboro
          * \param id The RequestId to send.
          * \param msg The Message to send.
          */
-        template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
-        inline Optional<R> sendSafeGlobalMessage(RequestId id, Args... arguments);
+		template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
+        inline Optional<R> sendSafeGlobalMessage(RequestId id, Args2&&... arguments);
 
-        template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
-        inline void sendSafeGlobalMessage(RequestId id, Args... arguments);
+		template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
+		inline void sendSafeGlobalMessage(RequestId id, Args2&&... arguments);
 
-        template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
-        inline Optional<R> sendUnsafeGlobalMessage(RequestId id, Args... arguments);
+		template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
+		inline Optional<R> sendUnsafeGlobalMessage(RequestId id, Args2&&... arguments);
 
-        template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
-        inline void sendUnsafeGlobalMessage(RequestId id, Args... arguments);
+		template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
+		inline void sendUnsafeGlobalMessage(RequestId id, Args2&&... arguments);
 
-        template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
-        inline Optional<R> sendSafeLocalMessage(EntityId eid, RequestId id, Args... arguments);
+		template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
+		inline Optional<R> sendSafeLocalMessage(EntityId eid, RequestId id, Args2&&... arguments);
 
-        template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
-        inline void sendSafeLocalMessage(EntityId eid, RequestId id, Args... arguments);
+		template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
+		inline void sendSafeLocalMessage(EntityId eid, RequestId id, Args2&&... arguments);
 
-        template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
-        inline Optional<R> sendUnsafeLocalMessage(EntityId eid, RequestId id, Args... arguments);
+		template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
+		inline Optional<R> sendUnsafeLocalMessage(EntityId eid, RequestId id, Args2&&... arguments);
 
-        template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
-        inline void sendUnsafeLocalMessage(EntityId eid, RequestId id, Args... arguments);
+		template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
+		inline void sendUnsafeLocalMessage(EntityId eid, RequestId id, Args2&&... arguments);
 
         ///@}
 
