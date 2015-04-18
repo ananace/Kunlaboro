@@ -419,7 +419,7 @@ void EntitySystem::registerLocalRequest(const ComponentRequested& req, const Com
 	{
 		if (it->isValid() && reg.component->getId() != it->getId())
 		{
-            (*reinterpret_cast<ComponentCallback*>(const_cast<std::function<void()>*>(&reg.functional)))(it, Type_Destroy);
+            (*reinterpret_cast<ComponentCallback*>(const_cast<std::function<void()>*>(&reg.functional)))(it, Type_Create);
 		}
 	}
 }
