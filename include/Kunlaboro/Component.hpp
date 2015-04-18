@@ -286,7 +286,7 @@ namespace Kunlaboro
          * \param local Should this request only listen to local message?
          */
         template<class T, class R, typename... Args>
-        inline void requestMessage(const std::string& name, R (T::*f)(Args...), bool local = false);
+        inline void requestMessage(const std::string& name, R(T::*f)(Args...), bool local = false);
         template<class T, class R, typename... Args>
         inline void requestMessage(const std::string& name, R(T::*f)(Args...) const, bool local = false);
         /** \brief Add a request to be told whenever a specific component is added.

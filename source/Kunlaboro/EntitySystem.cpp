@@ -168,6 +168,20 @@ void EntitySystem::destroyComponent(Component* component)
 
     component->setDestroyed();
 
+	auto reqcopy = mRequestsByComponent[component->getId()];
+	for (auto& req : reqcopy)
+	{
+		std::deque<ComponentRegistered> copy;
+		if (req.reason == Reason_Message)
+			copy = mGlobalMessageRequests[req.hash];
+		else
+			copy = mGlobalComponentRequests[req.hash];
+
+		for (auto& reg : copy)
+			if (reg.component == component)
+				removeGlobalRequest(req, reg);
+	}
+
     mRequestsByComponent.erase(component->getId());
 
 	Entity* ent = mEntities[component->getOwnerId()];
@@ -272,6 +286,17 @@ void EntitySystem::removeComponent(EntityId entity, Component* component)
     if (found == comps.end())
         throw std::runtime_error("Can't remove a component from an entity that doesn't contain it");
 
+	for (auto& req : mRequestsByComponent[component->getId()])
+	{
+		std::deque<ComponentRegistered> copy;
+		if (req.reason == Reason_Message)
+			copy = mGlobalMessageRequests[req.hash];
+		else
+			copy = mGlobalComponentRequests[req.hash];
+
+		for (auto& reg : copy)
+			removeGlobalRequest(req, reg);
+	}
     mRequestsByComponent.erase(component->getId());
 
 	auto toRemove = std::remove_if(comps.begin(), comps.end(), [component](Component* req) { return req == component; });
