@@ -197,22 +197,22 @@ namespace Kunlaboro
         template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
         inline void sendMessageToEntity(EntityId eid, const std::string& id, Args2&&... args) const
         {
-            return sendMessageToEntity<void>(eid, hash::hashString(id), std::forward<Args2>(args)...);
+			return sendMessageToEntity<void, Args...>(eid, hash::hashString(id), std::forward<Args2>(args)...);
         }
         template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
         inline void sendMessageToEntity(EntityId eid, const char* id, Args2&&... args) const
         {
-            return sendMessageToEntity<void>(eid, hash::hash_func1::hash(id), std::forward<Args2>(args)...);
+			return sendMessageToEntity<void, Args...>(eid, hash::hash_func1::hash(id), std::forward<Args2>(args)...);
         }
         template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
         inline Optional<R> sendMessageToEntity(EntityId eid, const char* id, Args2&&... args) const
         {
-            return sendMessageToEntity<R>(eid, hash::hash_func1::hash(id), std::forward<Args2>(args)...);
+			return sendMessageToEntity<R, Args...>(eid, hash::hash_func1::hash(id), std::forward<Args2>(args)...);
         }
         template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
         inline Optional<R> sendMessageToEntity(EntityId eid, const std::string& id, Args2&&... args) const
         {
-            return sendMessageToEntity<R>(eid, hash::hashString(id), std::forward<Args2>(args)...);
+            return sendMessageToEntity<R, Args...>(eid, hash::hashString(id), std::forward<Args2>(args)...);
         }
 
         inline void changeRequestPriority(const std::string& name, int priority) const { changeRequestPriority(hash::hashString(name), priority); }
