@@ -96,6 +96,9 @@ Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendUnsafeGlobalMessage(RequestI
 
     for (auto& it : reqs)
     {
+		if (mRequestsByComponent.count(it.component) == 0)
+			continue;
+
 		Optional<R> ret = (reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.functional))->operator()(std::forward<Args2>(arguments)...);
 
         if (ret)
@@ -115,6 +118,9 @@ void Kunlaboro::EntitySystem::sendUnsafeGlobalMessage(RequestId id, Args2&&...ar
 
     for (auto& it : reqs)
     {
+		if (mRequestsByComponent.count(it.component) == 0)
+			continue;
+
 		(reinterpret_cast<std::function<void(Args...)>*>(&it.functional))->operator()(std::forward<Args2>(arguments)...);
     }
 }
@@ -156,6 +162,9 @@ Kunlaboro::Optional<R> Kunlaboro::EntitySystem::sendUnsafeLocalMessage(EntityId 
 
     for (auto& it : reqs)
     {
+		if (mRequestsByComponent.count(it.component) == 0)
+			continue;
+
 		auto ret = (reinterpret_cast<std::function<Optional<R>(Args...)>*>(&it.functional))->operator()(std::forward<Args2>(arguments)...);
 
         if (ret)
@@ -175,6 +184,9 @@ void Kunlaboro::EntitySystem::sendUnsafeLocalMessage(EntityId eid, RequestId id,
 
     for (auto& it : reqs)
     {
+		if (mRequestsByComponent.count(it.component) == 0)
+			continue;
+
 		(reinterpret_cast<std::function<void(Args...)>*>(&it.functional))->operator()(std::forward<Args2>(arguments)...);
     }
 }

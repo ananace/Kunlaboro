@@ -294,7 +294,7 @@ namespace Kunlaboro
         RequestMap mGlobalMessageRequests; ///< Globally registered requests.
         RequestMap mGlobalComponentRequests; ///< Globally registered requests.
 
-        std::unordered_map<ComponentId, std::vector<ComponentRequested> > mRequestsByComponent; ///< Requests by component.
+        std::unordered_map<Component*, std::vector<ComponentRequested> > mRequestsByComponent; ///< Requests by component.
         std::unordered_map<EntityId,Entity*> mEntities; ///< List of created entities.
 
         bool mThreaded; ///< Should this EntitySystem allow for threading?

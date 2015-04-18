@@ -168,7 +168,7 @@ void EntitySystem::destroyComponent(Component* component)
 
     component->setDestroyed();
 
-	auto reqcopy = mRequestsByComponent[component->getId()];
+	auto reqcopy = mRequestsByComponent[component];
 	for (auto& req : reqcopy)
 	{
 		std::deque<ComponentRegistered> copy;
@@ -182,7 +182,7 @@ void EntitySystem::destroyComponent(Component* component)
 				removeGlobalRequest(req, reg);
 	}
 
-    mRequestsByComponent.erase(component->getId());
+    mRequestsByComponent.erase(component);
 
 	Entity* ent = mEntities[component->getOwnerId()];
 
@@ -286,7 +286,7 @@ void EntitySystem::removeComponent(EntityId entity, Component* component)
     if (found == comps.end())
         throw std::runtime_error("Can't remove a component from an entity that doesn't contain it");
 
-	for (auto& req : mRequestsByComponent[component->getId()])
+	for (auto& req : mRequestsByComponent[component])
 	{
 		std::deque<ComponentRegistered> copy;
 		if (req.reason == Reason_Message)
@@ -297,7 +297,7 @@ void EntitySystem::removeComponent(EntityId entity, Component* component)
 		for (auto& reg : copy)
 			removeGlobalRequest(req, reg);
 	}
-    mRequestsByComponent.erase(component->getId());
+    mRequestsByComponent.erase(component);
 
 	auto toRemove = std::remove_if(comps.begin(), comps.end(), [component](Component* req) { return req == component; });
 	comps.erase(toRemove, comps.end());
@@ -393,7 +393,7 @@ void EntitySystem::registerGlobalRequest(const ComponentRequested& req, const Co
     if (reg.required && !mEntities[reg.component->getOwnerId()]->finalised)
         mRequiredComponents[reg.component->getOwnerId()].push_back(req.name);
 
-    mRequestsByComponent[reg.component->getId()].push_back(req);
+    mRequestsByComponent[reg.component].push_back(req);
 
     if (req.reason == Reason_Message)
         return;
@@ -483,7 +483,7 @@ void EntitySystem::removeGlobalRequest(const ComponentRequested& req, const Comp
 				}
 			}
 
-			std::vector<ComponentRequested>& reqs = mRequestsByComponent[reg.component->getId()];
+			std::vector<ComponentRequested>& reqs = mRequestsByComponent[reg.component];
 			auto it2 = std::find_if(reqs.begin(), reqs.end(), RequestFind(req));
 			if (it2 != reqs.end())
 				reqs.erase(it2);
