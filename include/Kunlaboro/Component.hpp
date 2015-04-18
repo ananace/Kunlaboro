@@ -113,30 +113,30 @@ namespace Kunlaboro
          * \sa sendMessage(RequestId) const
          * \sa sendMessage(RequestId, const Payload&) const
          */
-        template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
-        inline void sendMessage(RequestId id, Args... args) const;
-        template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
-        inline Optional<R> sendMessage(RequestId id, Args... args) const;
+		template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
+        inline void sendMessage(RequestId id, Args2&&... args) const;
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
+        inline Optional<R> sendMessage(RequestId id, Args2&&... args) const;
 
-        template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
-        inline void sendMessage(const std::string& id, Args... args) const
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
+        inline void sendMessage(const std::string& id, Args2&&... args) const
         {
-            sendMessage<void>(hash::hashString(id), args...);
+			sendMessage<void, Args...>(hash::hashString(id), std::forward<Args2>(args)...);
         }
-        template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
-        inline void sendMessage(const char* id, Args... args) const
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
+        inline void sendMessage(const char* id, Args2&&... args) const
         {
-            sendMessage<void>(hash::hash_func1::hash(id), args...);
+            sendMessage<void, Args...>(hash::hash_func1::hash(id), std::forward<Args2>(args)...);
         }
-        template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
-        inline Optional<R> sendMessage(const char* id, Args... args) const
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
+        inline Optional<R> sendMessage(const char* id, Args2&&... args) const
         {
-            return sendMessage<R>(hash::hash_func1::hash(id), args...);
+			return sendMessage<R, Args...>(hash::hash_func1::hash(id), std::forward<Args2>(args)...);
         }
-        template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
-        inline Optional<R> sendMessage(const std::string& id, Args... args) const
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
+        inline Optional<R> sendMessage(const std::string& id, Args2&&... args) const
         {
-            return sendMessage<R>(hash::hashString(id), args...);
+			return sendMessage<R, Args...>(hash::hashString(id), std::forward<Args2>(args)...);
         }
 
         /** \brief Send a message to the entire EntitySystem that the local entity is a part of.
@@ -150,30 +150,30 @@ namespace Kunlaboro
          * \sa sendGlobalMessage(RequestId) const
          * \sa sendGlobalMessage(RequestId, const Payload&) const
          */
-        template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
-        inline void sendGlobalMessage(RequestId id, Args... args) const;
-        template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
-        inline Optional<R> sendGlobalMessage(RequestId id, Args... args) const;
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
+        inline void sendGlobalMessage(RequestId id, Args2&&... args) const;
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
+        inline Optional<R> sendGlobalMessage(RequestId id, Args2&&... args) const;
 
-        template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
-        inline void sendGlobalMessage(const std::string& id, Args... args) const
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
+        inline void sendGlobalMessage(const std::string& id, Args2&&... args) const
         {
-            sendGlobalMessage<void>(hash::hashString(id), args...);
+			sendGlobalMessage<void, Args...>(hash::hashString(id), std::forward<Args2>(args)...);
         }
-        template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
-        inline void sendGlobalMessage(const char* id, Args... args) const
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
+        inline void sendGlobalMessage(const char* id, Args2&&... args) const
         {
-            sendGlobalMessage<void>(hash::hash_func1::hash(id), args...);
+			sendGlobalMessage<void, Args...>(hash::hash_func1::hash(id), std::forward<Args2>(args)...);
         }
-        template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
-        inline Optional<R> sendGlobalMessage(const char* id, Args... args) const
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
+        inline Optional<R> sendGlobalMessage(const char* id, Args2&&... args) const
         {
-            return sendGlobalMessage<R>(hash::hash_func1::hash(id), args...);
+			return sendGlobalMessage<R, Args...>(hash::hash_func1::hash(id), std::forward<Args2>(args)...);
         }
-        template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
-        inline Optional<R> sendGlobalMessage(const std::string& id, Args... args) const
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
+        inline Optional<R> sendGlobalMessage(const std::string& id, Args2&&... args) const
         {
-            return sendGlobalMessage<R>(hash::hashString(id), args...);
+			return sendGlobalMessage<R, Args...>(hash::hashString(id), std::forward<Args2>(args)...);
         }
         
 
@@ -189,30 +189,30 @@ namespace Kunlaboro
          * \sa sendMessageToEntity(EntityId, RequestId) const
          * \sa sendMessageToEntity(EntityId, RequestId, const Payload&) const
          */
-        template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
-        inline void sendMessageToEntity(EntityId eid, RequestId id, Args... args) const;
-        template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
-        inline Optional<R> sendMessageToEntity(EntityId eid, RequestId id, Args... args) const;
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
+        inline void sendMessageToEntity(EntityId eid, RequestId id, Args2&&... args) const;
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
+        inline Optional<R> sendMessageToEntity(EntityId eid, RequestId id, Args2&&... args) const;
 
-        template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
-        inline void sendMessageToEntity(EntityId eid, const std::string& id, Args... args) const
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
+        inline void sendMessageToEntity(EntityId eid, const std::string& id, Args2&&... args) const
         {
-            return sendMessageToEntity<void>(eid, hash::hashString(id), args...);
+            return sendMessageToEntity<void>(eid, hash::hashString(id), std::forward<Args2>(args)...);
         }
-        template<typename R, typename... Args, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
-        inline void sendMessageToEntity(EntityId eid, const char* id, Args... args) const
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<std::is_void<R>::value, R>::type* = nullptr>
+        inline void sendMessageToEntity(EntityId eid, const char* id, Args2&&... args) const
         {
-            return sendMessageToEntity<void>(eid, hash::hash_func1::hash(id), args...);
+            return sendMessageToEntity<void>(eid, hash::hash_func1::hash(id), std::forward<Args2>(args)...);
         }
-        template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
-        inline Optional<R> sendMessageToEntity(EntityId eid, const char* id, Args... args) const
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
+        inline Optional<R> sendMessageToEntity(EntityId eid, const char* id, Args2&&... args) const
         {
-            return sendMessageToEntity<R>(eid, hash::hash_func1::hash(id), args...);
+            return sendMessageToEntity<R>(eid, hash::hash_func1::hash(id), std::forward<Args2>(args)...);
         }
-        template<typename R, typename... Args, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
-        inline Optional<R> sendMessageToEntity(EntityId eid, const std::string& id, Args... args) const
+        template<typename R, typename... Args, typename... Args2, typename std::enable_if<!std::is_void<R>::value, R>::type* = nullptr>
+        inline Optional<R> sendMessageToEntity(EntityId eid, const std::string& id, Args2&&... args) const
         {
-            return sendMessageToEntity<R>(eid, hash::hashString(id), args...);
+            return sendMessageToEntity<R>(eid, hash::hashString(id), std::forward<Args2>(args)...);
         }
 
         inline void changeRequestPriority(const std::string& name, int priority) const { changeRequestPriority(hash::hashString(name), priority); }
