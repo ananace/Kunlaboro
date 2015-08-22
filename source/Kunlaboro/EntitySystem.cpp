@@ -221,7 +221,7 @@ void EntitySystem::destroyComponent(Component* component)
         }
         else
         {
-            auto& reqList = mGlobalComponentRequests[reqid];
+            auto& reqList = mGlobalMessageRequests[reqid];
             auto toRemove = std::remove_if(reqList.begin(), reqList.end(), [component](ComponentRegistered& req) { return req.component == component; });
             reqList.erase(toRemove, reqList.end());
         }
@@ -663,6 +663,9 @@ void EntitySystem::sendUnsafeGlobalMessage(RequestId reqid, Message& msg)
 
     for (auto& it : reqs)
     {
+        if (it.component->mEntitySystem != this || !it.component->isValid())
+            continue;
+
         it.callback(msg);
 
         if (msg.handled)
