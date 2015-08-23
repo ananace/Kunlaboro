@@ -42,7 +42,7 @@ namespace Kunlaboro
         Payload(const T& data) : mData(new T(data)), mSize(sizeof(T)), mType(typeid(T)) { }
 
         template<typename T>
-        Payload(const T* data) : mData(new T(data)), mSize(sizeof(T)), mType(typeid(T)) { }
+        Payload(const T* data) : mData(new T*(const_cast<T*>(data))), mSize(sizeof(T)), mType(typeid(T)) { }
 
         Payload(std::nullptr_t) : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
         Payload() : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
