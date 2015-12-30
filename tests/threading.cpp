@@ -17,13 +17,13 @@ SCENARIO("Threaded message passing")
         void addedToEntity()
         {
             requestMessage("Increment", [](const Kunlaboro::Message& msg) {
-                std::atomic_uint& value = *boost::any_cast<std::atomic_uint*>(msg.payload);
+                std::atomic_uint& value = *boost::any_cast<std::atomic_uint*>(msg.Data);
 
                 ++value;
             }, true);
 
             requestMessage("Decrement", [](const Kunlaboro::Message& msg) {
-                std::atomic_uint& value = *boost::any_cast<std::atomic_uint*>(msg.payload);
+                std::atomic_uint& value = *boost::any_cast<std::atomic_uint*>(msg.Data);
 
                 --value;
             }, true);
@@ -45,9 +45,9 @@ SCENARIO("Threaded message passing")
 
             std::list<std::thread*> threads = {
                 new std::thread([eid1, &es, &value]() {
-                    auto rid = Kunlaboro::hash::hashString("Increment");
+                    auto rid = Kunlaboro::hashRequest("Increment");
                     Kunlaboro::Message msg;
-                    msg.payload = &value;
+                    msg.Data = &value;
 
                     for (uint16_t i = 0; i < UINT16_MAX; ++i)
                     {
@@ -55,9 +55,9 @@ SCENARIO("Threaded message passing")
                     }
                 }),
                 new std::thread([eid2, &es, &value]() {
-                    auto rid = Kunlaboro::hash::hashString("Decrement");
+                    auto rid = Kunlaboro::hashRequest("Decrement");
                     Kunlaboro::Message msg;
-                    msg.payload = &value;
+                    msg.Data = &value;
 
                     for (uint16_t i = 0; i < UINT16_MAX; ++i)
                     {

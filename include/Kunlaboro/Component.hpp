@@ -170,43 +170,43 @@ namespace Kunlaboro
         /** \name Convenience functions
          */
         ///@{
-        inline void changeRequestPriority(const std::string& name, int priority) const { changeRequestPriority(hash::hashString(name), priority); }
+        inline void changeRequestPriority(const std::string& name, int priority) const { changeRequestPriority(hashRequest(name), priority); }
 
         inline void sendMessage(RequestId id) const { sendMessage(id, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline void sendMessage(const std::string& name) const { sendMessage(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
+        inline void sendMessage(const std::string& name) const { sendMessage(hashRequest(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
         inline void sendMessage(RequestId id, const Payload& p) const { sendMessage(id, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline void sendMessage(const std::string& name, const Payload& p) const { sendMessage(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline void sendMessage(const std::string& name, const Message& msg) const { sendMessage(hash::hashString(name), msg); }
+        inline void sendMessage(const std::string& name, const Payload& p) const { sendMessage(hashRequest(name), Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline void sendMessage(const std::string& name, const Message& msg) const { sendMessage(hashRequest(name), msg); }
 
         inline Message sendQuestion(RequestId id) const { return sendQuestion(id, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline Message sendQuestion(const std::string& name) const { return sendQuestion(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
+        inline Message sendQuestion(const std::string& name) const { return sendQuestion(hashRequest(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
         inline Message sendQuestion(RequestId id, const Payload& p) const { return sendQuestion(id, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendQuestion(const std::string& name, const Payload& p) const { return sendQuestion(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendQuestion(const std::string& name, const Message& msg) const { return sendQuestion(hash::hashString(name), msg); }
+        inline Message sendQuestion(const std::string& name, const Payload& p) const { return sendQuestion(hashRequest(name), Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline Message sendQuestion(const std::string& name, const Message& msg) const { return sendQuestion(hashRequest(name), msg); }
 
         inline void sendGlobalMessage(RequestId id) const { sendGlobalMessage(id, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline void sendGlobalMessage(const std::string& name) const { sendGlobalMessage(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
+        inline void sendGlobalMessage(const std::string& name) const { sendGlobalMessage(hashRequest(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
         inline void sendGlobalMessage(RequestId id, const Payload& p) const { sendGlobalMessage(id, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline void sendGlobalMessage(const std::string& name, const Payload& p) const { sendGlobalMessage(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline void sendGlobalMessage(const std::string& name, const Message& msg) const { sendGlobalMessage(hash::hashString(name), msg); }
+        inline void sendGlobalMessage(const std::string& name, const Payload& p) const { sendGlobalMessage(hashRequest(name), Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline void sendGlobalMessage(const std::string& name, const Message& msg) const { sendGlobalMessage(hashRequest(name), msg); }
 
         inline Message sendGlobalQuestion(RequestId id) const { return sendGlobalQuestion(id, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline Message sendGlobalQuestion(const std::string& name) const { return sendGlobalQuestion(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
+        inline Message sendGlobalQuestion(const std::string& name) const { return sendGlobalQuestion(hashRequest(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
         inline Message sendGlobalQuestion(RequestId id, const Payload& p) const { return sendGlobalQuestion(id, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendGlobalQuestion(const std::string& name, const Payload& p) const { return sendGlobalQuestion(hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendGlobalQuestion(const std::string& name, const Message& msg) const { return sendGlobalQuestion(hash::hashString(name), msg); }
+        inline Message sendGlobalQuestion(const std::string& name, const Payload& p) const { return sendGlobalQuestion(hashRequest(name), Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline Message sendGlobalQuestion(const std::string& name, const Message& msg) const { return sendGlobalQuestion(hashRequest(name), msg); }
 
         inline void sendMessageToEntity(EntityId eid, RequestId rid) const { sendMessageToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline void sendMessageToEntity(EntityId eid, const std::string& name) const { sendMessageToEntity(eid, hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
+        inline void sendMessageToEntity(EntityId eid, const std::string& name) const { sendMessageToEntity(eid, hashRequest(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
         inline void sendMessageToEntity(EntityId eid, RequestId rid, const Payload& p) const { sendMessageToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline void sendMessageToEntity(EntityId eid, const std::string& name, const Payload& p) const { sendMessageToEntity(eid, hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline void sendMessageToEntity(EntityId eid, const std::string& name, const Message& m) const { sendMessageToEntity(eid, hash::hashString(name), m); }
+        inline void sendMessageToEntity(EntityId eid, const std::string& name, const Payload& p) const { sendMessageToEntity(eid, hashRequest(name), Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline void sendMessageToEntity(EntityId eid, const std::string& name, const Message& m) const { sendMessageToEntity(eid, hashRequest(name), m); }
 
         inline Message sendQuestionToEntity(EntityId eid, RequestId rid) const { return sendQuestionToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), 0)); }
-        inline Message sendQuestionToEntity(EntityId eid, const std::string& name, const Message& m) const { return sendQuestionToEntity(eid, hash::hashString(name), m); }
+        inline Message sendQuestionToEntity(EntityId eid, const std::string& name, const Message& m) const { return sendQuestionToEntity(eid, hashRequest(name), m); }
         inline Message sendQuestionToEntity(EntityId eid, RequestId rid, const Payload& p) const { return sendQuestionToEntity(eid, rid, Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendQuestionToEntity(EntityId eid, const std::string& name, const Payload& p) const { return sendQuestionToEntity(eid, hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), p)); }
-        inline Message sendQuestionToEntity(EntityId eid, const std::string& name) const { return sendQuestionToEntity(eid, hash::hashString(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
+        inline Message sendQuestionToEntity(EntityId eid, const std::string& name, const Payload& p) const { return sendQuestionToEntity(eid, hashRequest(name), Message(Type_Message, const_cast<Component*>(this), p)); }
+        inline Message sendQuestionToEntity(EntityId eid, const std::string& name) const { return sendQuestionToEntity(eid, hashRequest(name), Message(Type_Message, const_cast<Component*>(this), 0)); }
         ///@}
 
         // Utility functions

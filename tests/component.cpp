@@ -111,12 +111,12 @@ SCENARIO("Message passing")
         {
             Kunlaboro::Message msg;
 
-            es.sendGlobalMessage(Kunlaboro::hash::hashString("GlobalTestMessage"), msg);
+            es.sendGlobalMessage(Kunlaboro::hashRequest("GlobalTestMessage"), msg);
 
             THEN("The message is handled correctly")
             {
-                CHECK(msg.handled);
-                CHECK(boost::any_cast<int>(msg.payload) == 314159);
+                CHECK(msg.Handled);
+                CHECK(boost::any_cast<int>(msg.Data) == 314159);
             }
         }
 
@@ -124,12 +124,12 @@ SCENARIO("Message passing")
         {
             Kunlaboro::Message msg;
 
-            es.sendLocalMessage(eid, Kunlaboro::hash::hashString("LocalTestMessage"), msg);
+            es.sendLocalMessage(eid, Kunlaboro::hashRequest("LocalTestMessage"), msg);
 
             THEN("The message is handled correctly")
             {
-                CHECK(msg.handled);
-                CHECK(boost::any_cast<std::string>(msg.payload) == "Hello World");
+                CHECK(msg.Handled);
+                CHECK(boost::any_cast<std::string>(msg.Data) == "Hello World");
             }
         }
 
@@ -137,11 +137,11 @@ SCENARIO("Message passing")
         {
             Kunlaboro::Message msg;
 
-            es.sendGlobalMessage(Kunlaboro::hash::hashString("LocalTestMessage"), msg);
+            es.sendGlobalMessage(Kunlaboro::hashRequest("LocalTestMessage"), msg);
 
             THEN("The message is left unhandled")
             {
-                CHECK(!msg.handled);
+                CHECK(!msg.Handled);
             }
         }
 
@@ -149,11 +149,11 @@ SCENARIO("Message passing")
         {
             Kunlaboro::Message msg;
 
-            es.sendLocalMessage(eid, Kunlaboro::hash::hashString("GlobalTestMessage"), msg);
+            es.sendLocalMessage(eid, Kunlaboro::hashRequest("GlobalTestMessage"), msg);
 
             THEN("The message is left unhandled")
             {
-                CHECK(!msg.handled);
+                CHECK(!msg.Handled);
             }
         }
     }
@@ -172,11 +172,11 @@ SCENARIO("Message passing")
         {
             Kunlaboro::Message msg;
 
-            es.sendGlobalMessage(Kunlaboro::hash::hashString("GlobalTestMessage"), msg);
+            es.sendGlobalMessage(Kunlaboro::hashRequest("GlobalTestMessage"), msg);
 
             THEN("The message is handled correctly")
             {
-                CHECK(msg.handled);
+                CHECK(msg.Handled);
             }
         }
 
@@ -186,12 +186,12 @@ SCENARIO("Message passing")
 
             Kunlaboro::Message msg;
 
-            es.sendGlobalMessage(Kunlaboro::hash::hashString("GlobalTestMessage"), msg);
+            es.sendGlobalMessage(Kunlaboro::hashRequest("GlobalTestMessage"), msg);
 
             THEN("The message is recieved by the correct component")
             {
-                CHECK(msg.handled);
-                CHECK((msg.sender == testComponent2));
+                CHECK(msg.Handled);
+                CHECK((msg.Sender == testComponent2));
             }
         }
     }
@@ -218,7 +218,7 @@ SCENARIO("Requests changing during calls")
         bool handled = false;
 
         c1->requestMessage("Message", [&](Kunlaboro::Message& msg) {
-            CHECK_NOTHROW(msg.sender->requestMessage("Message", [&](const Kunlaboro::Message& msg) {
+            CHECK_NOTHROW(msg.Sender->requestMessage("Message", [&](const Kunlaboro::Message& msg) {
                 handled = true;
             }, true));
             msg.handle(true);
@@ -276,17 +276,17 @@ SCENARIO("Requests changing during calls")
         for (auto comp : comps)
         {
             comp->requestMessage("Ping", [&](const Kunlaboro::Message& msg) {
-                comp->sendMessageToEntity(msg.sender->getOwnerId(), "Pong");
+                comp->sendMessageToEntity(msg.Sender->getOwnerId(), "Pong");
             }, true);
 
             comp->requestMessage("Pong", [&](const Kunlaboro::Message& msg) {
-                if (msg.sender == comp)
+                if (msg.Sender == comp)
                     return;
-                
+
                 if (add)
-                    es.addComponent(msg.sender->getOwnerId(), "TestComponent");
+                    es.addComponent(msg.Sender->getOwnerId(), "TestComponent");
                 else
-                    es.removeComponent(msg.sender->getOwnerId(), es.getAllComponentsOnEntity(msg.sender->getOwnerId())[0]);
+                    es.removeComponent(msg.Sender->getOwnerId(), es.getAllComponentsOnEntity(msg.Sender->getOwnerId())[0]);
             }, true);
 
             comp->requestComponent("TestComponent", [&](const Kunlaboro::Message& msg){

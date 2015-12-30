@@ -44,9 +44,16 @@ namespace Kunlaboro
         template<typename T>
         Payload(const T* data) : mData(new T*(const_cast<T*>(data))), mSize(sizeof(T)), mType(typeid(T)) { }
 
+        template<typename T>
+        Payload(T&& data) : mData(new T(std::move(data))), mSize(sizeof(T)), mType(typeid(T)) { }
+
         Payload(std::nullptr_t) : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
         Payload() : mData(nullptr), mSize(0), mType(typeid(nullptr)) { }
-        ~Payload() {
+        ~Payload()
+        {
+            if (!mData || mSize == 0)
+                return;
+
             char* test = new (mData) char[mSize];
 
             if (mData)
@@ -123,11 +130,13 @@ namespace Kunlaboro
 
     /// A message that is sent through the EntitySystem.
     struct Message {
-        MessageType type;  ///< The type of the message.
-        Component* sender; ///< The sender of the message, can be NULL.
-        Payload payload;   ///< The payload of the message, can be empty.
-        bool handled;      ///< Has the message been handled?
-        Message(MessageType t = Type_Message, Component *c = nullptr, const Payload& p = nullptr) : type(t), sender(c), payload(p), handled(false) {} ///< Create an empty message of the specified type.
+        MessageType Type;  ///< The type of the message.
+        Component* Sender; ///< The sender of the message, can be NULL.
+        Payload Data;   ///< The payload of the message, can be empty.
+        bool Handled;      ///< Has the message been handled?
+
+        /// Create an empty message of the specified type.
+        Message(MessageType t = Type_Message, Component *c = nullptr, const ::Kunlaboro::Payload& p = nullptr) : Type(t), Sender(c), Data(p), Handled(false) {}
 
         /// Helper function to handle a message.
         template<typename T>
@@ -138,7 +147,7 @@ namespace Kunlaboro
 #if !_MSC_VER || _MSC_PLATFORM_TOOLSET_CTP_Nov2013
 #define CONSTEXPR constexpr
 #else
-#define CONSTEXPR const
+#define CONSTEXPR
 #endif
 
     /** Fowler-Null-Vo string hash functions
@@ -166,32 +175,22 @@ namespace Kunlaboro
             CONSTEXPR static uint32_t prime = 0x01000193;
         };
 
-        struct hash_func1 : public hash_internal<GUID>
+        template<typename S>
+        struct hash_func : public hash_internal<S>
         {
-            CONSTEXPR static inline GUID hash(const char* const string, const GUID val = default_offset)
+            CONSTEXPR static inline S hash(const char* const string, const S val = hash_internal<S>::default_offset)
             {
-                return (string[0] == 0) ? val : hash(string + 1, (val * prime) ^ GUID(string[0]));
+                return (string[0] == 0) ? val : hash(string + 1, (val * hash_internal<S>::prime) ^ S(string[0]));
             }
-            CONSTEXPR static inline GUID hashF(const char* const string, const size_t strlen, const GUID val = default_offset)
+            CONSTEXPR static inline S hashF(const char* const string, const size_t strlen, const S val = hash_internal<S>::default_offset)
             {
-                return (strlen == 0) ? val : hashF(string + 1, strlen - 1, (val * prime) ^ GUID(string[0]));
+                return (strlen == 0) ? val : hashF(string + 1, strlen - 1, (val * hash_internal<S>::prime) ^ S(string[0]));
             }
         };
-
-        struct hash_func2 : public hash_internal<GUID>
-        {
-            static inline GUID hash(const char* const string, const GUID val = default_offset)
-            {
-                return (string[0] == 0) ? val : hash(string + 1, (val * prime) ^ GUID(string[0]));
-            }
-            static inline GUID hashF(const char* const string, const size_t strlen, const GUID val = default_offset)
-            {
-                return (strlen == 0) ? val : hashF(string + 1, strlen - 1, (val * prime) ^ GUID(string[0]));
-            }
-        };
-
-        inline GUID hashString(const std::string& str) { return hash_func2::hashF(str.c_str(), str.size()); }
     }
+
+    CONSTEXPR inline RequestId hashRequest(const char* str) { return hash::hash_func<RequestId>::hash(str); }
+    inline RequestId hashRequest(const std::string& str) { return hash::hash_func<RequestId>::hashF(str.c_str(), str.size()); }
 
 #undef CONSTEXPR
 }
@@ -206,6 +205,7 @@ namespace boost
 template<typename T>
 void Kunlaboro::Message::handle(const T& ret)
 {
-    payload = ret;
-    handled = true;
+    Data = ret;
+    Handled = true;
 }
+

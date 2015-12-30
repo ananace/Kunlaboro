@@ -71,7 +71,7 @@ SCENARIO("Message passing benchmark",
             AND_WHEN("Using cached request IDs")
             {
                 Kunlaboro::Message msg;
-                Kunlaboro::RequestId rid = Kunlaboro::hash::hash_func1::hash("Ping");
+                Kunlaboro::RequestId rid = Kunlaboro::hashRequest("Ping");
                 for (uint32_t i = 0; i < 100000; ++i)
                     es.sendUnsafeGlobalMessage(rid, msg);
 
@@ -84,7 +84,7 @@ SCENARIO("Message passing benchmark",
             AND_WHEN("Using cached request IDs")
             {
                 Kunlaboro::Message msg;
-                Kunlaboro::RequestId rid = Kunlaboro::hash::hash_func1::hash("Ping");
+                Kunlaboro::RequestId rid = Kunlaboro::hashRequest("Ping");
                 for (uint32_t i = 0; i < 100000; ++i)
                     es.sendSafeGlobalMessage(rid, msg);
 
@@ -115,7 +115,7 @@ SCENARIO("Message passing benchmark",
             AND_WHEN("Using cached request IDs")
             {
                 Kunlaboro::Message msg;
-                Kunlaboro::RequestId rid = Kunlaboro::hash::hash_func1::hash("Ping");
+                Kunlaboro::RequestId rid = Kunlaboro::hashRequest("Ping");
                 for (uint32_t i = 0; i < 100000; ++i)
                     es.sendUnsafeGlobalMessage(rid, msg);
 
@@ -128,7 +128,7 @@ SCENARIO("Message passing benchmark",
             AND_WHEN("Using cached request IDs")
             {
                 Kunlaboro::Message msg;
-                Kunlaboro::RequestId rid = Kunlaboro::hash::hash_func1::hash("Ping");
+                Kunlaboro::RequestId rid = Kunlaboro::hashRequest("Ping");
                 for (uint32_t i = 0; i < 100000; ++i)
                     es.sendSafeGlobalMessage(rid, msg);
 

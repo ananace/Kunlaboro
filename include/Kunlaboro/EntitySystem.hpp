@@ -229,9 +229,9 @@ namespace Kunlaboro
             {
                 it.callback(msg);
 
-                if (msg.handled)
+                if (msg.Handled)
                 {
-                    msg.sender = it.component;
+                    msg.Sender = it.component;
                     break;
                 }
             }
@@ -255,9 +255,9 @@ namespace Kunlaboro
             {
                 it.callback(msg);
 
-                if (msg.handled)
+                if (msg.Handled)
                 {
-                    msg.sender = it.component;
+                    msg.Sender = it.component;
                     break;
                 }
             }
@@ -284,7 +284,7 @@ namespace Kunlaboro
         inline void sendGlobalMessage(const std::string& n, const Payload& p = 0)
         {
             Message msg(Type_Message, NULL, p);
-            sendUnsafeGlobalMessage(hash::hashString(n), msg);
+            sendUnsafeGlobalMessage(hashRequest(n), msg);
         }
 
         /** \brief Send a local message to all the Component objects in the specified entity.
@@ -300,7 +300,7 @@ namespace Kunlaboro
         inline void sendLocalMessage(EntityId eid, const std::string& n, const Payload& p = 0)
         {
             Message msg(Type_Message, NULL, p);
-            sendUnsafeLocalMessage(eid, hash::hashString(n), msg);
+            sendUnsafeLocalMessage(eid, hashRequest(n), msg);
         }
         ///@}
 

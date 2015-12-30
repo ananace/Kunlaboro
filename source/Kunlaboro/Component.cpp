@@ -26,7 +26,7 @@ void Component::requestMessage(const std::string& name, MessageFunction callback
 {
     ComponentRequested req;
     req.name = name;
-    req.hash = hash::hashString(name);
+    req.hash = hashRequest(name);
     req.reason = Reason_Message;
 
     ComponentRegistered reg;
@@ -45,7 +45,7 @@ void Component::unrequestMessage(const std::string& name, bool local) const
 {
     ComponentRequested req;
     req.name = name;
-    req.hash = hash::hashString(name);
+    req.hash = hashRequest(name);
     req.reason = Reason_Message;
 
     ComponentRegistered reg;
@@ -63,7 +63,7 @@ void Component::requestComponent(const std::string& name, MessageFunction callba
 {
     ComponentRequested req;
     req.name = name;
-    req.hash = hash::hashString(name);
+    req.hash = hashRequest(name);
     req.reason = Reason_Component;
 
     ComponentRegistered reg;
@@ -82,7 +82,7 @@ void Component::requireComponent(const std::string& name, MessageFunction callba
 {
     ComponentRequested req;
     req.name = name;
-    req.hash = hash::hashString(name);
+    req.hash = hashRequest(name);
     req.reason = Reason_Component;
 
     ComponentRegistered reg;
