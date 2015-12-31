@@ -146,8 +146,10 @@ namespace Kunlaboro
     // Only supported in the November 2013 CTP at the moment
 #if !_MSC_VER || _MSC_PLATFORM_TOOLSET_CTP_Nov2013
 #define CONSTEXPR constexpr
+#define CONSTEXPRVAR constexpr
 #else
 #define CONSTEXPR
+#define CONSTEXPRVAR const
 #endif
 
     /** Fowler-Null-Vo string hash functions
@@ -165,14 +167,14 @@ namespace Kunlaboro
         template<>
         struct hash_internal<uint64_t>
         {
-            CONSTEXPR static uint64_t default_offset = 14695981039346656037ULL;
-            CONSTEXPR static uint64_t prime = 1099511628211ULL;
+            CONSTEXPRVAR static uint64_t default_offset = 14695981039346656037ULL;
+            CONSTEXPRVAR static uint64_t prime = 1099511628211ULL;
         };
         template<>
         struct hash_internal<uint32_t>
         {
-            CONSTEXPR static uint32_t default_offset = 0x811C9DC5;
-            CONSTEXPR static uint32_t prime = 0x01000193;
+            CONSTEXPRVAR static uint32_t default_offset = 0x811C9DC5;
+            CONSTEXPRVAR static uint32_t prime = 0x01000193;
         };
 
         template<typename S>
