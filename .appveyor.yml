@@ -1,0 +1,26 @@
+version: "{build}"
+
+platform:
+    - Win32
+    - x64
+
+configuration:
+    - Debug
+
+matrix:
+    fast_finish: true
+
+shallow_clone: true
+
+clone_folder: C:\projects\Kunlaboro
+
+before_build:
+    - cmd: cd C:\projects\Kunlaboro
+    - cmd: if %PLATFORM%==Win32 cmake . -G"Visual Studio 14 2015" -Tv140_xp -DKunlaboro_BUILD_TESTS=ON
+    - cmd: if %PLATFORM%==x64 cmake . -G"Visual Studio 14 2015 Win64" -DKunlaboro_BUILD_TESTS=ON
+
+build:
+    project: ALL_BUILD.vcxproj
+
+test_script:
+    - cmd: ctest -VV -C %configuration%
