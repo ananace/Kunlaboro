@@ -3,14 +3,12 @@
 
 using namespace Kunlaboro;
 
-template<>
-const ComponentId ComponentId::INVALID(UINT32_MAX);
 ComponentId::GenerationType BaseComponentHandle::sGenerationCounter = 0;
 
 Component::Component()
 	: mES(nullptr)
-	, mId(ComponentId::INVALID)
-	, mOwnerId(EntityId::INVALID)
+	, mId()
+	, mOwnerId()
 {
 
 }

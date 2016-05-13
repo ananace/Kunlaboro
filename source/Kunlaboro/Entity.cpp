@@ -4,12 +4,9 @@
 
 using namespace Kunlaboro;
 
-template<>
-const EntityId EntityId::INVALID(UINT32_MAX);
-
 Entity::Entity()
 	: mES(nullptr)
-	, mId(EntityId::INVALID)
+	, mId()
 {
 
 }

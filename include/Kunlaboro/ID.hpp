@@ -16,8 +16,6 @@ namespace Kunlaboro
 		static_assert(IndexBits <= sizeof(indexType) * 8, "Index bit count is larger than index type can store");
 		static_assert(GenerationBits <= sizeof(generationType) * 8, "Generation bit count is larger than generation type can store");
 
-		static const Id INVALID;
-
 	private:
 		enum : uint8_t
 		{
@@ -42,7 +40,7 @@ namespace Kunlaboro
 
 		static_assert(sIndexBits + sGenerationBits == sizeof(idType) * 8, "Id bit counts must add up to the total Id size.");
 
-		Id() : mId(0) { }
+		Id() : mId(~idType(0)) { }
 		Id(indexType index, generationType generation)
 			: mId(static_cast<idType>(index & sIndexMask) | (static_cast<idType>(generation & sGenerationMask) << sIndexBits))
 		{ }

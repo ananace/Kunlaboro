@@ -38,7 +38,7 @@ Entity EntitySystem::entityCreate()
 		mGenerations.push_back(0);
 		id = mGenerations.size() - 1;
 
-		assert(id < (1 << EntityId::sIndexBits));
+		assert(id < EntityId::sMaxIndex);
 	}
 	else
 	{
