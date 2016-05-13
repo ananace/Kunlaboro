@@ -20,7 +20,7 @@ add_executable(testsuite ${SRC})
 
 target_link_libraries(testsuite Kunlaboro ${CMAKE_THREAD_LIBS_INIT})
 
-add_custom_target(runtests ALL
+add_custom_target(run_tests
 	DEPENDS testsuite
 	WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/tests"
 	COMMAND ${CMAKE_COMMAND} -E echo_append "Running tests...\n"

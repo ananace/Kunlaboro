@@ -1,164 +1,107 @@
 #include <Kunlaboro/Component.hpp>
 #include <Kunlaboro/EntitySystem.hpp>
-#include <sstream>
 
 using namespace Kunlaboro;
 
-Component::Component(const std::string& name) : mOwner(0), mEntitySystem(0), mId(0), mName(name), mDestroyed(false)
-{
-}
+const ComponentId ComponentId::INVALID(UINT32_MAX);
+ComponentId::GenerationType BaseComponentHandle::sGenerationCounter = 0;
 
-Component::~Component()
-{
-}
-
-void Component::addedToEntity()
+Component::Component()
+	: mES(nullptr)
+	, mId(ComponentId::INVALID)
+	, mOwnerId(EntityId::INVALID)
 {
 
 }
 
-void Component::addLocalComponent(Component* comp)
+const ComponentId& Component::getId() const
 {
-    mEntitySystem->addComponent(mOwner, comp);
+	return mId;
+}
+const EntityId& Component::getEntityId() const
+{
+	return mOwnerId;
+}
+const EntitySystem* Component::getEntitySystem() const
+{
+	return mES;
+}
+EntitySystem* Component::getEntitySystem()
+{
+	return mES;
 }
 
-void Component::requestMessage(const std::string& name, MessageFunction callback, bool local) const
+BaseComponentHandle::BaseComponentHandle()
+	: mPtr(nullptr)
+	, mCounter(nullptr)
 {
-    ComponentRequested req;
-    req.name = name;
-    req.hash = hashRequest(name);
-    req.reason = Reason_Message;
 
-    ComponentRegistered reg;
-    reg.callback = callback;
-    reg.component = const_cast<Component*>(this);
-    reg.required = false;
-    reg.priority = 0;
-
-    if (local)
-        mEntitySystem->registerLocalRequest(req, reg);
-    else
-        mEntitySystem->registerGlobalRequest(req, reg);
+}
+BaseComponentHandle::BaseComponentHandle(Component* ptr, uint32_t* counter)
+	: mPtr(ptr)
+	, mCounter(counter)
+{
+	addRef();
+}
+BaseComponentHandle::BaseComponentHandle(const BaseComponentHandle& copy)
+	: mPtr(copy.mPtr)
+	, mCounter(copy.mCounter)
+{
+	addRef();
+}
+BaseComponentHandle::BaseComponentHandle(BaseComponentHandle&& move)
+	: mPtr(std::move(move.mPtr))
+	, mCounter(std::move(move.mCounter))
+{
+	move.mPtr = nullptr;
+	move.mCounter = nullptr;
+}
+BaseComponentHandle::~BaseComponentHandle()
+{
+	release();
 }
 
-void Component::unrequestMessage(const std::string& name, bool local) const
+BaseComponentHandle& BaseComponentHandle::operator=(const BaseComponentHandle& assign)
 {
-    ComponentRequested req;
-    req.name = name;
-    req.hash = hashRequest(name);
-    req.reason = Reason_Message;
+	if (this == &assign)
+		return *this;
 
-    ComponentRegistered reg;
-    reg.component = const_cast<Component*>(this);
-    reg.required = false;
-    reg.priority = 0;
+	release();
+	mPtr = assign.mPtr;
+	mCounter = assign.mCounter;
+	addRef();
 
-    if (local)
-        mEntitySystem->removeLocalRequest(req, reg);
-    else
-        mEntitySystem->removeGlobalRequest(req, reg);
+	return *this;
 }
 
-void Component::requestComponent(const std::string& name, MessageFunction callback, bool local) const
+bool BaseComponentHandle::operator==(const BaseComponentHandle& rhs) const
 {
-    ComponentRequested req;
-    req.name = name;
-    req.hash = hashRequest(name);
-    req.reason = Reason_Component;
-
-    ComponentRegistered reg;
-    reg.callback = callback;
-    reg.component = const_cast<Component*>(this);
-    reg.required = false;
-    reg.priority = 0;
-
-    if (local)
-        mEntitySystem->registerLocalRequest(req, reg);
-    else
-        mEntitySystem->registerGlobalRequest(req, reg);
+	return mPtr == rhs.mPtr;
+}
+bool BaseComponentHandle::operator!=(const BaseComponentHandle& rhs) const
+{
+	return mPtr != rhs.mPtr;
 }
 
-void Component::requireComponent(const std::string& name, MessageFunction callback, bool local) const
+void BaseComponentHandle::unlink()
 {
-    ComponentRequested req;
-    req.name = name;
-    req.hash = hashRequest(name);
-    req.reason = Reason_Component;
-
-    ComponentRegistered reg;
-    reg.callback = callback;
-    reg.component = const_cast<Component*>(this);
-    reg.required = true;
-    reg.priority = 0;
-
-    if (local)
-        mEntitySystem->registerLocalRequest(req, reg);
-    else
-        mEntitySystem->registerGlobalRequest(req, reg);
+	mCounter = nullptr;
 }
 
-void Component::changeRequestPriority(RequestId rid, int priority) const
+void BaseComponentHandle::addRef()
 {
-    mEntitySystem->reprioritizeRequest(const_cast<Component*>(this), rid, priority);
+	if (mCounter)
+		++(*mCounter);
 }
-
-void Component::sendMessage(RequestId id, const Message& m) const
+void BaseComponentHandle::release()
 {
-    Message msg = m;
-    mEntitySystem->sendLocalMessage(mOwner, id, msg);
-}
+	bool release = false;
+	if (mCounter && *mCounter > 0)
+	{
+		auto count = --(*mCounter);
+		release = count == 0;
+	}
 
-Message Component::sendQuestion(RequestId id, const Message& m) const
-{
-    Message msg = m;
-    mEntitySystem->sendLocalMessage(mOwner, id, msg);
-
-    return msg;
-}
-
-void Component::sendGlobalMessage(RequestId id, const Message& m) const
-{
-    Message msg = m;
-    mEntitySystem->sendSafeGlobalMessage(id, msg);
-}
-
-Message Component::sendGlobalQuestion(RequestId id, const Message& m) const
-{
-    Message msg = m;
-    mEntitySystem->sendGlobalMessage(id, msg);
-
-    return msg;
-}
-
-void Component::sendMessageToEntity(EntityId eid, RequestId rid, const Message& m) const
-{
-    Message msg = m;
-    mEntitySystem->sendLocalMessage(eid, rid, msg);
-}
-
-Message Component::sendQuestionToEntity(EntityId eid, RequestId rid, const Message& m) const
-{
-    Message msg = m;
-    mEntitySystem->sendLocalMessage(eid, rid, msg);
-
-    return msg;
-}
-
-void Component::destroy()
-{
-    mDestroyed = true;
-    mEntitySystem->destroyComponent(this);
-}
-
-std::string Component::toString() const
-{
-    std::stringstream ss;
-    ss << "Component #" << getId() << " \"" << getName() << "\" owned by entity #" << getOwnerId();
-
-    return ss.str();
-}
-
-std::ostream& operator<<(std::ostream& os, const Component& c)
-{
-    return os << c.toString();
+	if (release && mPtr)
+		mPtr->getEntitySystem()->componentDestroy(mPtr->getId());
 }

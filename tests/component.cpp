@@ -1,308 +1,107 @@
-#include <Kunlaboro/Component.hpp>
-#include <Kunlaboro/EntitySystem.hpp>
+#include <Kunlaboro/EntitySystem.inl>
+
 #include "catch.hpp"
 
 class TestComponent : public Kunlaboro::Component
 {
 public:
-    TestComponent() : Kunlaboro::Component("TestComponent") { }
+	struct Message : public BaseMessage
+	{
+		static constexpr uint16_t Id = 0x0532;
 
-    void addedToEntity()
-    {
-        requestMessage("GlobalTestMessage", [&](Kunlaboro::Message& msg) { msg.handle(314159); });
-        requestMessage("LocalTestMessage", [&](Kunlaboro::Message& msg) { msg.handle(std::string("Hello World")); }, true);
-    }
-};
+		Message()
+			: BaseMessage{ Id }
+			, NewData(0)
+		{}
+		Message(int data)
+			: BaseMessage{ Id }
+			, NewData(data)
+		{}
 
-class TestComponent2 : public Kunlaboro::Component
-{
-public:
-    TestComponent2() : Kunlaboro::Component("TestComponent2") { }
+		int NewData;
+	};
 
-    void addedToEntity()
-    {
-        requestMessage("GlobalTestMessage", [&](Kunlaboro::Message& msg) { msg.handle(1234); });
-        changeRequestPriority("GlobalTestMessage", 1);
+	TestComponent()
+		: mData(-1)
+	{
 
-        requestMessage("LocalTestMessage", [&](Kunlaboro::Message& msg) { msg.handle(std::string("Goodbye World")); }, true);
-    }
+	}
+
+	TestComponent(int data)
+		: mData(data)
+	{
+
+	}
+
+	int getData() const { return mData; }
+
+	virtual void onMessage(BaseMessage* msg) override
+	{
+		if (msg->MessageId == Message::Id)
+			mData = static_cast<Message*>(msg)->NewData;
+	}
+
+private:
+	int mData;
 };
 
 SCENARIO("Creating a component")
 {
-    Kunlaboro::EntitySystem es;
-    es.registerComponent<TestComponent>("TestComponent");
+	Kunlaboro::EntitySystem es;
+	
+	GIVEN("A simple POD component")
+	{
+		WHEN("The component is trivially constructed")
+		{
+			auto component = es.componentCreate<TestComponent>();
+			auto copy = component;
 
-    GIVEN("A manually created component")
-    {
-        TestComponent* component = new TestComponent();
+			THEN("The created component is contained successfully in the entity system")
+			{
+				CHECK(component->getEntitySystem() == &es);
+				CHECK(es.getComponent(component->getId()) == component);
+				CHECK(es.componentAlive(component->getId()));
 
-        THEN("The component has a correct name")
-        {
-            CHECK(component->getName() == "TestComponent");
-        }
-        THEN("The component is in an invalid state")
-        {
-            CHECK(!component->isValid());
-        }
-        THEN("The component is not part of any entity system")
-        {
-            CHECK((component->getEntitySystem() == nullptr));
-        }
+				AND_THEN("The created component has its default constructor called appropriately")
+				{
+					CHECK(component->getData() == -1);
+				}
+			}
+		}
+		WHEN("The component is non-trivially constructed")
+		{
+			auto component = es.componentCreate<TestComponent>(42);
 
-        delete component;
-    }
+			THEN("The created component has its non-trivial constructor called appropriately")
+			{
+				CHECK(component->getData() == 42);
+			}
+		}
 
-    GIVEN("A correctly created component")
-    {
-        WHEN("Created by itself")
-        {
-            Kunlaboro::Component* component = es.createComponent("TestComponent");
+		THEN("The component can receive messages correctly")
+		{
+			auto component = es.componentCreate<TestComponent>(42);
+			CHECK(component->getData() == 42);
 
-            THEN("The component has correct name")
-            {
-                CHECK(component->getName() == "TestComponent");
-            }
-            THEN("The component is of the correct type")
-            {
-                CHECK((dynamic_cast<TestComponent*>(component) != nullptr));
-            }
-            THEN("The component is in an invalid state")
-            {
-                CHECK(!component->isValid());
-            }
-            THEN("The component is unowned")
-            {
-                CHECK(component->getOwnerId() == 0);
-            }
-        }
+			TestComponent::Message newData(1);
 
-        WHEN("Created and stored in an entity")
-        {
-            Kunlaboro::Component* component = es.createComponent("TestComponent");
+			component->onMessage(&newData);
+			CHECK(component->getData() == 1);
 
-            auto eid = es.createEntity();
-            es.addComponent(eid, component);
+			newData.NewData = 23;
+			es.sendMessage(component->getId(), &newData);
 
-            THEN("The component is in a valid state")
-            {
-                CHECK(component->isValid());
-            }
-            THEN("The component has a valid owner")
-            {
-                CHECK(component->getOwnerId() > 0);
-            }
-        }
-    }
+			CHECK(component->getData() == 23);
+		}
+	}
 }
 
-SCENARIO("Message passing")
+SCENARIO("Creating several components")
 {
-    Kunlaboro::EntitySystem es;
-    es.registerComponent<TestComponent>("TestComponent");
-    es.registerComponent<TestComponent2>("TestComponent2");
+	Kunlaboro::EntitySystem es;
 
-    GIVEN("A single entity containing a single test component")
-    {
-        auto eid = es.createEntity();
-        es.addComponent(eid, "TestComponent");
+	GIVEN("A simple POD component")
+	{
 
-        WHEN("A global message is sent")
-        {
-            Kunlaboro::Message msg;
-
-            es.sendGlobalMessage(Kunlaboro::hashRequest("GlobalTestMessage"), msg);
-
-            THEN("The message is handled correctly")
-            {
-                CHECK(msg.Handled);
-                CHECK(boost::any_cast<int>(msg.Data) == 314159);
-            }
-        }
-
-        WHEN("A local message is sent to the entity")
-        {
-            Kunlaboro::Message msg;
-
-            es.sendLocalMessage(eid, Kunlaboro::hashRequest("LocalTestMessage"), msg);
-
-            THEN("The message is handled correctly")
-            {
-                CHECK(msg.Handled);
-                CHECK(boost::any_cast<std::string>(msg.Data) == "Hello World");
-            }
-        }
-
-        WHEN("A local message is sent globally")
-        {
-            Kunlaboro::Message msg;
-
-            es.sendGlobalMessage(Kunlaboro::hashRequest("LocalTestMessage"), msg);
-
-            THEN("The message is left unhandled")
-            {
-                CHECK(!msg.Handled);
-            }
-        }
-
-        WHEN("A global message is sent locally to the entity")
-        {
-            Kunlaboro::Message msg;
-
-            es.sendLocalMessage(eid, Kunlaboro::hashRequest("GlobalTestMessage"), msg);
-
-            THEN("The message is left unhandled")
-            {
-                CHECK(!msg.Handled);
-            }
-        }
-    }
-
-    GIVEN("A single entity containing two test components")
-    {
-        auto eid = es.createEntity();
-
-        auto testComponent = es.createComponent("TestComponent");
-        auto testComponent2 = es.createComponent("TestComponent2");
-
-        es.addComponent(eid, testComponent);
-        es.addComponent(eid, testComponent2);
-
-        WHEN("A global message is sent")
-        {
-            Kunlaboro::Message msg;
-
-            es.sendGlobalMessage(Kunlaboro::hashRequest("GlobalTestMessage"), msg);
-
-            THEN("The message is handled correctly")
-            {
-                CHECK(msg.Handled);
-            }
-        }
-
-        WHEN("The priority is changed")
-        {
-            testComponent2->changeRequestPriority("GlobalTestMessage", -1);
-
-            Kunlaboro::Message msg;
-
-            es.sendGlobalMessage(Kunlaboro::hashRequest("GlobalTestMessage"), msg);
-
-            THEN("The message is recieved by the correct component")
-            {
-                CHECK(msg.Handled);
-                CHECK((msg.Sender == testComponent2));
-            }
-        }
-    }
-}
-
-SCENARIO("Requests changing during calls")
-{
-    Kunlaboro::EntitySystem es;
-    es.registerComponent<TestComponent>("TestComponent");
-    es.registerComponent<TestComponent2>("TestComponent2");
-
-    es.registerTemplate("Test", { "TestComponent" });
-
-    std::vector<Kunlaboro::EntityId> eids = {
-        es.createEntity("Test"),
-        es.createEntity("Test")
-    };
-
-    WHEN("Adding message requests in the middle of calls")
-    {
-        auto c1 = es.getAllComponentsOnEntity(eids[0])[0];
-        auto c2 = es.getAllComponentsOnEntity(eids[1])[0];
-
-        bool handled = false;
-
-        c1->requestMessage("Message", [&](Kunlaboro::Message& msg) {
-            CHECK_NOTHROW(msg.Sender->requestMessage("Message", [&](const Kunlaboro::Message& msg) {
-                handled = true;
-            }, true));
-            msg.handle(true);
-        }, true);
-
-        THEN("The message doesn't exist to begin with")
-        {
-            c2->sendMessage("Message");
-            CHECK(!handled);
-        }
-
-        c2->sendMessageToEntity(c1->getOwnerId(), "Message");
-
-        THEN("The message exists afterwards")
-        {
-            c2->sendMessage("Message");
-            CHECK(handled);
-        }
-    }
-
-    WHEN("Removing message requests in the middle of calls")
-    {
-        auto c1 = es.getAllComponentsOnEntity(eids[0])[0];
-
-        bool handled = false;
-
-        c1->requestMessage("Message", [&](const Kunlaboro::Message& msg) {
-            handled = !handled;
-
-            CHECK_NOTHROW(c1->unrequestMessage("Message", true));
-        }, true);
-
-        THEN("The message exists to begin with")
-        {
-            c1->sendMessage("Message");
-            CHECK(handled);
-
-            AND_THEN("The message doesn't exist afterwards")
-            {
-                c1->sendMessage("Message");
-                CHECK(handled);
-            }
-        }
-    }
-
-    GIVEN("Two entities calling eachother")
-    {
-        auto c1 = es.getAllComponentsOnEntity(eids[0])[0];
-        auto c2 = es.getAllComponentsOnEntity(eids[1])[0];
-
-        Kunlaboro::Component* comps[2] = { c1, c2 };
-
-        bool add = true;
-
-        for (auto comp : comps)
-        {
-            comp->requestMessage("Ping", [&](const Kunlaboro::Message& msg) {
-                comp->sendMessageToEntity(msg.Sender->getOwnerId(), "Pong");
-            }, true);
-
-            comp->requestMessage("Pong", [&](const Kunlaboro::Message& msg) {
-                if (msg.Sender == comp)
-                    return;
-
-                if (add)
-                    es.addComponent(msg.Sender->getOwnerId(), "TestComponent");
-                else
-                    es.removeComponent(msg.Sender->getOwnerId(), es.getAllComponentsOnEntity(msg.Sender->getOwnerId())[0]);
-            }, true);
-
-            comp->requestComponent("TestComponent", [&](const Kunlaboro::Message& msg){
-                comp->sendMessage("Ping");
-            });
-        }
-
-        WHEN("A component is added during the call")
-        {
-            CHECK_NOTHROW(c2->sendMessageToEntity(c1->getOwnerId(), "Ping"));
-        }
-
-        WHEN("A component is removed during the call")
-        {
-            add = false;
-            CHECK_NOTHROW(c2->sendMessageToEntity(c1->getOwnerId(), "Ping"));
-        }
-    }
+	}
 }
