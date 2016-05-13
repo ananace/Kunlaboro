@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Config.hpp"
+#include <cstdint>
 
 namespace Kunlaboro
 {
 
-	template<typename idType, typename indexType, size_t IndexBits, typename generationType, size_t GenerationBits>
+	template<typename idType, typename indexType, uint8_t IndexBits, typename generationType, uint8_t GenerationBits>
 	class Id
 	{
 	public:
@@ -19,7 +19,7 @@ namespace Kunlaboro
 		static const Id INVALID;
 
 	private:
-		enum : size_t
+		enum : uint8_t
 		{
 			sIndexBits = IndexBits,
 			sGenerationBits = GenerationBits

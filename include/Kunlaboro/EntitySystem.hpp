@@ -63,5 +63,3 @@ namespace Kunlaboro
 		std::vector<ComponentData> mComponentData;
 	};
 }
-
-#include "EntitySystem.inl"

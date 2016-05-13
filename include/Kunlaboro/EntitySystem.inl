@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Component.hpp"
 #include "EntitySystem.hpp"
+#include "Component.hpp"
 
 namespace Kunlaboro
 {
@@ -14,7 +14,7 @@ namespace Kunlaboro
 	template<typename T, typename... Args>
 	ComponentHandle<T> EntitySystem::componentCreate(Args... args)
 	{
-		typedef std::remove_const<T>::type ComponentType;
+		typedef typename std::remove_const<T>::type ComponentType;
 		auto gen = ComponentHandle<ComponentType>::getGeneration();
 		if (mComponentData.size() <= gen)
 			mComponentData.resize(gen + 1);

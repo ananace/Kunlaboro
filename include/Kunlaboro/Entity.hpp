@@ -54,5 +54,3 @@ namespace Kunlaboro
 	};
 
 }
-
-#include "Entity.inl"

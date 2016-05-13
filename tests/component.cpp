@@ -1,4 +1,5 @@
 #include <Kunlaboro/EntitySystem.inl>
+#include <Kunlaboro/Component.inl>
 
 #include "catch.hpp"
 

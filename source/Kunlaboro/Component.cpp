@@ -3,6 +3,7 @@
 
 using namespace Kunlaboro;
 
+template<>
 const ComponentId ComponentId::INVALID(UINT32_MAX);
 ComponentId::GenerationType BaseComponentHandle::sGenerationCounter = 0;
 

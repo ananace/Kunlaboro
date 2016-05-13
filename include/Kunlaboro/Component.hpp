@@ -102,4 +102,3 @@ namespace Kunlaboro
 	};
 }
 
-#include "Component.inl"

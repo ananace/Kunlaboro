@@ -1,6 +1,8 @@
 #include <Kunlaboro/detail/ComponentPool.hpp>
+#include <cmath>
 
 using namespace Kunlaboro::detail;
+using std::size_t;
 
 BaseComponentPool::BaseComponentPool(size_t componentSize, size_t chunkSize)
 	: mComponentSize(componentSize)

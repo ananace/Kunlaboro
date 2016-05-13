@@ -1,8 +1,10 @@
 #include <Kunlaboro/Entity.hpp>
+#include <Kunlaboro/Entity.inl>
 #include <Kunlaboro/EntitySystem.hpp>
 
 using namespace Kunlaboro;
 
+template<>
 const EntityId EntityId::INVALID(UINT32_MAX);
 
 Entity::Entity()

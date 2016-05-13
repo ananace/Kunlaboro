@@ -1,5 +1,6 @@
 #include <Kunlaboro/EntitySystem.hpp>
 #include <Kunlaboro/Entity.hpp>
+#include <Kunlaboro/Component.inl>
 
 #include <cassert>
 
