@@ -24,7 +24,7 @@ namespace Kunlaboro
 	{
 		auto family = Kunlaboro::ComponentFamily<T>::getFamily();
 		if (mComponentFamilies.size() <= family)
-			mComponentFamilies.push_back({});
+			mComponentFamilies.resize(family + 1);
 
 		auto& data = mComponentFamilies[family];
 		if (!data.MemoryPool)
@@ -56,6 +56,7 @@ namespace Kunlaboro
 
 		comp->mES = this;
 		comp->mId = ComponentId(index, component.Generation, family);
+		comp->mOwnerId = EntityId();
 
 		return ComponentHandle<T>(comp, component.RefCount);
 	}

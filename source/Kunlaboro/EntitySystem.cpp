@@ -58,6 +58,16 @@ void EntitySystem::entityDestroy(EntityId id)
 	if (!entityAlive(id))
 		return;
 
+	auto& entity = mEntities[id.getIndex()];
+	const auto* components = entity.Components.data();
+	for (ComponentId::FamilyType family = 0; family < entity.Components.size(); ++family)
+	{
+		if (!componentAlive(components[family]))
+			continue;
+
+		componentDestroy(components[family]);
+	}
+
 	++mEntities[id.getIndex()].Generation;
 	mFreeEntityIndices.push_back(id.getIndex());
 }

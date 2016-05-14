@@ -41,12 +41,12 @@ namespace Kunlaboro
 		};
 
 
-		template<typename T, std::size_t ChunkSize = 256>
+		template<typename T>
 		class ComponentPool : public BaseComponentPool
 		{
 		public:
 			ComponentPool()
-				: BaseComponentPool(sizeof(T), ChunkSize)
+				: BaseComponentPool(sizeof(T), T::sPreferredChunkSize)
 			{ }
 			virtual ~ComponentPool() { }
 

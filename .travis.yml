@@ -33,5 +33,5 @@ before_script:
   - CXX=$COMPILER cmake -DKunlaboro_BUILD_TESTS=1 ..
 
 script: 
-  - make
-  - ctest -V
+  - make -j2
+  - tests/testsuite

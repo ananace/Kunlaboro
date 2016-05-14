@@ -18,6 +18,13 @@ namespace Kunlaboro
 	class Component
 	{
 	public:
+		enum
+		{
+			sPreferredChunkSize = 256
+		};
+
+		virtual ~Component() = default;
+
 		struct BaseMessage
 		{
 			uint32_t MessageId;
@@ -32,13 +39,10 @@ namespace Kunlaboro
 		const ComponentId& getId() const;
 		const EntityId& getEntityId() const;
 
-		virtual void onMessage(BaseMessage*) = 0;
+		virtual void onMessage(BaseMessage*) { }
 
 		EntitySystem* getEntitySystem();
 		const EntitySystem* getEntitySystem() const;
-
-	protected:
-		Component();
 
 	private:
 		friend class EntitySystem;

@@ -20,7 +20,13 @@ before_build:
     - cmd: if %PLATFORM%==x64 cmake . -G"Visual Studio 14 2015 Win64" -DKunlaboro_BUILD_TESTS=ON
 
 build:
-    project: ALL_BUILD.vcxproj
+    project: Kunlaboro.sln
 
 test_script:
-    - cmd: ctest -VV -C %configuration%
+    - cmd: tests\%configuration%\testsuite.exe -r junit > testresult.xml
+
+after_test:
+    - ps: |
+        $url = "https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)"
+        $file = "testresult.xml"
+        (New-Object 'System.Net.WebClient').UploadFile($url, (Resolve-Path $file))

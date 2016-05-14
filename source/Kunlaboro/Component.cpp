@@ -6,6 +6,7 @@ using namespace Kunlaboro;
 
 ComponentId::FamilyType BaseComponentFamily::sFamilyCounter = 0;
 
+/*
 Component::Component()
 	: mES(nullptr)
 	, mId()
@@ -13,6 +14,7 @@ Component::Component()
 {
 
 }
+*/
 
 const ComponentId& Component::getId() const
 {

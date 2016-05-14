@@ -48,19 +48,21 @@ private:
 	int mData;
 };
 
-SCENARIO("Testing")
+TEST_CASE("entity creation", "[entity]")
 {
 	Kunlaboro::EntitySystem es;
 
 	auto ent = es.entityCreate();
 	ent.addComponent<TestComponent>(42);
 
+	REQUIRE(ent.hasComponent<TestComponent>());
+
 	auto comp = ent.getComponent<TestComponent>();
 
-	CHECK(comp->getData() == 42);
+	REQUIRE(comp->getData() == 42);
 
 	TestComponent::Message newData(23);
 	es.entitySendMessage(ent.getId(), &newData);
 
-	CHECK(comp->getData() == 23);
+	REQUIRE(comp->getData() == 23);
 }
