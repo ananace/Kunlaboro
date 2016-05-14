@@ -37,6 +37,8 @@ set(Kunlaboro_HEADERS
 	include/Kunlaboro/EntitySystem.hpp
 	include/Kunlaboro/EntitySystem.inl
 	include/Kunlaboro/ID.hpp
+	include/Kunlaboro/Views.hpp
+	include/Kunlaboro/Views.inl
 
 	include/Kunlaboro/detail/ComponentPool.hpp
 )
@@ -45,6 +47,7 @@ set(Kunlaboro_SOURCES
 	source/Kunlaboro/Component.cpp
 	source/Kunlaboro/Entity.cpp
 	source/Kunlaboro/EntitySystem.cpp
+	source/Kunlaboro/Views.cpp
 
 	source/Kunlaboro/detail/ComponentPool.cpp
 )

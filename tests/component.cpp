@@ -1,5 +1,6 @@
 #include <Kunlaboro/EntitySystem.inl>
 #include <Kunlaboro/Component.inl>
+#include <Kunlaboro/Views.inl>
 
 #include "catch.hpp"
 
@@ -46,63 +47,60 @@ private:
 	int mData;
 };
 
-SCENARIO("Creating a component")
+TEST_CASE("component creation", "[component]")
 {
 	Kunlaboro::EntitySystem es;
 	
-	GIVEN("A simple POD component")
+	SECTION("simple POD component")
 	{
-		WHEN("The component is trivially constructed")
+		auto component = es.componentCreate<TestComponent>();
+
+		REQUIRE(component->getEntitySystem() == &es);
+		REQUIRE(es.getComponent(component->getId()) == component);
+		REQUIRE(es.componentAlive(component->getId()));
+		REQUIRE(component.getRefCount() == 1);
+
+		SECTION("ref counting")
 		{
-			auto component = es.componentCreate<TestComponent>();
-			CHECK(component.getRefCount() == 1);
+			auto copy = component;
+			REQUIRE(component.getRefCount() == 2);
+			REQUIRE(copy == component);
 
-			THEN("The created component is correctly ref counted")
-			{
-				auto copy = component;
-				CHECK(component.getRefCount() == 2);
-				CHECK(copy == component);
+			copy.release();
+			copy.unlink();
 
-				copy.release();
-				copy.unlink();
-
-				CHECK(component.getRefCount() == 1);
-				CHECK(copy == component);
-			}
-
-			THEN("The created component is contained successfully in the entity system")
-			{
-				CHECK(component->getEntitySystem() == &es);
-				CHECK(es.getComponent(component->getId()) == component);
-				CHECK(es.componentAlive(component->getId()));
-
-				AND_THEN("The created component has its default constructor called appropriately")
-				{
-					CHECK(component->getData() == -1);
-				}
-			}
+			REQUIRE(component.getRefCount() == 1);
+			REQUIRE(copy == component);
 		}
-		WHEN("The component is non-trivially constructed")
+
+		SECTION("cleanup")
+		{
+			component.release();
+
+			REQUIRE(component->getEntitySystem() == &es);
+			REQUIRE(es.getComponent(component->getId()) != component);
+			REQUIRE(!es.componentAlive(component->getId()));
+			REQUIRE(component.getRefCount() == 0);
+		}
+
+		SECTION("non-trivially construction")
 		{
 			auto component = es.componentCreate<TestComponent>(42);
 
-			THEN("The created component has its non-trivial constructor called appropriately")
-			{
-				CHECK(component->getData() == 42);
-
-				AND_THEN("Another component can be successfully copy-constructed from it")
-				{
-					auto copy = es.componentCreate<TestComponent>(*component);
-
-					CHECK(copy != component);
-					CHECK(copy->getData() == component->getData());
-				}
-			}
+			REQUIRE(component->getData() == 42);
 		}
 
-		THEN("The component can receive messages correctly")
+		SECTION("copy construction")
 		{
-			auto component = es.componentCreate<TestComponent>(42);
+			auto copy = es.componentCreate<TestComponent>(*component);
+
+			CHECK(copy != component);
+			CHECK(copy->getData() == component->getData());
+		}
+
+		SECTION("low-level message passing")
+		{
+			component = es.componentCreate<TestComponent>(42);
 			CHECK(component->getData() == 42);
 
 			TestComponent::Message newData(1);
@@ -118,7 +116,7 @@ SCENARIO("Creating a component")
 	}
 }
 
-SCENARIO("Creating several components")
+TEST_CASE("component iteration", "[component][view]")
 {
 	Kunlaboro::EntitySystem es;
 
@@ -128,10 +126,45 @@ SCENARIO("Creating several components")
 		components.push_back(es.componentCreate<TestComponent>(i));
 
 	auto collection = es.components<TestComponent>();
-	int i = 0;
-	for (auto& comp : collection)
+
+	SECTION("range-based for")
 	{
-		CHECK(comp.getData() == i);
-		++i;
+		int count = 0;
+		for (auto& comp : collection)
+		{
+			REQUIRE(comp.getData() == count);
+			++count;
+		}
+
+		REQUIRE(count == 10);
+	}
+
+	SECTION("view forEach")
+	{
+		int combinedValue = 0;
+		collection.forEach([&combinedValue](TestComponent& comp) { combinedValue += comp.getData(); });
+
+		REQUIRE(combinedValue == 45);
+	}
+
+	SECTION("view where forEach")
+	{
+		collection.where([](const TestComponent& comp) { return comp.getData() < 5; });
+
+		int combinedValue = 0;
+		collection.forEach([&combinedValue](TestComponent& comp) { combinedValue += comp.getData(); });
+
+		REQUIRE(combinedValue == 10);
+	}
+
+	SECTION("view where range-based")
+	{
+		collection.where([](const TestComponent& comp) { return comp.getData() > 5; });
+
+		int combinedValue = 0;
+		for (auto& comp : collection)
+			combinedValue += comp.getData();
+
+		REQUIRE(combinedValue == 30);
 	}
 }

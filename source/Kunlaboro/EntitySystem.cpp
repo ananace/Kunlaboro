@@ -1,6 +1,10 @@
 #include <Kunlaboro/EntitySystem.hpp>
+#include <Kunlaboro/EntitySystem.inl>
 #include <Kunlaboro/Entity.hpp>
+#include <Kunlaboro/Component.hpp>
 #include <Kunlaboro/Component.inl>
+
+#include <Kunlaboro/detail/ComponentPool.hpp>
 
 #include <cassert>
 
@@ -23,7 +27,7 @@ ComponentHandle<Component> EntitySystem::getComponent(ComponentId id) const
 		return ComponentHandle<Component>();
 
 	auto& data = mComponentFamilies[id.getFamily()];
-	return ComponentHandle<Component>(static_cast<Component*>(data.MemoryPool->getData(id.getIndex())), const_cast<std::atomic_uint32_t*>(data.Components[id.getIndex()].RefCount));
+	return ComponentHandle<Component>(static_cast<Component*>(data.MemoryPool->getData(id.getIndex())), const_cast<std::atomic_ushort*>(data.Components[id.getIndex()].RefCount));
 }
 Entity EntitySystem::getEntity(EntityId id) const
 {
@@ -184,6 +188,10 @@ void EntitySystem::componentDetach(ComponentId cid, EntityId eid)
 	comp.release();
 }
 
+const detail::BaseComponentPool& EntitySystem::componentGetPool(ComponentId::FamilyType family) const
+{
+	return *mComponentFamilies.at(family).MemoryPool;
+}
 const std::vector<EntitySystem::ComponentData>& EntitySystem::componentGetList(ComponentId::FamilyType family) const
 {
 	return mComponentFamilies.at(family).Components;
@@ -191,10 +199,4 @@ const std::vector<EntitySystem::ComponentData>& EntitySystem::componentGetList(C
 const std::vector<EntitySystem::EntityData>& EntitySystem::entityGetList() const
 {
 	return mEntities;
-}
-
-EntitySystem::BaseView::BaseView(const EntitySystem* es)
-	: mES(es)
-{
-
 }

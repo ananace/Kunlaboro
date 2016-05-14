@@ -3,8 +3,7 @@
 #include "Component.hpp"
 #include "Entity.hpp"
 #include "ID.hpp"
-
-#include "detail/ComponentPool.hpp"
+#include "Views.hpp"
 
 #include <array>
 #include <atomic>
@@ -15,6 +14,10 @@
 
 namespace Kunlaboro
 {
+	namespace detail
+	{
+		class BaseComponentPool;
+	}
 
 	class EntitySystem
 	{
@@ -50,45 +53,14 @@ namespace Kunlaboro
 		void componentDetach(ComponentId cid, EntityId eid);
 		
 	private:
-		class BaseView
-		{
-		public:
-			BaseView(const EntitySystem*);
-
-			template<typename IteratorType, typename IteratedType>
-			class Iterator : public std::iterator<std::input_iterator_tag, ComponentId>
-			{
-			public:
-				virtual ~Iterator() = default;
-
-				IteratorType& operator++();
-				bool operator==(const Iterator& rhs) const;
-				bool operator!=(const Iterator& rhs) const;
-
-				virtual IteratedType* operator->() = 0;
-				virtual const IteratedType* operator->() const = 0;
-				virtual IteratedType& operator*() = 0;
-				virtual const IteratedType& operator*() const = 0;
-
-			protected:
-				Iterator(const EntitySystem* es, uint64_t index);
-
-				virtual void moveNext() = 0;
-
-				const EntitySystem* mES;
-				uint64_t mIndex;
-			};
-
-		protected:
-			const EntitySystem* mES;
-		};
+		
 
 	public:
 		struct ComponentData
 		{
 			ComponentData()
 				: Generation(0)
-				, RefCount(new std::atomic_uint32_t(0))
+				, RefCount(new std::atomic_ushort(0))
 			{ }
 			ComponentData(const ComponentData&) = delete;
 			ComponentData(ComponentData&& move)
@@ -104,7 +76,7 @@ namespace Kunlaboro
 			}
 
 			ComponentId::GenerationType Generation;
-			std::atomic_uint32_t* RefCount;
+			std::atomic_ushort* RefCount;
 		};
 		struct EntityData
 		{
@@ -112,64 +84,13 @@ namespace Kunlaboro
 			std::vector<ComponentId> Components;
 		};
 
+		const detail::BaseComponentPool& componentGetPool(ComponentId::FamilyType family) const;
 		const std::vector<ComponentData>& componentGetList(ComponentId::FamilyType family) const;
 		const std::vector<EntityData>& entityGetList() const;
 
-
-		template<typename T>
-		class ComponentView : public BaseView
-		{
-		public:
-			struct Iterator : public BaseView::Iterator<Iterator, T>
-			{
-				inline T* operator->() { return mCurComponent.get(); }
-				inline const T* operator->() const { return mCurComponent.get(); }
-				inline T& operator*() { return *mCurComponent; }
-				inline const T& operator*() const { return *mCurComponent; }
-
-			protected:
-				Iterator(const EntitySystem* sys, ComponentId::IndexType index, const std::vector<EntitySystem::ComponentData>* components);
-
-				friend class ComponentView;
-
-				virtual void moveNext();
-
-			private:
-				ComponentHandle<T> mCurComponent;
-				const std::vector<EntitySystem::ComponentData>* mComponents;
-			};
-
-			Iterator begin() const;
-			Iterator end() const;
-
-		private:
-			ComponentView(const EntitySystem* es);
-
-			friend class EntitySystem;
-		};
-
-		class EntityView : public BaseView
-		{
-		public:
-			struct Iterator : public BaseView::Iterator<Iterator, Entity>
-			{
-				inline Entity* operator->() { return &mCurEntity; }
-				inline const Entity* operator->() const { return &mCurEntity; }
-				inline Entity& operator*() { return mCurEntity; }
-				inline const Entity& operator*() const { return mCurEntity; }
-
-			protected:
-				Iterator(EntitySystem* sys, EntityId::IndexType index);
-				virtual void moveNext();
-
-			private:
-				Entity mCurEntity;
-			};
-		};
-
 		template<typename T>
 		ComponentView<T> components() const;
-		//EntityView entities() const;
+		EntityView entities() const;
 
 	private:
 		struct ComponentFamily

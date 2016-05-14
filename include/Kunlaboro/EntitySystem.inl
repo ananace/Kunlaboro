@@ -3,6 +3,8 @@
 #include "EntitySystem.hpp"
 #include "Component.hpp"
 
+#include "detail/ComponentPool.hpp"
+
 namespace Kunlaboro
 {
 	template<typename T>
@@ -59,76 +61,8 @@ namespace Kunlaboro
 	}
 
 	template<typename T>
-	EntitySystem::ComponentView<T> EntitySystem::components() const
+	ComponentView<T> EntitySystem::components() const
 	{
 		return ComponentView<T>(this);
 	}
-
-
-	/*//////////
-	// Views //
-	/////////*/
-
-	template<typename IteratorType, typename IteratedType>
-	EntitySystem::BaseView::Iterator<IteratorType, IteratedType>::Iterator(const EntitySystem* es, uint64_t index)
-		: mES(es)
-		, mIndex(index)
-	{
-	}
-
-	template<typename IteratorType, typename IteratedType>
-	IteratorType& EntitySystem::BaseView::Iterator<IteratorType, IteratedType>::operator++()
-	{
-		++mIndex;
-		moveNext();
-
-		return *static_cast<IteratorType*>(this);
-	}
-	template<typename IteratorType, typename IteratedType>
-	bool EntitySystem::BaseView::Iterator<IteratorType, IteratedType>::operator==(const Iterator& rhs) const
-	{
-		return mIndex == rhs.mIndex;
-	}
-	template<typename IteratorType, typename IteratedType>
-	bool EntitySystem::BaseView::Iterator<IteratorType, IteratedType>::operator!=(const Iterator& rhs) const
-	{
-		return mIndex != rhs.mIndex;
-	}
-
-	template<typename T>
-	EntitySystem::ComponentView<T>::Iterator::Iterator(const EntitySystem* sys, ComponentId::IndexType index, const std::vector<EntitySystem::ComponentData>* components)
-		: BaseView::Iterator<Iterator, T>(sys, index)
-		, mComponents(components)
-	{
-		moveNext();
-	}
-	template<typename T>
-	void EntitySystem::ComponentView<T>::Iterator::moveNext()
-	{
-		const auto family = Kunlaboro::ComponentFamily<T>::getFamily();
-		
-		if (mComponents->size() > mIndex)
-			mCurComponent = mES->getComponent(ComponentId(static_cast<ComponentId::IndexType>(mIndex), mComponents->at(static_cast<size_t>(mIndex)).Generation, family));
-		else
-			mCurComponent = ComponentHandle<T>();
-	}
-
-	template<typename T>
-	EntitySystem::ComponentView<T>::ComponentView(const EntitySystem* es)
-		: BaseView(es)
-	{
-	}
-
-	template<typename T>
-	typename EntitySystem::ComponentView<T>::Iterator EntitySystem::ComponentView<T>::begin() const
-	{
-		return Iterator(mES, 0, &mES->componentGetList(Kunlaboro::ComponentFamily<T>::getFamily()));
-	}
-	template<typename T>
-	typename EntitySystem::ComponentView<T>::Iterator EntitySystem::ComponentView<T>::end() const
-	{
-		auto& list = mES->componentGetList(Kunlaboro::ComponentFamily<T>::getFamily());
-		return Iterator(mES, list.size(), &list);
-	}
-
 }

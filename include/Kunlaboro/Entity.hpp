@@ -9,6 +9,7 @@ namespace Kunlaboro
 	template<typename T>
 	class ComponentHandle;
 	class EntitySystem;
+	class EntityView;
 
 	class Entity
 	{
@@ -48,6 +49,7 @@ namespace Kunlaboro
 		Entity(EntitySystem* sys, EntityId id);
 
 		friend class EntitySystem;
+		friend class EntityView;
 		
 		EntitySystem* mES;
 		EntityId mId;

@@ -1,4 +1,5 @@
 #include <Kunlaboro/Component.hpp>
+#include <Kunlaboro/Component.inl>
 #include <Kunlaboro/EntitySystem.hpp>
 
 using namespace Kunlaboro;
@@ -36,7 +37,7 @@ BaseComponentHandle::BaseComponentHandle()
 {
 
 }
-BaseComponentHandle::BaseComponentHandle(Component* ptr, std::atomic_uint32_t* counter)
+BaseComponentHandle::BaseComponentHandle(Component* ptr, std::atomic_ushort* counter)
 	: mPtr(ptr)
 	, mCounter(counter)
 {
@@ -97,20 +98,20 @@ void BaseComponentHandle::release()
 	if (!mPtr || !mCounter)
 		return;
 
-	auto& id = mPtr->getId();
+	const auto& id = mPtr->getId();
 	auto* es = mPtr->getEntitySystem();
 
 	if (es->componentAlive(id))
 	{
 		auto count = mCounter->fetch_sub(1);
 		
-		if (count == 0)
+		if (count <= 1)
 			es->componentDestroy(id);
 	}
 }
 uint32_t BaseComponentHandle::getRefCount() const
 {
 	if (mCounter && mPtr)
-		return (*mCounter);
+		return mCounter->load();
 	return 0;
 }

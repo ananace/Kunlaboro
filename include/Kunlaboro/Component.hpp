@@ -85,13 +85,13 @@ namespace Kunlaboro
 		uint32_t getRefCount() const;
 
 	protected:
-		BaseComponentHandle(Component* ptr, std::atomic_uint32_t* counter);
+		BaseComponentHandle(Component* ptr, std::atomic_ushort* counter);
 
 	private:
 		friend class EntitySystem;
 
 		Component* mPtr;
-		std::atomic_uint32_t* mCounter;
+		std::atomic_ushort* mCounter;
 	};
 
 	template<typename T>
@@ -111,7 +111,7 @@ namespace Kunlaboro
 		T& operator*();
 
 	private:
-		ComponentHandle(T* ptr, std::atomic_uint32_t* counter);
+		ComponentHandle(T* ptr, std::atomic_ushort* counter);
 		friend class EntitySystem;
 	};
 }
