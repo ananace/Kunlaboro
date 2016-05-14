@@ -59,23 +59,23 @@ namespace Kunlaboro
 	}
 
 	template<typename T>
-	ComponentView<T>::Iterator::Iterator(const EntitySystem* sys, ComponentId componentBase, const typename BaseView<ComponentView<T>, T>::Predicate& pred)
+	ComponentView<T>::Iterator::Iterator(const EntitySystem* sys, ComponentId componentBase, const Predicate& pred)
 		: BaseView<ComponentView, T>::template BaseIterator<Iterator>(sys, componentBase.getIndex(), pred)
 		, mComponents(&sys->componentGetList(componentBase.getFamily()))
 	{
 		moveNext();
 
 		const auto maxLen = maxLength();
-		while (BaseView<ComponentView, T>::mIndex < maxLen && (!basePred() || (BaseView<ComponentView, T>::mPred && !BaseView<ComponentView, T>::mPred(**this))))
+		while (mIndex < maxLen && (!basePred() || (mPred && !mPred(**this))))
 		{
-			++BaseView<ComponentView, T>::mIndex;
+			++mIndex;
 			moveNext();
 		}
 	}
 	template<typename T>
 	bool ComponentView<T>::Iterator::basePred() const
 	{
-		return BaseView<ComponentView, T>::mES->componentAlive(mCurComponent->getId());
+		return mES->componentAlive(mCurComponent->getId());
 	}
 	template<typename T>
 	void ComponentView<T>::Iterator::moveNext()
@@ -83,8 +83,8 @@ namespace Kunlaboro
 		const auto family = Kunlaboro::ComponentFamily<T>::getFamily();
 		const auto* components = static_cast<const std::vector<EntitySystem::ComponentData>*>(mComponents);
 
-		if (components->size() > BaseView<ComponentView, T>::mIndex)
-			mCurComponent = BaseView<ComponentView, T>::mES->getComponent(ComponentId(static_cast<ComponentId::IndexType>(BaseView<ComponentView, T>::mIndex), components->at(static_cast<size_t>(BaseView<ComponentView, T>::mIndex)).Generation, family));
+		if (components->size() > mIndex)
+			mCurComponent = mES->getComponent(ComponentId(static_cast<ComponentId::IndexType>(mIndex), components->at(static_cast<size_t>(mIndex)).Generation, family));
 		else
 			mCurComponent = ComponentHandle<T>();
 	}
@@ -112,7 +112,7 @@ namespace Kunlaboro
 		return Iterator(BaseView<ComponentView, T>::mES, ComponentId(list.size(), 0, Kunlaboro::ComponentFamily<T>::getFamily()), BaseView<ComponentView, T>::mPred);
 	}
 	template<typename T>
-	void ComponentView<T>::forEach(const typename BaseView<ComponentView, T>::Function& func)
+	void ComponentView<T>::forEach(const Function& func)
 	{
 		auto family = Kunlaboro::ComponentFamily<T>::getFamily();
 		auto& pool = BaseView<ComponentView, T>::mES->componentGetPool(family);

@@ -24,8 +24,8 @@ void EntityView::forEach(const Function& func)
 	}
 }
 
-EntityView::Iterator::Iterator(EntitySystem* sys, EntityId::IndexType index)
-	: BaseView<EntityView, Entity>::BaseIterator<Iterator>(sys, index, mPred)
+EntityView::Iterator::Iterator(EntitySystem* sys, EntityId::IndexType index, const Predicate& pred)
+	: BaseView<EntityView, Entity>::BaseIterator<Iterator>(sys, index, pred)
 {
 
 }

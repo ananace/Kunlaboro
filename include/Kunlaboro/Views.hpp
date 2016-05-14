@@ -5,6 +5,12 @@
 
 #include <functional>
 
+#ifdef _MSC_VER
+#define TEMPLATE(T) T
+#else
+#define TEMPLATE(T) template T
+#endif
+
 namespace Kunlaboro
 {
 	class EntitySystem;
@@ -57,7 +63,10 @@ namespace Kunlaboro
 	class ComponentView : public BaseView<ComponentView<T>, T>
 	{
 	public:
-		struct Iterator : public BaseView<ComponentView, T>::template BaseIterator<Iterator>
+		typedef std::function<bool(const T&)> Predicate;
+		typedef std::function<void(T&)> Function;
+
+		struct Iterator : public BaseView<ComponentView, T>::TEMPLATE(BaseIterator<Iterator>)
 		{
 			inline T* operator->() { return mCurComponent.get(); }
 			inline const T* operator->() const { return mCurComponent.get(); }
@@ -65,7 +74,7 @@ namespace Kunlaboro
 			inline const T& operator*() const { return *mCurComponent; }
 
 		protected:
-			Iterator(const EntitySystem* sys, ComponentId componentBase, const typename BaseView<ComponentView<T>, T>::Predicate& pred);
+			Iterator(const EntitySystem* sys, ComponentId componentBase, const Predicate& pred);
 
 			friend class ComponentView;
 
@@ -81,7 +90,7 @@ namespace Kunlaboro
 		Iterator begin() const;
 		Iterator end() const;
 
-		virtual void forEach(const typename BaseView<ComponentView<T>, T>::Function& func);
+		virtual void forEach(const Function& func);
 
 	private:
 		ComponentView(const EntitySystem* es);
@@ -92,7 +101,10 @@ namespace Kunlaboro
 	class EntityView : public BaseView<EntityView, Entity>
 	{
 	public:
-		struct Iterator : public BaseView<EntityView, Entity>::template BaseIterator<Iterator>
+		typedef std::function<bool(const Entity&)> Predicate;
+		typedef std::function<void(Entity&)> Function;
+
+		struct Iterator : public BaseView<EntityView, Entity>::TEMPLATE(BaseIterator<Iterator>)
 		{
 			inline Entity* operator->() { return &mCurEntity; }
 			inline const Entity* operator->() const { return &mCurEntity; }
@@ -100,7 +112,7 @@ namespace Kunlaboro
 			inline const Entity& operator*() const { return mCurEntity; }
 
 		protected:
-			Iterator(EntitySystem* sys, EntityId::IndexType index);
+			Iterator(EntitySystem* sys, EntityId::IndexType index, const Predicate& pred);
 
 			virtual bool basePred() const;
 			virtual void moveNext();
