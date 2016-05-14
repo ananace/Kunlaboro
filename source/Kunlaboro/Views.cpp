@@ -56,7 +56,7 @@ EntityView::Iterator::Iterator(const EntitySystem* sys, EntityId::IndexType inde
 	, mBitField(bits)
 	, mMatchType(match)
 {
-	nextStep();
+	Iterator::nextStep();
 }
 
 bool EntityView::Iterator::basePred() const

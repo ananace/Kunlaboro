@@ -81,7 +81,7 @@ namespace Kunlaboro
 		: BaseView<ComponentView, T>::template BaseIterator<Iterator>(sys, componentBase.getIndex(), pred)
 		, mComponents(&sys->componentGetList(componentBase.getFamily()))
 	{
-		nextStep();
+		Iterator::nextStep();
 	}
 	template<typename T>
 	bool ComponentView<T>::Iterator::basePred() const
@@ -160,8 +160,10 @@ namespace Kunlaboro
 	}
 
 	template<typename... Components>
-	void EntityView::forEach(const std::function<void(Entity&, Components&...)>& func)
+	void EntityView::forEach(const std::function<void(Entity&, Components&...)>& func, MatchType match)
 	{
+		assert(match == Match_All);
+
 		mMatchType = Match_All;
 		mBitField.clear();
 		addComponents<Components...>();

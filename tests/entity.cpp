@@ -139,9 +139,9 @@ TEST_CASE("fizzbuzz", "[entity][view]")
 		std::string result;
 
 		auto view = es.entities();
-		view.forEach<NumberComponent, NameComponent>([&result](Kunlaboro::Entity& ent, NumberComponent* number, NameComponent* name) {
-			result += std::to_string(number->Number);
-			result += name->Name + " ";
+		view.forEach<NumberComponent, NameComponent>([&result](Kunlaboro::Entity& ent, NumberComponent& number, NameComponent& name) {
+			result += std::to_string(number.Number);
+			result += name.Name + " ";
 		}, Kunlaboro::EntityView::Match_All);
 
 		REQUIRE(result == "3fizz 5buzz 6fizz 9fizz 10buzz 12fizz 15fizzbuzz ");

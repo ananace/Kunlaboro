@@ -142,7 +142,7 @@ namespace Kunlaboro
 		EntityView& withComponents(MatchType match = Match_All);
 
 		template<typename... Components>
-		void forEach(const std::function<void(Entity&, Components&...)>& func);
+		void forEach(const std::function<void(Entity&, Components&...)>& func, MatchType match = Match_Any);
 		template<typename... Components>
 		void forEach(const std::function<void(Entity&, Components*...)>& func, MatchType match = Match_Any);
 
