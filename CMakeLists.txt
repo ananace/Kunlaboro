@@ -41,6 +41,7 @@ set(Kunlaboro_HEADERS
 	include/Kunlaboro/Views.inl
 
 	include/Kunlaboro/detail/ComponentPool.hpp
+	include/Kunlaboro/detail/DynamicBitfield.hpp
 )
 
 set(Kunlaboro_SOURCES
@@ -50,10 +51,17 @@ set(Kunlaboro_SOURCES
 	source/Kunlaboro/Views.cpp
 
 	source/Kunlaboro/detail/ComponentPool.cpp
+	source/Kunlaboro/detail/DynamicBitfield.cpp
 )
 
-source_group("Header Files\\detail" FILES include/Kunlaboro/detail/ComponentPool.hpp)
-source_group("Source Files\\detail" FILES source/Kunlaboro/detail/ComponentPool.cpp)
+source_group("Header Files\\detail" FILES
+	include/Kunlaboro/detail/ComponentPool.hpp
+	include/Kunlaboro/detail/DynamicBitfield.hpp
+)
+source_group("Source Files\\detail" FILES
+	source/Kunlaboro/detail/ComponentPool.cpp
+	source/Kunlaboro/detail/DynamicBitfield.cpp
+)
 
 add_library(Kunlaboro STATIC ${Kunlaboro_HEADERS} ${Kunlaboro_SOURCES})
 

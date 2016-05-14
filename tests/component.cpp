@@ -101,6 +101,7 @@ TEST_CASE("component creation", "[component]")
 		SECTION("low-level message passing")
 		{
 			component = es.componentCreate<TestComponent>(42);
+			CHECK(es.componentAlive(component->getId()));
 			CHECK(component->getData() == 42);
 
 			TestComponent::Message newData(1);

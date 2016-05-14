@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "DynamicBitfield.hpp"
+
 namespace Kunlaboro
 {
 
@@ -22,9 +24,9 @@ namespace Kunlaboro
 			void ensure(std::size_t count);
 			void resize(std::size_t count);
 
-			bool hasBit(std::size_t index) const;
-			void setBit(std::size_t index);
-			void resetBit(std::size_t index);
+			inline bool hasBit(std::size_t index) const { return mBits.hasBit(index); }
+			inline void setBit(std::size_t index) { mBits.setBit(index); }
+			inline void resetBit(std::size_t index) { mBits.clearBit(index); }
 
 			inline void* getData(std::size_t index) {
 				return mBlocks[index / mChunkSize] + (index % mChunkSize) * mComponentSize;
@@ -36,7 +38,7 @@ namespace Kunlaboro
 
 		private:
 			std::vector<uint8_t*> mBlocks;
-			std::vector<uint64_t> mBits;
+			DynamicBitfield mBits;
 			std::size_t mComponentSize, mChunkSize, mSize, mCapacity;
 		};
 

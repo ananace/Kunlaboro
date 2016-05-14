@@ -27,6 +27,7 @@ void BaseComponentPool::ensure(size_t count)
 		resize(count);
 
 	mSize = count;
+	mBits.ensure(count);
 }
 void BaseComponentPool::resize(size_t count)
 {
@@ -37,28 +38,4 @@ void BaseComponentPool::resize(size_t count)
 
 		mCapacity += mChunkSize;
 	}
-
-	mBits.resize(size_t(std::ceil(mCapacity / 64.f)), 0);
-}
-
-bool BaseComponentPool::hasBit(size_t index) const
-{
-	if (mBits.size() < index / 64)
-		return false;
-
-	return (mBits[index / 64] & (1ull << (index % 64))) != 0;
-}
-void BaseComponentPool::setBit(size_t index)
-{
-	if (mBits.size() < index / 64ul)
-		return;
-
-	mBits[index / 64] |= (1ull << (index % 64));
-}
-void BaseComponentPool::resetBit(size_t index)
-{
-	if (mBits.size() < index / 64ul)
-		return;
-
-	mBits[index / 64] &= ~(1ull << (index % 64));
 }

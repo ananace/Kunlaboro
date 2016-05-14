@@ -104,11 +104,10 @@ namespace Kunlaboro
 		static_assert(sIndexBits + sGenerationBits + sFamilyBits == sizeof(idType) * 8, "Id bit counts must add up to the total Id size.");
 
 		BaseComponentId() : mId(~idType(0)) { }
-		BaseComponentId(familyType family) 
-			: mId(static_cast<idType>((~indexType(0)) & sIndexMask) |
-				(static_cast<idType>((~generationType(0)) & sGenerationMask) << sIndexBits) |
-				(static_cast<idType>(family & sFamilyMask) << (sIndexBits + sGenerationBits))) 
-		{ }
+		static BaseComponentId Invalid()
+		{
+			return BaseComponentId(~indexType(0), ~generationType(0), ~familyType(0));
+		}
 		BaseComponentId(indexType index, generationType generation, familyType family)
 			: mId(static_cast<idType>(index & sIndexMask) |
 				(static_cast<idType>(generation & sGenerationMask) << sIndexBits) |

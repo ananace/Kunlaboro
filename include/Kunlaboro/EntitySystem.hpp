@@ -5,6 +5,8 @@
 #include "ID.hpp"
 #include "Views.hpp"
 
+#include "detail/DynamicBitfield.hpp"
+
 #include <array>
 #include <atomic>
 #include <list>
@@ -39,6 +41,7 @@ namespace Kunlaboro
 		template<typename T>
 		ComponentHandle<T> entityGetComponent(ComponentId::FamilyType family, EntityId eid) const;
 		ComponentHandle<Component> entityGetComponent(ComponentId::FamilyType family, EntityId eid) const;
+		bool entityHasComponent(ComponentId::FamilyType family, EntityId eid) const;
 
 		void componentSendMessage(ComponentId id, Component::BaseMessage* msg);
 		void entitySendMessage(EntityId id, Component::BaseMessage* msg);
@@ -81,6 +84,7 @@ namespace Kunlaboro
 		struct EntityData
 		{
 			EntityId::GenerationType Generation;
+			detail::DynamicBitfield ComponentBits;
 			std::vector<ComponentId> Components;
 		};
 

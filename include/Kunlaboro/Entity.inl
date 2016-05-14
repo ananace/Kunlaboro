@@ -36,8 +36,7 @@ namespace Kunlaboro
 	{
 		auto gen = ComponentFamily<T>::getFamily();
 
-		auto comp = mES->entityGetComponent<T>(gen, mId);
-		return static_cast<bool>(comp);
+		return mES->entityHasComponent(gen, mId);
 	}
 	template<typename T>
 	ComponentHandle<T> Entity::getComponent() const

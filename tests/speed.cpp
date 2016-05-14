@@ -187,23 +187,21 @@ TEST_CASE("entity performance - 1 000 000", "[.performance][entity]")
 					es.entityDestroy(Kunlaboro::EntityId(i, 0));
 			}
 		}
-	}
 
-	/*
-	SECTION("iteration - range based")
-	{
-		auto view = es.entities();
-		for (auto& ent : view)
+		SECTION("iteration - range based")
 		{
-			(void)ent.getId();
+			auto view = es.entities();
+			for (auto& ent : view)
+			{
+				(void)ent.getId();
+			}
+		}
+		SECTION("iteration - forEach")
+		{
+			auto view = es.entities();
+			view.forEach([](Kunlaboro::Entity& ent) {
+				(void)ent.getId();
+			});
 		}
 	}
-	SECTION("iteration - forEach")
-	{
-		auto view = es.entities();
-		view.forEach([](Entity& ent) {
-			(void)ent.getId();
-		});
-	}
-	*/
 }

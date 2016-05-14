@@ -6,6 +6,10 @@
 
 namespace Kunlaboro
 {
+	namespace impl
+	{
+		bool matchBitfield(const detail::DynamicBitfield& entity, const detail::DynamicBitfield& bitField, EntityView::MatchType match);
+	}
 
 	template<typename ViewType, typename ViewedType>
 	BaseView<ViewType, ViewedType>::BaseView(const EntitySystem* es)
@@ -58,19 +62,26 @@ namespace Kunlaboro
 		return mIndex != rhs.mIndex;
 	}
 
+	template<typename ViewType, typename ViewedType>
+	template<typename IteratorType>
+	void BaseView<ViewType, ViewedType>::BaseIterator<IteratorType>::nextStep()
+	{
+		moveNext();
+
+		const auto maxLen = maxLength();
+		while (mIndex < maxLen && (!basePred() || (mPred && !mPred(**this))))
+		{
+			++mIndex;
+			moveNext();
+		}
+	}
+
 	template<typename T>
 	ComponentView<T>::Iterator::Iterator(const EntitySystem* sys, ComponentId componentBase, const Predicate& pred)
 		: BaseView<ComponentView, T>::template BaseIterator<Iterator>(sys, componentBase.getIndex(), pred)
 		, mComponents(&sys->componentGetList(componentBase.getFamily()))
 	{
-		moveNext();
-
-		const auto maxLen = maxLength();
-		while (Iterator::mIndex < maxLen && (!basePred() || (Iterator::mPred && !Iterator::mPred(**this))))
-		{
-			++Iterator::mIndex;
-			moveNext();
-		}
+		nextStep();
 	}
 	template<typename T>
 	bool ComponentView<T>::Iterator::basePred() const
@@ -127,17 +138,67 @@ namespace Kunlaboro
 			}
 	}
 
-	/*
 	template<typename... Components>
-	EntityView& EntityView::withComponents()
+	EntityView& EntityView::withComponents(MatchType type)
 	{
+		mBitField.clear();
+		mMatchType = type;
+		addComponents<Components...>();
 
+		return *this;
 	}
+	template<typename T, typename T2, typename... Components>
+	inline void EntityView::addComponents()
+	{
+		mBitField.setBit(Kunlaboro::ComponentFamily<T>::getFamily());
+		addComponents<T2, Components...>();
+	}
+	template<typename T>
+	inline void EntityView::addComponents()
+	{
+		mBitField.setBit(Kunlaboro::ComponentFamily<T>::getFamily());
+	}
+
 	template<typename... Components>
 	void EntityView::forEach(const std::function<void(Entity&, Components&...)>& func)
 	{
+		mMatchType = Match_All;
+		mBitField.clear();
+		addComponents<Components...>();
 
+		auto& list = mES->entityGetList();
+
+		for (size_t i = 0; i < list.size(); ++i)
+		{
+			auto& entData = list[i];
+			EntityId eid(i, entData.Generation);
+
+			Entity ent(const_cast<EntitySystem*>(mES), eid);
+			if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, Match_All))
+			{
+				func(ent, *(ent.getComponent<Components>().get())...);
+			}
+		}
 	}
-	*/
+	template<typename... Components>
+	void EntityView::forEach(const std::function<void(Entity&, Components*...)>& func, MatchType type)
+	{
+		mMatchType = type;
+		mBitField.clear();
+		addComponents<Components...>();
 
+		auto& list = mES->entityGetList();
+
+		for (size_t i = 0; i < list.size(); ++i)
+		{
+			auto& entData = list[i];
+			EntityId eid(i, entData.Generation);
+
+			Entity ent(const_cast<EntitySystem*>(mES), eid);
+			if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, mMatchType))
+			{
+				func(ent, (ent.getComponent<Components>().get())...);
+			}
+		}
+	}
 }

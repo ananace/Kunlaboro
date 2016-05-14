@@ -2,6 +2,7 @@
 
 #include "ID.hpp"
 #include "Entity.hpp"
+#include "detail/DynamicBitfield.hpp"
 
 #include <functional>
 
@@ -42,6 +43,7 @@ namespace Kunlaboro
 		protected:
 			BaseIterator(const EntitySystem* es, uint64_t index, const typename BaseView<ViewType, ViewedType>::Predicate& pred);
 
+			void nextStep();
 			virtual bool basePred() const { return true; }
 			virtual void moveNext() = 0;
 			virtual uint64_t maxLength() const = 0;
@@ -49,6 +51,7 @@ namespace Kunlaboro
 			const typename BaseView<ViewType, ViewedType>::Predicate& mPred;
 			const EntitySystem* mES;
 			uint64_t mIndex;
+
 		};
 
 		ViewType& where(const Predicate& pred);
@@ -101,6 +104,12 @@ namespace Kunlaboro
 	class EntityView : public BaseView<EntityView, Entity>
 	{
 	public:
+		enum MatchType
+		{
+			Match_All,
+			Match_Any
+		};
+
 		typedef std::function<bool(const Entity&)> Predicate;
 		typedef std::function<void(Entity&)> Function;
 
@@ -112,7 +121,9 @@ namespace Kunlaboro
 			inline const Entity& operator*() const { return mCurEntity; }
 
 		protected:
-			Iterator(EntitySystem* sys, EntityId::IndexType index, const Predicate& pred);
+			Iterator(const EntitySystem* sys, EntityId::IndexType index, const Predicate& pred, const detail::DynamicBitfield&, MatchType);
+
+			friend class EntityView;
 
 			virtual bool basePred() const;
 			virtual void moveNext();
@@ -120,17 +131,33 @@ namespace Kunlaboro
 
 		private:
 			Entity mCurEntity;
+			detail::DynamicBitfield mBitField;
+			MatchType mMatchType;
 		};
 
+		Iterator begin() const;
+		Iterator end() const;
+
 		template<typename... Components>
-		EntityView& withComponents();
+		EntityView& withComponents(MatchType match = Match_All);
+
 		template<typename... Components>
 		void forEach(const std::function<void(Entity&, Components&...)>& func);
+		template<typename... Components>
+		void forEach(const std::function<void(Entity&, Components*...)>& func, MatchType match = Match_Any);
+
 		virtual void forEach(const Function& func);
 
 	private:
 		EntityView(const EntitySystem* es);
 
+		template<typename T, typename T2, typename... Components>
+		inline void addComponents();
+		template<typename T>
+		inline void addComponents();
+
+		detail::DynamicBitfield mBitField;
+		MatchType mMatchType;
 		friend class EntitySystem;
 	};
 }

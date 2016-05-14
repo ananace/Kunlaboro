@@ -62,7 +62,7 @@ void EntitySystem::entityDestroy(EntityId id)
 	const auto* components = entity.Components.data();
 	for (ComponentId::FamilyType family = 0; family < entity.Components.size(); ++family)
 	{
-		if (!componentAlive(components[family]))
+		if (!entity.ComponentBits.hasBit(family) || !componentAlive(components[family]))
 			continue;
 
 		componentDestroy(components[family]);
@@ -83,7 +83,7 @@ ComponentHandle<Component> EntitySystem::entityGetComponent(ComponentId::FamilyT
 		return ComponentHandle<Component>();
 
 	auto& entity = mEntities[eid.getIndex()];
-	if (entity.Components.size() <= family)
+	if (entity.Components.size() <= family || !entity.ComponentBits.hasBit(family))
 		return ComponentHandle<Component>();
 
 	auto cid = entity.Components[family];
@@ -91,6 +91,17 @@ ComponentHandle<Component> EntitySystem::entityGetComponent(ComponentId::FamilyT
 		return ComponentHandle<Component>();
 
 	return getComponent(cid);
+}
+bool EntitySystem::entityHasComponent(ComponentId::FamilyType family, EntityId eid) const
+{
+	if (!entityAlive(eid))
+		return false;
+
+	auto& entity = mEntities[eid.getIndex()];
+	if (entity.Components.size() <= family || !entity.ComponentBits.hasBit(family))
+		return false;
+
+	return componentAlive(entity.Components[family]);
 }
 
 void EntitySystem::componentSendMessage(ComponentId id, Component::BaseMessage* msg)
@@ -110,7 +121,7 @@ void EntitySystem::entitySendMessage(EntityId id, Component::BaseMessage* msg)
 	const auto* components = entity.Components.data();
 	for (ComponentId::FamilyType family = 0; family < entity.Components.size(); ++family)
 	{
-		if (components[family] == ComponentId(family) || !componentAlive(components[family]))
+		if (!entity.ComponentBits.hasBit(family) || !componentAlive(components[family]))
 			continue;
 
 		auto& data = mComponentFamilies[family];
@@ -125,6 +136,17 @@ void EntitySystem::componentDestroy(ComponentId id)
 	auto& data = mComponentFamilies[id.getFamily()];
 	if (!data.MemoryPool->hasBit(id.getIndex()))
 		return;
+
+	EntityId::IndexType eid = 0;
+	for (auto& ent : mEntities)
+	{
+		if (ent.ComponentBits.hasBit(id.getFamily()) && ent.Components[id.getFamily()] == id)
+		{
+			componentDetach(id, EntityId(eid, ent.Generation));
+			break;
+		}
+		++eid;
+	}
 
 	data.MemoryPool->destroy(id.getIndex());
 	data.MemoryPool->resetBit(id.getIndex());
@@ -156,7 +178,7 @@ bool EntitySystem::componentAttached(ComponentId cid, EntityId eid) const
 	if (entity.Components.size() <= cid.getFamily())
 		return false;
 
-	return entity.Components[cid.getFamily()] == cid;
+	return entity.ComponentBits.hasBit(cid.getFamily()) && entity.Components[cid.getFamily()] == cid;
 }
 void EntitySystem::componentAttach(ComponentId cid, EntityId eid)
 {
@@ -164,8 +186,8 @@ void EntitySystem::componentAttach(ComponentId cid, EntityId eid)
 		return;
 
 	auto& entity = mEntities[eid.getIndex()];
-	if (entity.Components.size() <= cid.getFamily())
-		entity.Components.resize(cid.getFamily() + 1, ComponentId(cid.getFamily()));
+	while (entity.Components.size() <= cid.getFamily())
+		entity.Components.push_back(ComponentId::Invalid());
 
 	auto comp = getComponent(cid);
 	if (comp->getEntityId() == eid)
@@ -174,10 +196,12 @@ void EntitySystem::componentAttach(ComponentId cid, EntityId eid)
 	if (comp->getEntityId() != EntityId())
 		componentDetach(cid, comp->getEntityId());
 
-	if (entity.Components[cid.getFamily()] != ComponentId(cid.getFamily()))
+	if (entity.Components[cid.getFamily()] != ComponentId::Invalid())
 		componentDetach(entity.Components[cid.getFamily()], eid);
 
+	entity.ComponentBits.setBit(cid.getFamily());
 	entity.Components[cid.getFamily()] = cid;
+
 	comp->mOwnerId = eid;
 	comp.unlink();
 }
@@ -194,6 +218,9 @@ void EntitySystem::componentDetach(ComponentId cid, EntityId eid)
 	if (comp->getEntityId() == eid)
 		return;
 
+	entity.ComponentBits.clearBit(cid.getFamily());
+	entity.Components[cid.getFamily()] = ComponentId::Invalid();
+
 	comp->mOwnerId = EntityId();
 	comp.release();
 }
@@ -209,4 +236,9 @@ const std::vector<EntitySystem::ComponentData>& EntitySystem::componentGetList(C
 const std::vector<EntitySystem::EntityData>& EntitySystem::entityGetList() const
 {
 	return mEntities;
+}
+
+EntityView EntitySystem::entities() const
+{
+	return EntityView(this);
 }
