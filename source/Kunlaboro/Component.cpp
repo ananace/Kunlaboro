@@ -32,28 +32,28 @@ EntitySystem* Component::getEntitySystem()
 
 BaseComponentHandle::BaseComponentHandle()
 	: mPtr(nullptr)
-	, mCounters(nullptr)
+	, mCounter(nullptr)
 {
 
 }
-BaseComponentHandle::BaseComponentHandle(Component* ptr, std::vector<uint32_t>* counters)
+BaseComponentHandle::BaseComponentHandle(Component* ptr, std::atomic_uint32_t* counter)
 	: mPtr(ptr)
-	, mCounters(counters)
+	, mCounter(counter)
 {
 	addRef();
 }
 BaseComponentHandle::BaseComponentHandle(const BaseComponentHandle& copy)
 	: mPtr(copy.mPtr)
-	, mCounters(copy.mCounters)
+	, mCounter(copy.mCounter)
 {
 	addRef();
 }
 BaseComponentHandle::BaseComponentHandle(BaseComponentHandle&& move)
 	: mPtr(std::move(move.mPtr))
-	, mCounters(std::move(move.mCounters))
+	, mCounter(std::move(move.mCounter))
 {
 	move.mPtr = nullptr;
-	move.mCounters = nullptr;
+	move.mCounter = nullptr;
 }
 BaseComponentHandle::~BaseComponentHandle()
 {
@@ -67,7 +67,7 @@ BaseComponentHandle& BaseComponentHandle::operator=(const BaseComponentHandle& a
 
 	release();
 	mPtr = assign.mPtr;
-	mCounters = assign.mCounters;
+	mCounter = assign.mCounter;
 	addRef();
 
 	return *this;
@@ -84,17 +84,17 @@ bool BaseComponentHandle::operator!=(const BaseComponentHandle& rhs) const
 
 void BaseComponentHandle::unlink()
 {
-	mCounters = nullptr;
+	mCounter = nullptr;
 }
 
 void BaseComponentHandle::addRef()
 {
-	if (mCounters && mPtr)
-		++(*mCounters)[mPtr->getId().getIndex()];
+	if (mCounter && mPtr)
+		++(*mCounter);
 }
 void BaseComponentHandle::release()
 {
-	if (!mPtr || !mCounters)
+	if (!mPtr || !mCounter)
 		return;
 
 	auto& id = mPtr->getId();
@@ -102,7 +102,7 @@ void BaseComponentHandle::release()
 
 	if (es->componentAlive(id))
 	{
-		auto count = --(*mCounters)[id.getIndex()];
+		auto count = mCounter->fetch_sub(1);
 		
 		if (count == 0)
 			es->componentDestroy(id);
@@ -110,7 +110,7 @@ void BaseComponentHandle::release()
 }
 uint32_t BaseComponentHandle::getRefCount() const
 {
-	if (mCounters && mPtr)
-		return (*mCounters)[mPtr->getId().getIndex()];
+	if (mCounter && mPtr)
+		return (*mCounter);
 	return 0;
 }

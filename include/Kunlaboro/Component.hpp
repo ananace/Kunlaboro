@@ -2,8 +2,8 @@
 
 #include "ID.hpp"
 
+#include <atomic>
 #include <cassert>
-#include <vector>
 
 namespace Kunlaboro
 {
@@ -85,13 +85,13 @@ namespace Kunlaboro
 		uint32_t getRefCount() const;
 
 	protected:
-		BaseComponentHandle(Component* ptr, std::vector<uint32_t>* counter);
+		BaseComponentHandle(Component* ptr, std::atomic_uint32_t* counter);
 
 	private:
 		friend class EntitySystem;
 
 		Component* mPtr;
-		std::vector<uint32_t>* mCounters;
+		std::atomic_uint32_t* mCounter;
 	};
 
 	template<typename T>
@@ -111,7 +111,7 @@ namespace Kunlaboro
 		T& operator*();
 
 	private:
-		ComponentHandle(T* ptr, std::vector<uint32_t>* counter);
+		ComponentHandle(T* ptr, std::atomic_uint32_t* counter);
 		friend class EntitySystem;
 	};
 }

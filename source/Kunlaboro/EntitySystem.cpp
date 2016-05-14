@@ -12,7 +12,7 @@ EntitySystem::EntitySystem()
 }
 EntitySystem::~EntitySystem()
 {
-	for (auto& comp : mComponents)
+	for (auto& comp : mComponentFamilies)
 		if (comp.MemoryPool)
 			delete comp.MemoryPool;
 }
@@ -22,8 +22,8 @@ ComponentHandle<Component> EntitySystem::getComponent(ComponentId id) const
 	if (!componentAlive(id))
 		return ComponentHandle<Component>();
 
-	auto& data = mComponents[id.getFamily()];
-	return ComponentHandle<Component>(static_cast<Component*>(data.MemoryPool->getData(id.getIndex())), const_cast<std::vector<uint32_t>*>(&data.ReferenceCounter));
+	auto& data = mComponentFamilies[id.getFamily()];
+	return ComponentHandle<Component>(static_cast<Component*>(data.MemoryPool->getData(id.getIndex())), const_cast<std::atomic_uint32_t*>(data.Components[id.getIndex()].RefCount));
 }
 Entity EntitySystem::getEntity(EntityId id) const
 {
@@ -84,7 +84,7 @@ void EntitySystem::componentSendMessage(ComponentId id, Component::BaseMessage* 
 	if (!componentAlive(id))
 		return;
 
-	auto& data = mComponents[id.getFamily()];
+	auto& data = mComponentFamilies[id.getFamily()];
 	static_cast<Component*>(data.MemoryPool->getData(id.getIndex()))->onMessage(msg);
 }
 void EntitySystem::entitySendMessage(EntityId id, Component::BaseMessage* msg)
@@ -99,7 +99,7 @@ void EntitySystem::entitySendMessage(EntityId id, Component::BaseMessage* msg)
 		if (components[family] == ComponentId(family) || !componentAlive(components[family]))
 			continue;
 
-		auto& data = mComponents[family];
+		auto& data = mComponentFamilies[family];
 		static_cast<Component*>(data.MemoryPool->getData(components[family].getIndex()))->onMessage(msg);
 	}
 }
@@ -108,23 +108,29 @@ void EntitySystem::componentDestroy(ComponentId id)
 	if (!componentAlive(id))
 		return;
 
-	auto& data = mComponents[id.getFamily()];
+	auto& data = mComponentFamilies[id.getFamily()];
 	if (!data.MemoryPool->hasBit(id.getIndex()))
 		return;
 
 	data.MemoryPool->destroy(id.getIndex());
 	data.MemoryPool->resetBit(id.getIndex());
-	data.ReferenceCounter[id.getIndex()] = 0;
-	++data.Generations[id.getIndex()];
+	auto& comp = data.Components[id.getIndex()];
+	comp.RefCount->store(0);
+	++comp.Generation;
+
 	data.FreeIndices.push_back(id.getIndex());
 }
 inline bool EntitySystem::componentAlive(ComponentId id) const
 {
-	if (mComponents.size() <= id.getFamily())
+	if (mComponentFamilies.size() <= id.getFamily())
 		return false;
 
-	auto& components = mComponents[id.getFamily()];
-	return components.Generations[id.getIndex()] == id.getGeneration() && components.MemoryPool->hasBit(id.getIndex());
+	auto& components = mComponentFamilies[id.getFamily()];
+	if (components.Components.size() <= id.getIndex())
+		return false;
+
+	auto& component = components.Components[id.getIndex()];
+	return component.Generation == id.getGeneration() && components.MemoryPool->hasBit(id.getIndex());
 }
 
 bool EntitySystem::componentAttached(ComponentId cid, EntityId eid) const
@@ -136,7 +142,7 @@ bool EntitySystem::componentAttached(ComponentId cid, EntityId eid) const
 	if (entity.Components.size() <= cid.getFamily())
 		return false;
 
-	return entity.Components[cid.getFamily()] == cid.getIndex();
+	return entity.Components[cid.getFamily()] == cid;
 }
 void EntitySystem::componentAttach(ComponentId cid, EntityId eid)
 {
@@ -157,7 +163,7 @@ void EntitySystem::componentAttach(ComponentId cid, EntityId eid)
 	if (entity.Components[cid.getFamily()] != ComponentId(cid.getFamily()))
 		componentDetach(entity.Components[cid.getFamily()], eid);
 
-	entity.Components[cid.getFamily()] = cid.getIndex();
+	entity.Components[cid.getFamily()] = cid;
 	comp->mOwnerId = eid;
 	comp.unlink();
 }
@@ -178,26 +184,17 @@ void EntitySystem::componentDetach(ComponentId cid, EntityId eid)
 	comp.release();
 }
 
+const std::vector<EntitySystem::ComponentData>& EntitySystem::componentGetList(ComponentId::FamilyType family) const
+{
+	return mComponentFamilies.at(family).Components;
+}
+const std::vector<EntitySystem::EntityData>& EntitySystem::entityGetList() const
+{
+	return mEntities;
+}
+
 EntitySystem::BaseView::BaseView(const EntitySystem* es)
 	: mES(es)
 {
 
-}
-const std::vector<ComponentId::GenerationType>* EntitySystem::BaseView::componentGenerations(ComponentId::FamilyType family) const
-{
-	if (mES->mComponents.size() <= family)
-		return nullptr;
-
-	return &mES->mComponents[family].Generations;
-}
-size_t EntitySystem::BaseView::componentCount(ComponentId::FamilyType family) const
-{
-	if (mES->mComponents.size() <= family)
-		return 0;
-
-	return mES->mComponents[family].ReferenceCounter.size();
-}
-size_t EntitySystem::BaseView::entityCount() const
-{
-	return mES->mEntities.size();
 }

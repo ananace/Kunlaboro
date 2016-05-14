@@ -20,11 +20,11 @@ namespace Kunlaboro
 	template<typename T, typename... Args>
 	ComponentHandle<T> EntitySystem::componentCreate(Args... args)
 	{
-		auto family = ComponentFamily<T>::getFamily();
-		if (mComponents.size() <= family)
-			mComponents.push_back({});
+		auto family = Kunlaboro::ComponentFamily<T>::getFamily();
+		if (mComponentFamilies.size() <= family)
+			mComponentFamilies.push_back({});
 
-		auto& data = mComponents[family];
+		auto& data = mComponentFamilies[family];
 		if (!data.MemoryPool)
 		{
 			auto* pool = new detail::ComponentPool<T>();
@@ -35,9 +35,8 @@ namespace Kunlaboro
 		ComponentId::IndexType index;
 		if (data.FreeIndices.empty())
 		{
-			index = data.ReferenceCounter.size();
-			data.ReferenceCounter.push_back(0);
-			data.Generations.push_back(0);
+			index = data.Components.size();
+			data.Components.push_back({ });
 		}
 		else
 		{
@@ -46,16 +45,17 @@ namespace Kunlaboro
 		}
 
 		pool->ensure(index + 1);
-		data.ReferenceCounter[index] = 0;
+		auto& component = data.Components[index];
+		component.RefCount->store(0);
 
 		pool->setBit(index);
 		new(pool->getData(index)) T(std::forward<Args>(args)...);
 		auto* comp = static_cast<T*>(pool->getData(index));
 
 		comp->mES = this;
-		comp->mId = ComponentId(index, data.Generations[index], family);
+		comp->mId = ComponentId(index, component.Generation, family);
 
-		return ComponentHandle<T>(comp, &data.ReferenceCounter);
+		return ComponentHandle<T>(comp, component.RefCount);
 	}
 
 	template<typename T>
@@ -96,19 +96,19 @@ namespace Kunlaboro
 	}
 
 	template<typename T>
-	EntitySystem::ComponentView<T>::Iterator::Iterator(const EntitySystem* sys, ComponentId::IndexType index, const std::vector<ComponentId::GenerationType>* generations)
+	EntitySystem::ComponentView<T>::Iterator::Iterator(const EntitySystem* sys, ComponentId::IndexType index, const std::vector<EntitySystem::ComponentData>* components)
 		: BaseView::Iterator<Iterator, T>(sys, index)
-		, mGenerations(generations)
+		, mComponents(components)
 	{
 		moveNext();
 	}
 	template<typename T>
 	void EntitySystem::ComponentView<T>::Iterator::moveNext()
 	{
-		const auto family = ComponentFamily<T>::getFamily();
+		const auto family = Kunlaboro::ComponentFamily<T>::getFamily();
 		
-		if (mGenerations->size() > mIndex)
-			mCurComponent = mES->getComponent(ComponentId(static_cast<ComponentId::IndexType>(mIndex), mGenerations->at(static_cast<size_t>(mIndex)), family));
+		if (mComponents->size() > mIndex)
+			mCurComponent = mES->getComponent(ComponentId(static_cast<ComponentId::IndexType>(mIndex), mComponents->at(static_cast<size_t>(mIndex)).Generation, family));
 		else
 			mCurComponent = ComponentHandle<T>();
 	}
@@ -122,13 +122,13 @@ namespace Kunlaboro
 	template<typename T>
 	typename EntitySystem::ComponentView<T>::Iterator EntitySystem::ComponentView<T>::begin() const
 	{
-		return Iterator(mES, 0, componentGenerations(ComponentFamily<T>::getFamily()));
+		return Iterator(mES, 0, &mES->componentGetList(Kunlaboro::ComponentFamily<T>::getFamily()));
 	}
 	template<typename T>
 	typename EntitySystem::ComponentView<T>::Iterator EntitySystem::ComponentView<T>::end() const
 	{
-		const auto family = ComponentFamily<T>::getFamily();
-		return Iterator(mES, componentCount(family), componentGenerations(family));
+		auto& list = mES->componentGetList(Kunlaboro::ComponentFamily<T>::getFamily());
+		return Iterator(mES, list.size(), &list);
 	}
 
 }

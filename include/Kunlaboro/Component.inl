@@ -12,7 +12,7 @@ namespace Kunlaboro
 	}
 
 	template<typename T>
-	ComponentHandle<T>::ComponentHandle(T* ptr, std::vector<uint32_t>* counters)
+	ComponentHandle<T>::ComponentHandle(T* ptr, std::atomic_uint32_t* counters)
 		: BaseComponentHandle(ptr, counters)
 	{
 	}

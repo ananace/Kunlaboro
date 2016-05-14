@@ -7,6 +7,7 @@
 #include "detail/ComponentPool.hpp"
 
 #include <array>
+#include <atomic>
 #include <list>
 #include <memory>
 #include <typeinfo>
@@ -79,14 +80,42 @@ namespace Kunlaboro
 			};
 
 		protected:
-			const std::vector<ComponentId::GenerationType>* componentGenerations(ComponentId::FamilyType family) const;
-			size_t componentCount(ComponentId::FamilyType family) const;
-			size_t entityCount() const;
-
 			const EntitySystem* mES;
 		};
 
 	public:
+		struct ComponentData
+		{
+			ComponentData()
+				: Generation(0)
+				, RefCount(new std::atomic_uint32_t(0))
+			{ }
+			ComponentData(const ComponentData&) = delete;
+			ComponentData(ComponentData&& move)
+				: Generation(std::move(move.Generation))
+				, RefCount(std::move(move.RefCount))
+			{
+				move.RefCount = nullptr;
+			}
+			~ComponentData()
+			{
+				if (RefCount)
+					delete RefCount;
+			}
+
+			ComponentId::GenerationType Generation;
+			std::atomic_uint32_t* RefCount;
+		};
+		struct EntityData
+		{
+			EntityId::GenerationType Generation;
+			std::vector<ComponentId> Components;
+		};
+
+		const std::vector<ComponentData>& componentGetList(ComponentId::FamilyType family) const;
+		const std::vector<EntityData>& entityGetList() const;
+
+
 		template<typename T>
 		class ComponentView : public BaseView
 		{
@@ -99,7 +128,7 @@ namespace Kunlaboro
 				inline const T& operator*() const { return *mCurComponent; }
 
 			protected:
-				Iterator(const EntitySystem* sys, ComponentId::IndexType index, const std::vector<ComponentId::GenerationType>* generations);
+				Iterator(const EntitySystem* sys, ComponentId::IndexType index, const std::vector<EntitySystem::ComponentData>* components);
 
 				friend class ComponentView;
 
@@ -107,7 +136,7 @@ namespace Kunlaboro
 
 			private:
 				ComponentHandle<T> mCurComponent;
-				const std::vector<ComponentId::GenerationType>* mGenerations;
+				const std::vector<EntitySystem::ComponentData>* mComponents;
 			};
 
 			Iterator begin() const;
@@ -141,31 +170,23 @@ namespace Kunlaboro
 		template<typename T>
 		ComponentView<T> components() const;
 		//EntityView entities() const;
-		
-	private:
-		friend class BaseView;
 
-		struct ComponentData
+	private:
+		struct ComponentFamily
 		{
-			ComponentData()
+			ComponentFamily()
 				: MemoryPool(nullptr)
 			{ }
 
 			std::list<ComponentId::IndexType> FreeIndices;
-			std::vector<ComponentId::GenerationType> Generations;
-			std::vector<uint32_t> ReferenceCounter;
+			std::vector<ComponentData> Components;
 			detail::BaseComponentPool* MemoryPool;
 		};
 
-		struct EntityData
-		{
-			EntityId::GenerationType Generation;
-			std::vector<ComponentId> Components;
-		};
 
 		std::list<EntityId::IndexType> mFreeEntityIndices;
 
-		std::vector<ComponentData> mComponents;
+		std::vector<ComponentFamily> mComponentFamilies;
 		std::vector<EntityData> mEntities;
 	};
 }
