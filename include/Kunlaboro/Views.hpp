@@ -19,14 +19,14 @@ namespace Kunlaboro
 		BaseView(const EntitySystem*);
 
 		template<typename IteratorType>
-		class Iterator : public std::iterator<std::input_iterator_tag, ComponentId>
+		class BaseIterator : public std::iterator<std::input_iterator_tag, ComponentId>
 		{
 		public:
-			virtual ~Iterator() = default;
+			virtual ~BaseIterator() = default;
 
 			IteratorType& operator++();
-			bool operator==(const Iterator& rhs) const;
-			bool operator!=(const Iterator& rhs) const;
+			bool operator==(const BaseIterator& rhs) const;
+			bool operator!=(const BaseIterator& rhs) const;
 
 			virtual ViewedType* operator->() = 0;
 			virtual const ViewedType* operator->() const = 0;
@@ -34,13 +34,13 @@ namespace Kunlaboro
 			virtual const ViewedType& operator*() const = 0;
 
 		protected:
-			Iterator(const EntitySystem* es, uint64_t index, const Predicate& pred);
+			BaseIterator(const EntitySystem* es, uint64_t index, const typename BaseView<ViewType, ViewedType>::Predicate& pred);
 
 			virtual bool basePred() const { return true; }
 			virtual void moveNext() = 0;
 			virtual uint64_t maxLength() const = 0;
 
-			const Predicate& mPred;
+			const typename BaseView<ViewType, ViewedType>::Predicate& mPred;
 			const EntitySystem* mES;
 			uint64_t mIndex;
 		};
@@ -57,7 +57,7 @@ namespace Kunlaboro
 	class ComponentView : public BaseView<ComponentView<T>, T>
 	{
 	public:
-		struct Iterator : public BaseView<ComponentView, T>::Iterator<Iterator>
+		struct Iterator : public BaseView<ComponentView, T>::template BaseIterator<Iterator>
 		{
 			inline T* operator->() { return mCurComponent.get(); }
 			inline const T* operator->() const { return mCurComponent.get(); }
@@ -65,7 +65,7 @@ namespace Kunlaboro
 			inline const T& operator*() const { return *mCurComponent; }
 
 		protected:
-			Iterator(const EntitySystem* sys, ComponentId componentBase, const Predicate& pred);
+			Iterator(const EntitySystem* sys, ComponentId componentBase, const typename BaseView<ComponentView<T>, T>::Predicate& pred);
 
 			friend class ComponentView;
 
@@ -81,7 +81,7 @@ namespace Kunlaboro
 		Iterator begin() const;
 		Iterator end() const;
 
-		virtual void forEach(const Function& func);
+		virtual void forEach(const typename BaseView<ComponentView<T>, T>::Function& func);
 
 	private:
 		ComponentView(const EntitySystem* es);
@@ -92,7 +92,7 @@ namespace Kunlaboro
 	class EntityView : public BaseView<EntityView, Entity>
 	{
 	public:
-		struct Iterator : public BaseView<EntityView, Entity>::Iterator<Iterator>
+		struct Iterator : public BaseView<EntityView, Entity>::template BaseIterator<Iterator>
 		{
 			inline Entity* operator->() { return &mCurEntity; }
 			inline const Entity* operator->() const { return &mCurEntity; }

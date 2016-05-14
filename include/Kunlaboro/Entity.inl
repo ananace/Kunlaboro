@@ -13,9 +13,9 @@ namespace Kunlaboro
 		mES->componentAttach(comp->getId(), mId);
 	}
 	template<typename T, typename... Args>
-	void Entity::replaceComponent(Args...)
+	void Entity::replaceComponent(Args... args)
 	{
-		auto gen = ComponentFamily<T>::getFamily()
+		auto gen = ComponentFamily<T>::getFamily();
 		auto comp = mES->entityGetComponent<T>(gen, mId);
 		if (comp)
 			mES->componentDetach(comp->getId(), mId);

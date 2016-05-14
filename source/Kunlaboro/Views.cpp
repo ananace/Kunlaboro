@@ -19,13 +19,13 @@ void EntityView::forEach(const Function& func)
 		EntityId eid(i, entData.Generation);
 
 		Entity ent(const_cast<EntitySystem*>(mES), eid);
-		if (mES->entityAlive(eid) && !mPred || mPred(ent))
+		if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)))
 			func(ent);
 	}
 }
 
 EntityView::Iterator::Iterator(EntitySystem* sys, EntityId::IndexType index)
-	: BaseView<EntityView, Entity>::Iterator<Iterator>(sys, index, mPred)
+	: BaseView<EntityView, Entity>::BaseIterator<Iterator>(sys, index, mPred)
 {
 
 }
