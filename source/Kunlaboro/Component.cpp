@@ -3,7 +3,7 @@
 
 using namespace Kunlaboro;
 
-ComponentId::GenerationType BaseComponentHandle::sGenerationCounter = 0;
+ComponentId::FamilyType BaseComponentFamily::sFamilyCounter = 0;
 
 Component::Component()
 	: mES(nullptr)
@@ -32,28 +32,28 @@ EntitySystem* Component::getEntitySystem()
 
 BaseComponentHandle::BaseComponentHandle()
 	: mPtr(nullptr)
-	, mCounter(nullptr)
+	, mCounters(nullptr)
 {
 
 }
-BaseComponentHandle::BaseComponentHandle(Component* ptr, uint32_t* counter)
+BaseComponentHandle::BaseComponentHandle(Component* ptr, std::vector<uint32_t>* counters)
 	: mPtr(ptr)
-	, mCounter(counter)
+	, mCounters(counters)
 {
 	addRef();
 }
 BaseComponentHandle::BaseComponentHandle(const BaseComponentHandle& copy)
 	: mPtr(copy.mPtr)
-	, mCounter(copy.mCounter)
+	, mCounters(copy.mCounters)
 {
 	addRef();
 }
 BaseComponentHandle::BaseComponentHandle(BaseComponentHandle&& move)
 	: mPtr(std::move(move.mPtr))
-	, mCounter(std::move(move.mCounter))
+	, mCounters(std::move(move.mCounters))
 {
 	move.mPtr = nullptr;
-	move.mCounter = nullptr;
+	move.mCounters = nullptr;
 }
 BaseComponentHandle::~BaseComponentHandle()
 {
@@ -67,7 +67,7 @@ BaseComponentHandle& BaseComponentHandle::operator=(const BaseComponentHandle& a
 
 	release();
 	mPtr = assign.mPtr;
-	mCounter = assign.mCounter;
+	mCounters = assign.mCounters;
 	addRef();
 
 	return *this;
@@ -84,23 +84,33 @@ bool BaseComponentHandle::operator!=(const BaseComponentHandle& rhs) const
 
 void BaseComponentHandle::unlink()
 {
-	mCounter = nullptr;
+	mCounters = nullptr;
 }
 
 void BaseComponentHandle::addRef()
 {
-	if (mCounter)
-		++(*mCounter);
+	if (mCounters && mPtr)
+		++(*mCounters)[mPtr->getId().getIndex()];
 }
 void BaseComponentHandle::release()
 {
-	bool release = false;
-	if (mCounter && *mCounter > 0)
-	{
-		auto count = --(*mCounter);
-		release = count == 0;
-	}
+	if (!mPtr || !mCounters)
+		return;
 
-	if (release && mPtr)
-		mPtr->getEntitySystem()->componentDestroy(mPtr->getId());
+	auto& id = mPtr->getId();
+	auto* es = mPtr->getEntitySystem();
+
+	if (es->componentAlive(id))
+	{
+		auto count = --(*mCounters)[id.getIndex()];
+		
+		if (count == 0)
+			es->componentDestroy(id);
+	}
+}
+uint32_t BaseComponentHandle::getRefCount() const
+{
+	if (mCounters && mPtr)
+		return (*mCounters)[mPtr->getId().getIndex()];
+	return 0;
 }

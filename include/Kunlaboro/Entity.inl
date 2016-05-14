@@ -10,42 +10,39 @@ namespace Kunlaboro
 	void Entity::addComponent(Args... args)
 	{
 		auto comp = mES->componentCreate<T>(std::forward<Args>(args)...);
-		mES->componentAttach(comp->GetId(), mId);
+		mES->componentAttach(comp->getId(), mId);
+	}
+	template<typename T, typename... Args>
+	void Entity::replaceComponent(Args...)
+	{
+		auto gen = ComponentFamily<T>::getFamily()
+		auto comp = mES->entityGetComponent<T>(gen, mId);
+		if (comp)
+			mES->componentDetach(comp->getId(), mId);
+		comp = mES->componentCreate<T>(std::forward<Args>(args)...);
+		mES->componentAttach(comp->getId(), mId);
 	}
 	template<typename T>
 	void Entity::removeComponent()
 	{
-		typedef typename std::remove_const<T>::type ComponentType;
-		auto gen = ComponentHandle<ComponentType>::getGeneration();
-/*
-		ComponentId id = ComponentId::INVALID;
-		for (auto& c : mComponents)
-			if (c.GetGeneration() == gen)
-			{
-				id = c;
-				break;
-			}
+		auto gen = ComponentFamily<T>::getFamily();
 
-		if (mES->IsAlive(id))
-			mES->DetachComponent(id);
-			*/
+		auto comp = mES->entityGetComponent<T>(gen, mId);
+		if (comp)
+			mES->componentDetach(comp->getId(), mId);
 	}
 	template<typename T>
 	bool Entity::hasComponent() const
 	{
-		typedef typename std::remove_const<T>::type ComponentType;
-		auto gen = ComponentHandle<ComponentType>::getGeneration();
+		auto gen = ComponentFamily<T>::getFamily();
 
+		auto comp = mES->entityGetComponent<T>(gen, mId);
+		return static_cast<bool>(comp);
 	}
 	template<typename T>
 	ComponentHandle<T> Entity::getComponent() const
 	{
-		typedef typename std::remove_const<T>::type ComponentType;
-		auto gen = ComponentHandle<ComponentType>::getGeneration();
-/*
-		for (auto& c : mComponents)
-			if (c.GetGeneration() == gen)
-				return mES->GetComponent<T>(c);
-				*/
+		auto gen = ComponentFamily<T>::getFamily();
+		return mES->entityGetComponent<T>(gen, mId);;
 	}
 }

@@ -32,8 +32,12 @@ namespace Kunlaboro
 		Entity entityCreate();
 		void entityDestroy(EntityId id);
 		bool entityAlive(EntityId id) const;
+		template<typename T>
+		ComponentHandle<T> entityGetComponent(ComponentId::FamilyType family, EntityId eid) const;
+		ComponentHandle<Component> entityGetComponent(ComponentId::FamilyType family, EntityId eid) const;
 
-		void sendMessage(ComponentId id, Component::BaseMessage* msg);
+		void componentSendMessage(ComponentId id, Component::BaseMessage* msg);
+		void entitySendMessage(EntityId id, Component::BaseMessage* msg);
 
 		template<typename T, typename... Args>
 		ComponentHandle<T> componentCreate(Args...);
@@ -45,21 +49,123 @@ namespace Kunlaboro
 		void componentDetach(ComponentId cid, EntityId eid);
 		
 	private:
+		class BaseView
+		{
+		public:
+			BaseView(const EntitySystem*);
+
+			template<typename IteratorType, typename IteratedType>
+			class Iterator : public std::iterator<std::input_iterator_tag, ComponentId>
+			{
+			public:
+				virtual ~Iterator() = default;
+
+				IteratorType& operator++();
+				bool operator==(const Iterator& rhs) const;
+				bool operator!=(const Iterator& rhs) const;
+
+				virtual IteratedType* operator->() = 0;
+				virtual const IteratedType* operator->() const = 0;
+				virtual IteratedType& operator*() = 0;
+				virtual const IteratedType& operator*() const = 0;
+
+			protected:
+				Iterator(const EntitySystem* es, uint64_t index);
+
+				virtual void moveNext() = 0;
+
+				const EntitySystem* mES;
+				uint64_t mIndex;
+			};
+
+		protected:
+			const std::vector<ComponentId::GenerationType>* componentGenerations(ComponentId::FamilyType family) const;
+			size_t componentCount(ComponentId::FamilyType family) const;
+			size_t entityCount() const;
+
+			const EntitySystem* mES;
+		};
+
+	public:
+		template<typename T>
+		class ComponentView : public BaseView
+		{
+		public:
+			struct Iterator : public BaseView::Iterator<Iterator, T>
+			{
+				inline T* operator->() { return mCurComponent.get(); }
+				inline const T* operator->() const { return mCurComponent.get(); }
+				inline T& operator*() { return *mCurComponent; }
+				inline const T& operator*() const { return *mCurComponent; }
+
+			protected:
+				Iterator(const EntitySystem* sys, ComponentId::IndexType index, const std::vector<ComponentId::GenerationType>* generations);
+
+				friend class ComponentView;
+
+				virtual void moveNext();
+
+			private:
+				ComponentHandle<T> mCurComponent;
+				const std::vector<ComponentId::GenerationType>* mGenerations;
+			};
+
+			Iterator begin() const;
+			Iterator end() const;
+
+		private:
+			ComponentView(const EntitySystem* es);
+
+			friend class EntitySystem;
+		};
+
+		class EntityView : public BaseView
+		{
+		public:
+			struct Iterator : public BaseView::Iterator<Iterator, Entity>
+			{
+				inline Entity* operator->() { return &mCurEntity; }
+				inline const Entity* operator->() const { return &mCurEntity; }
+				inline Entity& operator*() { return mCurEntity; }
+				inline const Entity& operator*() const { return mCurEntity; }
+
+			protected:
+				Iterator(EntitySystem* sys, EntityId::IndexType index);
+				virtual void moveNext();
+
+			private:
+				Entity mCurEntity;
+			};
+		};
+
+		template<typename T>
+		ComponentView<T> components() const;
+		//EntityView entities() const;
+		
+	private:
+		friend class BaseView;
+
 		struct ComponentData
 		{
 			ComponentData()
-				: IndexCounter(0), MemoryPool(nullptr)
+				: MemoryPool(nullptr)
 			{ }
 
-			ComponentId::IndexType IndexCounter;
 			std::list<ComponentId::IndexType> FreeIndices;
+			std::vector<ComponentId::GenerationType> Generations;
 			std::vector<uint32_t> ReferenceCounter;
 			detail::BaseComponentPool* MemoryPool;
 		};
 
-		std::vector<EntityId::GenerationType> mGenerations;
-		std::list<EntityId::IndexType> mFreeIndices;
+		struct EntityData
+		{
+			EntityId::GenerationType Generation;
+			std::vector<ComponentId> Components;
+		};
 
-		std::vector<ComponentData> mComponentData;
+		std::list<EntityId::IndexType> mFreeEntityIndices;
+
+		std::vector<ComponentData> mComponents;
+		std::vector<EntityData> mEntities;
 	};
 }

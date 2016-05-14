@@ -55,7 +55,20 @@ SCENARIO("Creating a component")
 		WHEN("The component is trivially constructed")
 		{
 			auto component = es.componentCreate<TestComponent>();
-			auto copy = component;
+			CHECK(component.getRefCount() == 1);
+
+			THEN("The created component is correctly ref counted")
+			{
+				auto copy = component;
+				CHECK(component.getRefCount() == 2);
+				CHECK(copy == component);
+
+				copy.release();
+				copy.unlink();
+
+				CHECK(component.getRefCount() == 1);
+				CHECK(copy == component);
+			}
 
 			THEN("The created component is contained successfully in the entity system")
 			{
@@ -76,6 +89,14 @@ SCENARIO("Creating a component")
 			THEN("The created component has its non-trivial constructor called appropriately")
 			{
 				CHECK(component->getData() == 42);
+
+				AND_THEN("Another component can be successfully copy-constructed from it")
+				{
+					auto copy = es.componentCreate<TestComponent>(*component);
+
+					CHECK(copy != component);
+					CHECK(copy->getData() == component->getData());
+				}
 			}
 		}
 
@@ -90,7 +111,7 @@ SCENARIO("Creating a component")
 			CHECK(component->getData() == 1);
 
 			newData.NewData = 23;
-			es.sendMessage(component->getId(), &newData);
+			es.componentSendMessage(component->getId(), &newData);
 
 			CHECK(component->getData() == 23);
 		}
@@ -101,8 +122,16 @@ SCENARIO("Creating several components")
 {
 	Kunlaboro::EntitySystem es;
 
-	GIVEN("A simple POD component")
-	{
+	std::vector<Kunlaboro::ComponentHandle<TestComponent>> components;
+	components.reserve(10);
+	for (int i = 0; i < 10; ++i)
+		components.push_back(es.componentCreate<TestComponent>(i));
 
+	auto collection = es.components<TestComponent>();
+	int i = 0;
+	for (auto& comp : collection)
+	{
+		CHECK(comp.getData() == i);
+		++i;
 	}
 }

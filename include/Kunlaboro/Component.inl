@@ -12,8 +12,20 @@ namespace Kunlaboro
 	}
 
 	template<typename T>
-	ComponentHandle<T>::ComponentHandle(T* ptr, uint32_t* counter)
-		: BaseComponentHandle(ptr, counter)
+	ComponentHandle<T>::ComponentHandle(T* ptr, std::vector<uint32_t>* counters)
+		: BaseComponentHandle(ptr, counters)
+	{
+	}
+
+	template<typename T>
+	ComponentHandle<T>::ComponentHandle(const BaseComponentHandle& copy)
+		: BaseComponentHandle(copy)
+	{
+	}
+
+	template<typename T>
+	ComponentHandle<T>::ComponentHandle(BaseComponentHandle&& move)
+		: BaseComponentHandle(std::forward<BaseComponentHandle&&>(move))
 	{
 	}
 

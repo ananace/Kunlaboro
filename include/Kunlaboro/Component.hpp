@@ -1,11 +1,19 @@
 #pragma once
 
 #include "ID.hpp"
+
 #include <cassert>
+#include <vector>
 
 namespace Kunlaboro
 {
 	class EntitySystem;
+
+	struct BaseComponentFamily
+	{
+	protected:
+		static ComponentId::FamilyType sFamilyCounter;
+	};
 
 	class Component
 	{
@@ -40,6 +48,18 @@ namespace Kunlaboro
 		EntityId mOwnerId;
 	};
 
+	template<typename T>
+	class ComponentFamily : BaseComponentFamily
+	{
+	public:
+		static const ComponentId::FamilyType getFamily()
+		{
+			static ComponentId::FamilyType sFamily = sFamilyCounter++;
+			assert(sFamilyCounter != 0 && sFamily <= ComponentId::sMaxFamily);
+			return sFamily;
+		}
+	};
+
 	class BaseComponentHandle
 	{
 	public:
@@ -62,17 +82,16 @@ namespace Kunlaboro
 
 		void addRef();
 		void release();
+		uint32_t getRefCount() const;
 
 	protected:
-		BaseComponentHandle(Component* ptr, uint32_t* counter);
-
-		static ComponentId::GenerationType sGenerationCounter;
+		BaseComponentHandle(Component* ptr, std::vector<uint32_t>* counter);
 
 	private:
 		friend class EntitySystem;
 
 		Component* mPtr;
-		uint32_t* mCounter;
+		std::vector<uint32_t>* mCounters;
 	};
 
 	template<typename T>
@@ -80,6 +99,8 @@ namespace Kunlaboro
 	{
 	public:
 		ComponentHandle();
+		ComponentHandle(const BaseComponentHandle& copy);
+		ComponentHandle(BaseComponentHandle&& move);
 
 		inline const T* get() const { return static_cast<const T*>(BaseComponentHandle::get()); }
 		inline T* get() { return static_cast<T*>(BaseComponentHandle::get()); }
@@ -89,15 +110,8 @@ namespace Kunlaboro
 		const T& operator*() const;
 		T& operator*();
 
-		static ComponentId::GenerationType getGeneration()
-		{
-			static ComponentId::GenerationType sGeneration = sGenerationCounter++;
-			assert(sGenerationCounter != 0);
-			return sGeneration;
-		}
-
 	private:
-		ComponentHandle(T* ptr, uint32_t* counter);
+		ComponentHandle(T* ptr, std::vector<uint32_t>* counter);
 		friend class EntitySystem;
 	};
 }
