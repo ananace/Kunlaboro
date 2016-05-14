@@ -104,6 +104,8 @@ namespace Kunlaboro
 	class EntityView : public BaseView<EntityView, Entity>
 	{
 	public:
+		template<typename T> struct ident { typedef T type; };
+
 		enum MatchType
 		{
 			Match_All,
@@ -142,9 +144,9 @@ namespace Kunlaboro
 		EntityView& withComponents(MatchType match = Match_All);
 
 		template<typename... Components>
-		void forEach(const std::function<void(Entity&, Components&...)>& func, MatchType match = Match_Any);
+		void forEach(const typename ident<std::function<void(Entity&, Components*...)>>::type& func, MatchType match);
 		template<typename... Components>
-		void forEach(const std::function<void(Entity&, Components*...)>& func, MatchType match = Match_Any);
+		void forEach(const typename ident<std::function<void(Entity&, Components&...)>>::type& func, MatchType match);
 
 		virtual void forEach(const Function& func);
 

@@ -160,30 +160,7 @@ namespace Kunlaboro
 	}
 
 	template<typename... Components>
-	void EntityView::forEach(const std::function<void(Entity&, Components&...)>& func, MatchType match)
-	{
-		assert(match == Match_All);
-
-		mMatchType = Match_All;
-		mBitField.clear();
-		addComponents<Components...>();
-
-		auto& list = mES->entityGetList();
-
-		for (size_t i = 0; i < list.size(); ++i)
-		{
-			auto& entData = list[i];
-			EntityId eid(i, entData.Generation);
-
-			Entity ent(const_cast<EntitySystem*>(mES), eid);
-			if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, Match_All))
-			{
-				func(ent, *(ent.getComponent<Components>().get())...);
-			}
-		}
-	}
-	template<typename... Components>
-	void EntityView::forEach(const std::function<void(Entity&, Components*...)>& func, MatchType type)
+	void EntityView::forEach(const typename ident<std::function<void(Entity&, Components*...)>>::type& func, MatchType type)
 	{
 		mMatchType = type;
 		mBitField.clear();
@@ -200,6 +177,29 @@ namespace Kunlaboro
 			if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, mMatchType))
 			{
 				func(ent, (ent.getComponent<Components>().get())...);
+			}
+		}
+	}
+	template<typename... Components>
+	void EntityView::forEach(const typename ident<std::function<void(Entity&, Components&...)>>::type& func, MatchType type)
+	{
+		assert(type == Match_All);
+
+		mMatchType = Match_All;
+		mBitField.clear();
+		addComponents<Components...>();
+
+		auto& list = mES->entityGetList();
+
+		for (size_t i = 0; i < list.size(); ++i)
+		{
+			auto& entData = list[i];
+			EntityId eid(i, entData.Generation);
+
+			Entity ent(const_cast<EntitySystem*>(mES), eid);
+			if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, mMatchType))
+			{
+				func(ent, *(ent.getComponent<Components>().get())...);
 			}
 		}
 	}
