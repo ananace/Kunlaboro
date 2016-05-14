@@ -66,16 +66,16 @@ namespace Kunlaboro
 		moveNext();
 
 		const auto maxLen = maxLength();
-		while (mIndex < maxLen && (!basePred() || (mPred && !mPred(**this))))
+		while (Iterator::mIndex < maxLen && (!basePred() || (Iterator::mPred && !Iterator::mPred(**this))))
 		{
-			++mIndex;
+			++Iterator::mIndex;
 			moveNext();
 		}
 	}
 	template<typename T>
 	bool ComponentView<T>::Iterator::basePred() const
 	{
-		return mES->componentAlive(mCurComponent->getId());
+		return Iterator::mES->componentAlive(mCurComponent->getId());
 	}
 	template<typename T>
 	void ComponentView<T>::Iterator::moveNext()
@@ -83,8 +83,8 @@ namespace Kunlaboro
 		const auto family = Kunlaboro::ComponentFamily<T>::getFamily();
 		const auto* components = static_cast<const std::vector<EntitySystem::ComponentData>*>(mComponents);
 
-		if (components->size() > mIndex)
-			mCurComponent = mES->getComponent(ComponentId(static_cast<ComponentId::IndexType>(mIndex), components->at(static_cast<size_t>(mIndex)).Generation, family));
+		if (components->size() > Iterator::mIndex)
+			mCurComponent = Iterator::mES->getComponent(ComponentId(static_cast<ComponentId::IndexType>(Iterator::mIndex), components->at(static_cast<size_t>(Iterator::mIndex)).Generation, family));
 		else
 			mCurComponent = ComponentHandle<T>();
 	}
