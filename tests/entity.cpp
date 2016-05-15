@@ -210,12 +210,12 @@ TEST_CASE("Simple n-body simulation", "[performance][view]")
 
 						const float xDelta = (pos2.X - pos.X);
 						const float yDelta = (pos2.Y - pos.Y);
-						const float deltaSqrt = std::sqrtf(xDelta*xDelta + yDelta*yDelta + 1e-9f);
+						const float deltaSqrt = std::sqrt(xDelta*xDelta + yDelta*yDelta + 1e-9f);
 						const float invDist = 1 / deltaSqrt;
-						const float invDist3 = invDist * invDist * invDist;
+						const float invDist2 = invDist * invDist;
 
-						vel.X += xDelta * invDist3;
-						vel.Y += yDelta * invDist3;
+						vel.X += xDelta * invDist2;
+						vel.Y += yDelta * invDist2;
 
 						++gravityIterations;
 					});
