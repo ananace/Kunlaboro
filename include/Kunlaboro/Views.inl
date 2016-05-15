@@ -6,10 +6,6 @@
 
 namespace Kunlaboro
 {
-	namespace impl
-	{
-		bool matchBitfield(const detail::DynamicBitfield& entity, const detail::DynamicBitfield& bitField, EntityView::MatchType match);
-	}
 
 	template<typename ViewType, typename ViewedType>
 	BaseView<ViewType, ViewedType>::BaseView(const EntitySystem* es)
@@ -18,10 +14,11 @@ namespace Kunlaboro
 
 	}
 	template<typename ViewType, typename ViewedType>
-	ViewType& BaseView<ViewType, ViewedType>::where(const Predicate& pred)
+	ViewType BaseView<ViewType, ViewedType>::where(const Predicate& pred) const
 	{
-		mPred = pred;
-		return static_cast<ViewType&>(*this);
+		ViewType ret(static_cast<const ViewType&>(*this));
+		ret.mPred = pred;
+		return ret;
 	}
 
 	template<typename ViewType, typename ViewedType>
@@ -106,8 +103,8 @@ namespace Kunlaboro
 	}
 
 	template<typename T>
-	ComponentView<T>::ComponentView(const EntitySystem* es)
-		: BaseView<ComponentView, T>(es)
+	ComponentView<T>::ComponentView(const EntitySystem& es)
+		: BaseView<ComponentView, T>(&es)
 	{
 	}
 
@@ -123,7 +120,7 @@ namespace Kunlaboro
 		return Iterator(BaseView<ComponentView, T>::mES, ComponentId(list.size(), 0, Kunlaboro::ComponentFamily<T>::getFamily()), BaseView<ComponentView, T>::mPred);
 	}
 	template<typename T>
-	void ComponentView<T>::forEach(const Function& func)
+	void ComponentView<T>::forEach(const Function& func) const
 	{
 		auto family = Kunlaboro::ComponentFamily<T>::getFamily();
 		auto& pool = BaseView<ComponentView, T>::mES->componentGetPool(family);
@@ -139,13 +136,18 @@ namespace Kunlaboro
 	}
 
 	template<typename... Components>
-	EntityView& EntityView::withComponents(MatchType type)
+	EntityView EntityView::withComponents(MatchType type) const
 	{
-		mBitField.clear();
-		mMatchType = type;
-		addComponents<Components...>();
+		EntityView ret(*this);
 
-		return *this;
+		ret.mBitField.clear();
+		if (type == Match_Current)
+			ret.mMatchType = mMatchType;
+		else
+			ret.mMatchType = type;
+		ret.addComponents<Components...>();
+
+		return ret;
 	}
 	template<typename T, typename T2, typename... Components>
 	inline void EntityView::addComponents()
@@ -160,9 +162,11 @@ namespace Kunlaboro
 	}
 
 	template<typename... Components>
-	void EntityView::forEach(const typename ident<std::function<void(Entity&, Components*...)>>::type& func, MatchType type)
+	void EntityView::forEachComponents(const typename ident<std::function<void(Entity&, Components*...)>>::type& func, MatchType type)
 	{
-		mMatchType = type;
+		if (type != Match_Current)
+			mMatchType = type;
+
 		mBitField.clear();
 		addComponents<Components...>();
 
@@ -174,16 +178,17 @@ namespace Kunlaboro
 			EntityId eid(i, entData.Generation);
 
 			Entity ent(const_cast<EntitySystem*>(mES), eid);
-			if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, mMatchType))
+			if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)) && matchBitfield(entData.ComponentBits, mBitField, mMatchType))
 			{
 				func(ent, (ent.getComponent<Components>().get())...);
 			}
 		}
 	}
+
 	template<typename... Components>
-	void EntityView::forEach(const typename ident<std::function<void(Entity&, Components&...)>>::type& func, MatchType type)
+	void EntityView::forEachComponents(const typename ident<std::function<void(Entity&, Components&...)>>::type& func, MatchType type)
 	{
-		assert(type == Match_All);
+		assert(type == Match_All || (type == Match_Current && mMatchType == Match_All));
 
 		mMatchType = Match_All;
 		mBitField.clear();
@@ -197,7 +202,7 @@ namespace Kunlaboro
 			EntityId eid(i, entData.Generation);
 
 			Entity ent(const_cast<EntitySystem*>(mES), eid);
-			if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, mMatchType))
+			if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)) && matchBitfield(entData.ComponentBits, mBitField, mMatchType))
 			{
 				func(ent, *(ent.getComponent<Components>().get())...);
 			}

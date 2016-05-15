@@ -61,9 +61,4 @@ namespace Kunlaboro
 		return ComponentHandle<T>(comp, component.RefCount);
 	}
 
-	template<typename T>
-	ComponentView<T> EntitySystem::components() const
-	{
-		return ComponentView<T>(this);
-	}
 }

@@ -107,7 +107,7 @@ TEST_CASE("fizzbuzz", "[entity][view]")
 	{
 		std::string result;
 
-		auto view = es.entities();
+		auto view = Kunlaboro::EntityView(es);
 		for (auto& ent : view)
 		{
 			if (ent.hasComponent<NameComponent>())
@@ -123,8 +123,8 @@ TEST_CASE("fizzbuzz", "[entity][view]")
 	{
 		std::string result;
 
-		auto view = es.entities();
-		view.forEach<NumberComponent, NameComponent>([&result](Kunlaboro::Entity& ent, NumberComponent* number, NameComponent* name) {
+		auto view = Kunlaboro::EntityView(es);
+		view.forEachComponents<NumberComponent, NameComponent>([&result](Kunlaboro::Entity& ent, NumberComponent* number, NameComponent* name) {
 			if (name)
 				result += name->Name + " ";
 			else
@@ -138,8 +138,8 @@ TEST_CASE("fizzbuzz", "[entity][view]")
 	{
 		std::string result;
 
-		auto view = es.entities();
-		view.forEach<NumberComponent, NameComponent>([&result](Kunlaboro::Entity& ent, NumberComponent& number, NameComponent& name) {
+		auto view = Kunlaboro::EntityView(es);
+		view.forEachComponents<NumberComponent, NameComponent>([&result](Kunlaboro::Entity& ent, NumberComponent& number, NameComponent& name) {
 			result += std::to_string(number.Number);
 			result += name.Name + " ";
 		}, Kunlaboro::EntityView::Match_All);

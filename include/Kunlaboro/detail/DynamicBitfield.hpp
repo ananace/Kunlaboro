@@ -18,6 +18,7 @@ namespace Kunlaboro
 			void clear();
 			void ensure(std::size_t count);
 			inline std::size_t getSize() const { return mSize; }
+			std::size_t countBits() const;
 
 			bool operator==(const DynamicBitfield& rhs) const;
 			bool operator!=(const DynamicBitfield& rhs) const;

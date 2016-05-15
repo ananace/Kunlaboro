@@ -27,6 +27,7 @@ namespace Kunlaboro
 			inline bool hasBit(std::size_t index) const { return mBits.hasBit(index); }
 			inline void setBit(std::size_t index) { mBits.setBit(index); }
 			inline void resetBit(std::size_t index) { mBits.clearBit(index); }
+			inline std::size_t countBits() const { return mBits.countBits(); }
 
 			inline void* getData(std::size_t index) {
 				return mBlocks[index / mChunkSize] + (index % mChunkSize) * mComponentSize;

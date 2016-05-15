@@ -237,8 +237,3 @@ const std::vector<EntitySystem::EntityData>& EntitySystem::entityGetList() const
 {
 	return mEntities;
 }
-
-EntityView EntitySystem::entities() const
-{
-	return EntityView(this);
-}

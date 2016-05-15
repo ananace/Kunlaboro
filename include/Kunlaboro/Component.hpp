@@ -3,6 +3,7 @@
 #include "ID.hpp"
 
 #include <atomic>
+#include <type_traits>
 #include <cassert>
 
 namespace Kunlaboro
@@ -56,6 +57,8 @@ namespace Kunlaboro
 	class ComponentFamily : BaseComponentFamily
 	{
 	public:
+		static_assert(std::is_base_of<Component, T>::value, "Only components have families");
+
 		static const ComponentId::FamilyType getFamily()
 		{
 			static ComponentId::FamilyType sFamily = sFamilyCounter++;

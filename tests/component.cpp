@@ -50,70 +50,115 @@ private:
 TEST_CASE("component creation", "[component]")
 {
 	Kunlaboro::EntitySystem es;
-	
-	SECTION("simple POD component")
+	auto component = es.componentCreate<TestComponent>();
+
+	CHECK(component->getEntitySystem() == &es);
+	CHECK(es.getComponent(component->getId()) == component);
+	CHECK(es.componentAlive(component->getId()));
+	CHECK(component.getRefCount() == 1);
+	CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<TestComponent>::getFamily()).countBits() == 1);
+
+	SECTION("ref counted handles")
 	{
-		auto component = es.componentCreate<TestComponent>();
-
-		REQUIRE(component->getEntitySystem() == &es);
-		REQUIRE(es.getComponent(component->getId()) == component);
-		REQUIRE(es.componentAlive(component->getId()));
-		REQUIRE(component.getRefCount() == 1);
-
-		SECTION("ref counting")
 		{
 			auto copy = component;
+
 			REQUIRE(component.getRefCount() == 2);
 			REQUIRE(copy == component);
 
 			copy.release();
-			copy.unlink();
 
 			REQUIRE(component.getRefCount() == 1);
+			CHECK(copy == component);
+
+			copy.unlink();
+
+			CHECK(component.getRefCount() == 1);
+			CHECK(copy == component);
+		}
+
+		REQUIRE(component.getRefCount() == 1);
+
+		{
+			auto copy = component;
+
+			REQUIRE(component.getRefCount() == 2);
+			REQUIRE(copy == component);
+
+			copy.unlink();
+
 			REQUIRE(copy == component);
 		}
 
-		SECTION("cleanup")
-		{
-			component.release();
+		CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<TestComponent>::getFamily()).countBits() == 1);
+		REQUIRE(component.getRefCount() == 2);
 
-			REQUIRE(component->getEntitySystem() == &es);
-			REQUIRE(es.getComponent(component->getId()) != component);
-			REQUIRE(!es.componentAlive(component->getId()));
-			REQUIRE(component.getRefCount() == 0);
-		}
+		auto id = component->getId();
 
-		SECTION("non-trivially construction")
-		{
-			auto component = es.componentCreate<TestComponent>(42);
+		component.release();
+		component.release();
 
-			REQUIRE(component->getData() == 42);
-		}
+		REQUIRE(component.getRefCount() == 0);
+		REQUIRE(!es.componentAlive(id));
+		CHECK(component->getId() == id);
 
-		SECTION("copy construction")
-		{
-			auto copy = es.componentCreate<TestComponent>(*component);
+		CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<TestComponent>::getFamily()).countBits() == 0);
+	}
 
-			CHECK(copy != component);
-			CHECK(copy->getData() == component->getData());
-		}
+	SECTION("component cleanup")
+	{
+		component.release();
 
-		SECTION("low-level message passing")
-		{
-			component = es.componentCreate<TestComponent>(42);
-			CHECK(es.componentAlive(component->getId()));
-			CHECK(component->getData() == 42);
+		REQUIRE(component->getEntitySystem() == &es);
+		REQUIRE(es.getComponent(component->getId()) != component);
+		REQUIRE(!es.componentAlive(component->getId()));
+		REQUIRE(component.getRefCount() == 0);
+		REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<TestComponent>::getFamily()).countBits() == 0);
+	}
 
-			TestComponent::Message newData(1);
+	SECTION("non-trivial construction")
+	{
+		auto component = es.componentCreate<TestComponent>(42);
 
-			component->onMessage(&newData);
-			CHECK(component->getData() == 1);
+		REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<TestComponent>::getFamily()).countBits() == 2);
 
-			newData.NewData = 23;
-			es.componentSendMessage(component->getId(), &newData);
+		CHECK(component->getEntitySystem() == &es);
+		CHECK(es.getComponent(component->getId()) == component);
+		CHECK(es.componentAlive(component->getId()));
+		CHECK(component.getRefCount() == 1);
 
-			CHECK(component->getData() == 23);
-		}
+		REQUIRE(component->getData() == 42);
+	}
+
+	SECTION("copy construction")
+	{
+		auto copy = es.componentCreate<TestComponent>(*component);
+
+		REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<TestComponent>::getFamily()).countBits() == 2);
+
+		CHECK(copy->getEntitySystem() == &es);
+		CHECK(es.getComponent(copy->getId()) == copy);
+		CHECK(es.componentAlive(copy->getId()));
+		CHECK(copy.getRefCount() == 1);
+
+		REQUIRE(copy != component);
+		REQUIRE(copy->getData() == component->getData());
+	}
+
+	SECTION("low-level message passing")
+	{
+		CHECK(es.componentAlive(component->getId()));
+		CHECK(component->getData() == -1);
+
+		TestComponent::Message newData(1);
+
+		component->onMessage(&newData);
+		REQUIRE(component->getData() == 1);
+
+		newData.NewData = 23;
+		es.componentSendMessage(component->getId(), &newData);
+
+		REQUIRE(component->getData() == 23);
 	}
 }
 
@@ -126,9 +171,11 @@ TEST_CASE("component iteration", "[component][view]")
 	for (int i = 0; i < 10; ++i)
 		components.push_back(es.componentCreate<TestComponent>(i));
 
-	auto collection = es.components<TestComponent>();
+	CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<TestComponent>::getFamily()).countBits() == 10);
 
-	SECTION("range-based for")
+	auto collection = Kunlaboro::ComponentView<TestComponent>(es);
+
+	SECTION("view iteration with range-based for")
 	{
 		int count = 0;
 		for (auto& comp : collection)
@@ -140,7 +187,16 @@ TEST_CASE("component iteration", "[component][view]")
 		REQUIRE(count == 10);
 	}
 
-	SECTION("view forEach")
+	SECTION("view iteration with predicated range-based for")
+	{
+		int combinedValue = 0;
+		for (auto& comp : collection.where([](const TestComponent& comp) { return comp.getData() > 5; }))
+			combinedValue += comp.getData();
+
+		REQUIRE(combinedValue == 30);
+	}
+
+	SECTION("view iteration with forEach")
 	{
 		int combinedValue = 0;
 		collection.forEach([&combinedValue](TestComponent& comp) { combinedValue += comp.getData(); });
@@ -148,24 +204,13 @@ TEST_CASE("component iteration", "[component][view]")
 		REQUIRE(combinedValue == 45);
 	}
 
-	SECTION("view where forEach")
+	SECTION("view iteration with predicated forEach")
 	{
-		collection.where([](const TestComponent& comp) { return comp.getData() < 5; });
-
 		int combinedValue = 0;
-		collection.forEach([&combinedValue](TestComponent& comp) { combinedValue += comp.getData(); });
+		collection
+			.where([](const TestComponent& comp) { return comp.getData() < 5; })
+			.forEach([&combinedValue](TestComponent& comp) { combinedValue += comp.getData(); });
 
 		REQUIRE(combinedValue == 10);
-	}
-
-	SECTION("view where range-based")
-	{
-		collection.where([](const TestComponent& comp) { return comp.getData() > 5; });
-
-		int combinedValue = 0;
-		for (auto& comp : collection)
-			combinedValue += comp.getData();
-
-		REQUIRE(combinedValue == 30);
 	}
 }

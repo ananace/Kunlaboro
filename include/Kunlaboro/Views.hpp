@@ -2,6 +2,7 @@
 
 #include "ID.hpp"
 #include "Entity.hpp"
+
 #include "detail/DynamicBitfield.hpp"
 
 #include <functional>
@@ -14,6 +15,7 @@
 
 namespace Kunlaboro
 {
+	class Component;
 	class EntitySystem;
 
 	template<typename ViewType, typename ViewedType>
@@ -22,8 +24,6 @@ namespace Kunlaboro
 	public:
 		typedef std::function<bool(const ViewedType&)> Predicate;
 		typedef std::function<void(ViewedType&)> Function;
-
-		BaseView(const EntitySystem*);
 
 		template<typename IteratorType>
 		class BaseIterator : public std::iterator<std::input_iterator_tag, ComponentId>
@@ -54,10 +54,12 @@ namespace Kunlaboro
 
 		};
 
-		ViewType& where(const Predicate& pred);
-		virtual void forEach(const Function& func) = 0;
+		ViewType where(const Predicate& pred) const;
+		virtual void forEach(const Function& func) const = 0;
 
 	protected:
+		BaseView(const EntitySystem*);
+
 		const EntitySystem* mES;
 		Predicate mPred;
 	};
@@ -66,6 +68,10 @@ namespace Kunlaboro
 	class ComponentView : public BaseView<ComponentView<T>, T>
 	{
 	public:
+		static_assert(std::is_base_of<Component, T>::value, "Component Views only work on proper components.");
+
+		ComponentView(const EntitySystem& es);
+
 		typedef std::function<bool(const T&)> Predicate;
 		typedef std::function<void(T&)> Function;
 
@@ -93,21 +99,20 @@ namespace Kunlaboro
 		Iterator begin() const;
 		Iterator end() const;
 
-		virtual void forEach(const Function& func);
-
-	private:
-		ComponentView(const EntitySystem* es);
-
-		friend class EntitySystem;
+		virtual void forEach(const Function& func) const;
 	};
 
 	class EntityView : public BaseView<EntityView, Entity>
 	{
 	public:
+		EntityView(const EntitySystem& es);
+
 		template<typename T> struct ident { typedef T type; };
 
 		enum MatchType
 		{
+			Match_Current = -1,
+
 			Match_All,
 			Match_Any
 		};
@@ -141,25 +146,26 @@ namespace Kunlaboro
 		Iterator end() const;
 
 		template<typename... Components>
-		EntityView& withComponents(MatchType match = Match_All);
+		EntityView withComponents(MatchType match = Match_All) const;
 
 		template<typename... Components>
-		void forEach(const typename ident<std::function<void(Entity&, Components*...)>>::type& func, MatchType match);
+		void forEachComponents(const typename ident<std::function<void(Entity&, Components*...)>>::type& func, MatchType match = Match_Current);
 		template<typename... Components>
-		void forEach(const typename ident<std::function<void(Entity&, Components&...)>>::type& func, MatchType match);
+		void forEachComponents(const typename ident<std::function<void(Entity&, Components&...)>>::type& func, MatchType match = Match_All);
 
-		virtual void forEach(const Function& func);
+		virtual void forEach(const Function& func) const;
 
 	private:
-		EntityView(const EntitySystem* es);
-
 		template<typename T, typename T2, typename... Components>
 		inline void addComponents();
 		template<typename T>
 		inline void addComponents();
 
+		static bool matchBitfield(const detail::DynamicBitfield& entity, const detail::DynamicBitfield& bitField, EntityView::MatchType match);
+
+		friend struct Iterator;
+
 		detail::DynamicBitfield mBitField;
 		MatchType mMatchType;
-		friend class EntitySystem;
 	};
 }

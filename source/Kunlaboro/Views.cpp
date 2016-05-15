@@ -3,7 +3,7 @@
 
 using namespace Kunlaboro;
 
-bool impl::matchBitfield(const detail::DynamicBitfield& entity, const detail::DynamicBitfield& bitField, EntityView::MatchType match)
+bool EntityView::matchBitfield(const detail::DynamicBitfield& entity, const detail::DynamicBitfield& bitField, EntityView::MatchType match)
 {
 	if (match == EntityView::Match_All)
 		return entity == bitField;
@@ -20,8 +20,9 @@ bool impl::matchBitfield(const detail::DynamicBitfield& entity, const detail::Dy
 	return false;
 }
 
-EntityView::EntityView(const EntitySystem* es)
-	: BaseView<EntityView, Entity>(es)
+EntityView::EntityView(const EntitySystem& es)
+	: BaseView<EntityView, Entity>(&es)
+	, mMatchType(Match_All)
 {
 
 }
@@ -36,7 +37,7 @@ EntityView::Iterator EntityView::end() const
 	return Iterator(mES, list.size(), mPred, mBitField, mMatchType);
 }
 
-void EntityView::forEach(const Function& func)
+void EntityView::forEach(const Function& func) const
 {
 	auto& list = mES->entityGetList();
 
@@ -61,7 +62,7 @@ EntityView::Iterator::Iterator(const EntitySystem* sys, EntityId::IndexType inde
 
 bool EntityView::Iterator::basePred() const
 {
-	return mCurEntity.isValid() && (mBitField.getSize() == 0 || impl::matchBitfield(mES->entityGetList()[mCurEntity.getId().getIndex()].ComponentBits, mBitField, mMatchType));
+	return mCurEntity.isValid() && (mBitField.getSize() == 0 || EntityView::matchBitfield(mES->entityGetList()[mCurEntity.getId().getIndex()].ComponentBits, mBitField, mMatchType));
 }
 
 void EntityView::Iterator::moveNext()

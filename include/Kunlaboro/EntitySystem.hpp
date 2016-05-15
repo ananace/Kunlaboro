@@ -3,7 +3,6 @@
 #include "Component.hpp"
 #include "Entity.hpp"
 #include "ID.hpp"
-#include "Views.hpp"
 
 #include "detail/DynamicBitfield.hpp"
 
@@ -91,10 +90,6 @@ namespace Kunlaboro
 		const detail::BaseComponentPool& componentGetPool(ComponentId::FamilyType family) const;
 		const std::vector<ComponentData>& componentGetList(ComponentId::FamilyType family) const;
 		const std::vector<EntityData>& entityGetList() const;
-
-		template<typename T>
-		ComponentView<T> components() const;
-		EntityView entities() const;
 
 	private:
 		struct ComponentFamily
