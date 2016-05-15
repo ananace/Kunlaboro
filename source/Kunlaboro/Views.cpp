@@ -5,19 +5,20 @@ using namespace Kunlaboro;
 
 bool EntityView::matchBitfield(const detail::DynamicBitfield& entity, const detail::DynamicBitfield& bitField, EntityView::MatchType match)
 {
-	if (match == EntityView::Match_All)
-		return entity == bitField;
+	assert(match != Match_Current);
 
 	for (std::size_t i = 0; i < bitField.getSize(); ++i)
 	{
 		if (!bitField.hasBit(i))
 			continue;
 
-		if (entity.hasBit(i))
+		if (match == Match_Any && entity.hasBit(i))
 			return true;
+		else if (match == Match_All && !entity.hasBit(i))
+			return false;
 	}
 
-	return false;
+	return match == Match_All;
 }
 
 EntityView::EntityView(const EntitySystem& es)
