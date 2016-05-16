@@ -37,7 +37,10 @@ EntityView::Iterator EntityView::end() const
 
 void EntityView::forEach(const Function& func) const
 {
+	auto* queue = impl::BaseView<EntityView, Entity>::mQueue;
+
 	auto& list = mES->entityGetList();
+	std::list<std::future<void>> jobs;
 
 	for (size_t i = 0; i < list.size(); ++i)
 	{
@@ -46,8 +49,16 @@ void EntityView::forEach(const Function& func) const
 
 		Entity ent(const_cast<EntitySystem*>(mES), eid);
 		if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)))
-			func(ent);
+		{
+			if (queue)
+				jobs.push_back(queue->submit(std::bind([&func](Entity& ent) { func(ent); }, ent)));
+			else
+				func(ent);
+		}
 	}
+
+	for (auto& job : jobs)
+		job.wait();
 }
 
 EntityView::Iterator::Iterator(const EntitySystem* sys, EntityId::IndexType index, const Predicate& pred)

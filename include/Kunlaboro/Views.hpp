@@ -10,6 +10,8 @@
 
 namespace Kunlaboro
 {
+	namespace detail { class JobQueue; }
+
 	class Component;
 	class EntitySystem;
 
@@ -28,6 +30,11 @@ namespace Kunlaboro
 			typedef std::function<bool(const ViewedType&)> Predicate;
 			typedef std::function<void(ViewedType&)> Function;
 
+			virtual ~BaseView();
+
+			ViewType parallel(bool parallell = true) const;
+			ViewType parallel(detail::JobQueue& queue) const;
+
 			ViewType where(const Predicate& pred) const;
 			virtual void forEach(const Function& func) const = 0;
 
@@ -40,6 +47,9 @@ namespace Kunlaboro
 
 			const EntitySystem* mES;
 			Predicate mPred;
+
+			detail::JobQueue* mQueue;
+			bool mParallelOwned;
 		};
 
 		template<typename IteratorType, typename ViewedType>
@@ -156,13 +166,13 @@ namespace Kunlaboro
 	template<MatchType MT, typename... Components>
 	class TypedEntityView : public impl::BaseView<TypedEntityView<MT, Components...>, Entity>
 	{
+		template<typename T> struct ident { typedef T type; };
+
 	public:
 		TypedEntityView(const EntitySystem& es);
 
 		typedef std::function<bool(const Entity&)> Predicate;
 		typedef std::function<void(Entity&)> Function;
-
-		template<typename T> struct ident { typedef T type; };
 
 		typedef EntityView::Iterator Iterator;
 

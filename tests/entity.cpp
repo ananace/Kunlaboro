@@ -4,6 +4,7 @@
 #include <Kunlaboro/Views.inl>
 #include "catch.hpp"
 
+#include <atomic>
 #include <random>
 
 class TestComponent : public Kunlaboro::Component
@@ -155,7 +156,7 @@ struct Position : public Kunlaboro::Component
 		, Y(y)
 	{ }
 
-	float X, Y;
+	volatile float X, Y;
 };
 struct Velocity : public Kunlaboro::Component
 {
@@ -164,7 +165,7 @@ struct Velocity : public Kunlaboro::Component
 		, Y(y)
 	{ }
 
-	float X, Y;
+	volatile float X, Y;
 };
 
 TEST_CASE("Simple n-body simulation", "[performance][view]")
@@ -196,8 +197,8 @@ TEST_CASE("Simple n-body simulation", "[performance][view]")
 		{
 			const int IterationCount = 100;
 
-			uint32_t gravityIterations = 0
-			       , velocityIterations = 0;
+			std::atomic<uint32_t> gravityIterations(0)
+			                    , velocityIterations(0);
 
 			auto entityView = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position,Velocity>();
 			auto particleList = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position>();
@@ -218,18 +219,60 @@ TEST_CASE("Simple n-body simulation", "[performance][view]")
 						vel.X += xDelta * invDist2;
 						vel.Y += yDelta * invDist2;
 
-						++gravityIterations;
+						gravityIterations.fetch_add(1);
 					});
 
 					pos.X += vel.X;
 					pos.Y += vel.Y;
 
-					++velocityIterations;
+					velocityIterations.fetch_add(1);
 				});
 			}
 
 			REQUIRE(gravityIterations  == ParticleCount * (ParticleCount - 1) * IterationCount);
 			REQUIRE(velocityIterations == ParticleCount * IterationCount);
 		}
+
+		SECTION("Parallel gravity iteration, 100 steps, 100 000 calls per step")
+		{
+			const int IterationCount = 100;
+
+			std::atomic<uint32_t> gravityIterations(0)
+			                    , velocityIterations(0);
+
+			Kunlaboro::detail::JobQueue queue;
+			auto entityView = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position,Velocity>();
+			auto particleList = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position>().parallel(queue);
+
+			for (int step = 0; step < IterationCount; ++step)
+			{
+				entityView.forEach([&gravityIterations, &velocityIterations, &particleList](Kunlaboro::Entity& ent, Position& pos, Velocity& vel) {
+					particleList.forEach([&gravityIterations, &ent, &pos, &vel](Kunlaboro::Entity& ent2, Position& pos2) {
+						if (ent == ent2)
+							return;
+
+						const float xDelta = (pos2.X - pos.X);
+						const float yDelta = (pos2.Y - pos.Y);
+						const float deltaSqrt = std::sqrt(xDelta*xDelta + yDelta*yDelta + 1e-9f);
+						const float invDist = 1 / deltaSqrt;
+						const float invDist2 = invDist * invDist;
+
+						vel.X += xDelta * invDist2;
+						vel.Y += yDelta * invDist2;
+
+						gravityIterations.fetch_add(1, std::memory_order_relaxed);
+					});
+
+					pos.X += vel.X;
+					pos.Y += vel.Y;
+
+					velocityIterations.fetch_add(1, std::memory_order_relaxed);
+				});
+			}
+
+			REQUIRE(gravityIterations  == ParticleCount * (ParticleCount - 1) * IterationCount);
+			REQUIRE(velocityIterations == ParticleCount * IterationCount);
+		}
+
 	}
 }
