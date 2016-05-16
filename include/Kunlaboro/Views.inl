@@ -8,13 +8,13 @@ namespace Kunlaboro
 {
 
 	template<typename ViewType, typename ViewedType>
-	BaseView<ViewType, ViewedType>::BaseView(const EntitySystem* es)
+	impl::BaseView<ViewType, ViewedType>::BaseView(const EntitySystem* es)
 		: mES(es)
 	{
 
 	}
 	template<typename ViewType, typename ViewedType>
-	ViewType BaseView<ViewType, ViewedType>::where(const Predicate& pred) const
+	ViewType impl::BaseView<ViewType, ViewedType>::where(const Predicate& pred) const
 	{
 		ViewType ret(static_cast<const ViewType&>(*this));
 		ret.mPred = pred;
@@ -22,17 +22,31 @@ namespace Kunlaboro
 	}
 
 	template<typename ViewType, typename ViewedType>
-	template<typename IteratorType>
-	BaseView<ViewType, ViewedType>::BaseIterator<IteratorType>::BaseIterator(const EntitySystem* es, uint64_t index, const Predicate& pred)
+	const EntitySystem& impl::BaseView<ViewType, ViewedType>::getEntitySystem() const
+	{
+		return *mES;
+	}
+	template<typename ViewType, typename ViewedType>
+	const typename impl::BaseView<ViewType, ViewedType>::Predicate& impl::BaseView<ViewType, ViewedType>::getPredicate() const
+	{
+		return mPred;
+	}
+	template<typename ViewType, typename ViewedType>
+	void impl::BaseView<ViewType, ViewedType>::setPredicate(const Predicate& pred)
+	{
+		mPred = pred;
+	}
+
+	template<typename IteratorType, typename ViewedType>
+	impl::BaseIterator<IteratorType, ViewedType>::BaseIterator(const EntitySystem* es, uint64_t index, const Predicate& pred)
 		: mES(es)
 		, mIndex(index)
 		, mPred(pred)
 	{
 	}
 
-	template<typename ViewType, typename ViewedType>
-	template<typename IteratorType>
-	IteratorType& BaseView<ViewType, ViewedType>::BaseIterator<IteratorType>::operator++()
+	template<typename IteratorType, typename ViewedType>
+	IteratorType& impl::BaseIterator<IteratorType, ViewedType>::operator++()
 	{
 		const auto maxLen = maxLength();
 		if (mIndex == maxLen)
@@ -46,22 +60,19 @@ namespace Kunlaboro
 
 		return *static_cast<IteratorType*>(this);
 	}
-	template<typename ViewType, typename ViewedType>
-	template<typename IteratorType>
-	bool BaseView<ViewType, ViewedType>::BaseIterator<IteratorType>::operator==(const BaseIterator& rhs) const
+	template<typename IteratorType, typename ViewedType>
+	bool impl::BaseIterator<IteratorType, ViewedType>::operator==(const BaseIterator& rhs) const
 	{
 		return mIndex == rhs.mIndex;
 	}
-	template<typename ViewType, typename ViewedType>
-	template<typename IteratorType>
-	bool BaseView<ViewType, ViewedType>::BaseIterator<IteratorType>::operator!=(const BaseIterator& rhs) const
+	template<typename IteratorType, typename ViewedType>
+	bool impl::BaseIterator<IteratorType, ViewedType>::operator!=(const BaseIterator& rhs) const
 	{
 		return mIndex != rhs.mIndex;
 	}
 
-	template<typename ViewType, typename ViewedType>
-	template<typename IteratorType>
-	void BaseView<ViewType, ViewedType>::BaseIterator<IteratorType>::nextStep()
+	template<typename IteratorType, typename ViewedType>
+	void impl::BaseIterator<IteratorType, ViewedType>::nextStep()
 	{
 		moveNext();
 
@@ -75,7 +86,7 @@ namespace Kunlaboro
 
 	template<typename T>
 	ComponentView<T>::Iterator::Iterator(const EntitySystem* sys, ComponentId componentBase, const Predicate& pred)
-		: BaseView<ComponentView, T>::template BaseIterator<Iterator>(sys, componentBase.getIndex(), pred)
+		: impl::BaseIterator<Iterator, T>(sys, componentBase.getIndex(), pred)
 		, mComponents(&sys->componentGetList(componentBase.getFamily()))
 	{
 		Iterator::nextStep();
@@ -104,105 +115,122 @@ namespace Kunlaboro
 
 	template<typename T>
 	ComponentView<T>::ComponentView(const EntitySystem& es)
-		: BaseView<ComponentView, T>(&es)
+		: impl::BaseView<ComponentView, T>(&es)
 	{
 	}
 
 	template<typename T>
 	typename ComponentView<T>::Iterator ComponentView<T>::begin() const
 	{
-		return Iterator(BaseView<ComponentView, T>::mES, ComponentId(0, 0, Kunlaboro::ComponentFamily<T>::getFamily()), BaseView<ComponentView, T>::mPred);
+		return Iterator(impl::BaseView<ComponentView, T>::mES, ComponentId(0, 0, Kunlaboro::ComponentFamily<T>::getFamily()), impl::BaseView<ComponentView, T>::mPred);
 	}
 	template<typename T>
 	typename ComponentView<T>::Iterator ComponentView<T>::end() const
 	{
-		auto& list = BaseView<ComponentView, T>::mES->componentGetList(Kunlaboro::ComponentFamily<T>::getFamily());
-		return Iterator(BaseView<ComponentView, T>::mES, ComponentId(list.size(), 0, Kunlaboro::ComponentFamily<T>::getFamily()), BaseView<ComponentView, T>::mPred);
+		auto& list = impl::BaseView<ComponentView, T>::mES->componentGetList(Kunlaboro::ComponentFamily<T>::getFamily());
+		return Iterator(impl::BaseView<ComponentView, T>::mES, ComponentId(list.size(), 0, Kunlaboro::ComponentFamily<T>::getFamily()), impl::BaseView<ComponentView, T>::mPred);
 	}
 	template<typename T>
 	void ComponentView<T>::forEach(const Function& func) const
 	{
 		auto family = Kunlaboro::ComponentFamily<T>::getFamily();
-		auto& pool = BaseView<ComponentView, T>::mES->componentGetPool(family);
+		auto& pool = impl::BaseView<ComponentView, T>::mES->componentGetPool(family);
 
 		for (std::size_t i = 0; i < pool.getSize(); ++i)
 			if (pool.hasBit(i))
 			{
 				auto& comp = const_cast<T&>(*static_cast<const T*>(pool.getData(i)));
 
-				if (!BaseView<ComponentView, T>::mPred || BaseView<ComponentView, T>::mPred(comp))
+				if (!impl::BaseView<ComponentView, T>::mPred || impl::BaseView<ComponentView, T>::mPred(comp))
 					func(comp);
 			}
 	}
 
-	template<typename... Components>
-	EntityView EntityView::withComponents(MatchType type) const
+	template<MatchType mt, typename... Components>
+	TypedEntityView<mt,Components...> EntityView::withComponents() const
 	{
-		EntityView ret(*this);
-
-		ret.mBitField.clear();
-		if (type == Match_Current)
-			ret.mMatchType = mMatchType;
-		else
-			ret.mMatchType = type;
-		ret.addComponents<Components...>();
-
+		TypedEntityView<mt,Components...> ret(*mES);
+		ret.setPredicate(mPred);
 		return ret;
 	}
+	template<MatchType MT, typename... ViewComponents>
 	template<typename T, typename T2, typename... Components>
-	inline void EntityView::addComponents()
+	inline void TypedEntityView<MT, ViewComponents...>::addComponents()
 	{
 		mBitField.setBit(Kunlaboro::ComponentFamily<T>::getFamily());
 		addComponents<T2, Components...>();
 	}
+	template<MatchType MT, typename... ViewComponents>
 	template<typename T>
-	inline void EntityView::addComponents()
+	inline void TypedEntityView<MT, ViewComponents...>::addComponents()
 	{
 		mBitField.setBit(Kunlaboro::ComponentFamily<T>::getFamily());
 	}
 
-	template<typename... Components>
-	void EntityView::forEachComponents(const typename ident<std::function<void(Entity&, Components*...)>>::type& func, MatchType type)
+	template<MatchType MT, typename... Components>
+	TypedEntityView<MT, Components...>::TypedEntityView(const EntitySystem& es)
+		: impl::BaseView<TypedEntityView<MT, Components...>, Entity>(&es)
 	{
-		if (type != Match_Current)
-			mMatchType = type;
-
-		mBitField.clear();
 		addComponents<Components...>();
+	}
 
-		auto& list = mES->entityGetList();
+	template<MatchType MT, typename... Components>
+	void TypedEntityView<MT, Components...>::forEach(const Function& func) const
+	{
+		const auto* es = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mES;
+		const auto& pred = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mPred;
+
+		auto& list = es->entityGetList();
 
 		for (size_t i = 0; i < list.size(); ++i)
 		{
 			auto& entData = list[i];
 			EntityId eid(i, entData.Generation);
 
-			Entity ent(const_cast<EntitySystem*>(mES), eid);
-			if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)) && matchBitfield(entData.ComponentBits, mBitField, mMatchType))
+			Entity ent = es->getEntity(eid);
+			if (es->entityAlive(eid) && (!pred || pred(ent)))
+				func(ent);
+		}
+	}
+
+	template<MatchType MT, typename... Components>
+	void TypedEntityView<MT, Components...>::forEach(const typename ident<std::function<void(Entity&, Components*...)>>::type& func) const
+	{
+		const auto* es = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mES;
+		const auto& pred = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mPred;
+
+		auto& list = es->entityGetList();
+
+		for (size_t i = 0; i < list.size(); ++i)
+		{
+			auto& entData = list[i];
+			EntityId eid(i, entData.Generation);
+
+			Entity ent = es->getEntity(eid);
+			if (ent && (!pred || pred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, MT))
 			{
 				func(ent, (ent.getComponent<Components>().get())...);
 			}
 		}
 	}
 
-	template<typename... Components>
-	void EntityView::forEachComponents(const typename ident<std::function<void(Entity&, Components&...)>>::type& func, MatchType type)
+	template<MatchType MT,typename... Components>
+	void TypedEntityView<MT, Components...>::forEach(const typename ident<std::function<void(Entity&, Components&...)>>::type& func) const
 	{
-		assert(type == Match_All || (type == Match_Current && mMatchType == Match_All));
+		static_assert(MT == Match_All, "Can't use references unless matching all components.");
 
-		mMatchType = Match_All;
-		mBitField.clear();
-		addComponents<Components...>();
+		const auto* es = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mES;
+		const auto& pred = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mPred;
 
-		auto& list = mES->entityGetList();
+		auto& list = es->entityGetList();
 
 		for (size_t i = 0; i < list.size(); ++i)
 		{
 			auto& entData = list[i];
 			EntityId eid(i, entData.Generation);
 
-			Entity ent(const_cast<EntitySystem*>(mES), eid);
-			if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)) && matchBitfield(entData.ComponentBits, mBitField, mMatchType))
+			Entity ent = es->getEntity(eid);
+			if (es->entityAlive(eid) && (!pred || pred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, MT))
 			{
 				func(ent, *(ent.getComponent<Components>().get())...);
 			}
