@@ -143,6 +143,7 @@ TEST_CASE("Simple n-body simulation - 100 particles", "[comprehensive][performan
 		ent.addComponent<Velocity>((mag(rand) - 50) / 5, (mag(rand) - 50) / 5);
 	}
 
+	REQUIRE(es.entityGetList().size() == ParticleCount);
 	REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Position>::getFamily()).countBits() == ParticleCount);
 	REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Velocity>::getFamily()).countBits() == ParticleCount);
 

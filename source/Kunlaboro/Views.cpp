@@ -25,17 +25,17 @@ EntityView::EntityView(const EntitySystem& es)
 
 }
 
-EntityView::Iterator EntityView::begin() const
+EntityView::Iterator EntityView::begin()
 {
 	return Iterator(mES, 0, mPred);
 }
-EntityView::Iterator EntityView::end() const
+EntityView::Iterator EntityView::end()
 {
 	auto& list = mES->entityGetList();
 	return Iterator(mES, list.size(), mPred);
 }
 
-void EntityView::forEach(const Function& func) const
+void EntityView::forEach(const Function& func)
 {
 	auto* queue = impl::BaseView<EntityView, Entity>::mQueue;
 

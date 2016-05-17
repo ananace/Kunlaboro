@@ -36,7 +36,7 @@ namespace Kunlaboro
 			ViewType parallel(detail::JobQueue& queue) const;
 
 			ViewType where(const Predicate& pred) const;
-			virtual void forEach(const Function& func) const = 0;
+			virtual void forEach(const Function& func) = 0;
 
 			const EntitySystem& getEntitySystem() const;
 			const Predicate& getPredicate() const;
@@ -117,10 +117,10 @@ namespace Kunlaboro
 			const void* mComponents;
 		};
 
-		Iterator begin() const;
-		Iterator end() const;
+		Iterator begin();
+		Iterator end();
 
-		virtual void forEach(const Function& func) const;
+		virtual void forEach(const Function& func);
 	};
 
 	template<MatchType MT, typename... Components>
@@ -154,13 +154,13 @@ namespace Kunlaboro
 			Entity mCurEntity;
 		};
 
-		Iterator begin() const;
-		Iterator end() const;
+		Iterator begin();
+		Iterator end();
 
 		template<MatchType match = Match_All, typename... Components>
 		TypedEntityView<match, Components...> withComponents() const;
 
-		virtual void forEach(const Function& func) const;
+		virtual void forEach(const Function& func);
 	};
 
 	template<MatchType MT, typename... Components>
@@ -176,13 +176,13 @@ namespace Kunlaboro
 
 		typedef EntityView::Iterator Iterator;
 
-		Iterator begin() const;
-		Iterator end() const;
+		Iterator begin();
+		Iterator end();
 
-		void forEach(const typename ident<std::function<void(Entity&, Components*...)>>::type& func) const;
-		void forEach(const typename ident<std::function<void(Entity&, Components&...)>>::type& func) const;
+		void forEach(const typename ident<std::function<void(Entity&, Components*...)>>::type& func);
+		void forEach(const typename ident<std::function<void(Entity&, Components&...)>>::type& func);
 
-		virtual void forEach(const Function& func) const;
+		virtual void forEach(const Function& func);
 
 	private:
 		template<typename T, typename T2, typename... ComponentsToAdd>

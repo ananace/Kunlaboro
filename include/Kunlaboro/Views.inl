@@ -153,18 +153,18 @@ namespace Kunlaboro
 	}
 
 	template<typename T>
-	typename ComponentView<T>::Iterator ComponentView<T>::begin() const
+	typename ComponentView<T>::Iterator ComponentView<T>::begin()
 	{
 		return Iterator(impl::BaseView<ComponentView, T>::mES, ComponentId(0, 0, Kunlaboro::ComponentFamily<T>::getFamily()), impl::BaseView<ComponentView, T>::mPred);
 	}
 	template<typename T>
-	typename ComponentView<T>::Iterator ComponentView<T>::end() const
+	typename ComponentView<T>::Iterator ComponentView<T>::end()
 	{
 		auto& list = impl::BaseView<ComponentView, T>::mES->componentGetList(Kunlaboro::ComponentFamily<T>::getFamily());
 		return Iterator(impl::BaseView<ComponentView, T>::mES, ComponentId(list.size(), 0, Kunlaboro::ComponentFamily<T>::getFamily()), impl::BaseView<ComponentView, T>::mPred);
 	}
 	template<typename T>
-	void ComponentView<T>::forEach(const Function& func) const
+	void ComponentView<T>::forEach(const Function& func)
 	{
 		auto family = Kunlaboro::ComponentFamily<T>::getFamily();
 		auto& pool = impl::BaseView<ComponentView, T>::mES->componentGetPool(family);
@@ -216,7 +216,7 @@ namespace Kunlaboro
 	}
 
 	template<MatchType MT, typename... Components>
-	void TypedEntityView<MT, Components...>::forEach(const Function& func) const
+	void TypedEntityView<MT, Components...>::forEach(const Function& func)
 	{
 		const auto* es = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mES;
 		const auto& pred = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mPred;
@@ -245,7 +245,7 @@ namespace Kunlaboro
 	}
 
 	template<MatchType MT, typename... Components>
-	void TypedEntityView<MT, Components...>::forEach(const typename ident<std::function<void(Entity&, Components*...)>>::type& func) const
+	void TypedEntityView<MT, Components...>::forEach(const typename ident<std::function<void(Entity&, Components*...)>>::type& func)
 	{
 		const auto* es = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mES;
 		const auto& pred = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mPred;
@@ -274,7 +274,7 @@ namespace Kunlaboro
 	}
 
 	template<MatchType MT, typename... Components>
-	void TypedEntityView<MT, Components...>::forEach(const typename ident<std::function<void(Entity&, Components&...)>>::type& func) const
+	void TypedEntityView<MT, Components...>::forEach(const typename ident<std::function<void(Entity&, Components&...)>>::type& func)
 	{
 		static_assert(MT == Match_All, "Can't use references unless matching all components.");
 
