@@ -26,7 +26,7 @@ struct NameComponent : public Kunlaboro::Component
 	std::string Name;
 };
 
-TEST_CASE("fizzbuzz", "[comprehensive][entity][view]")
+TEST_CASE("fizzbuzz", "[comprehensive][view]")
 {
 	Kunlaboro::EntitySystem es;
 
@@ -43,11 +43,11 @@ TEST_CASE("fizzbuzz", "[comprehensive][entity][view]")
 		ent.addComponent<NumberComponent>(i);
 	}
 
+	auto view = Kunlaboro::EntityView(es);
 	SECTION("Range-based for")
 	{
 		std::string result;
 
-		auto view = Kunlaboro::EntityView(es);
 		for (auto& ent : view)
 		{
 			if (ent.hasComponent<NameComponent>())
@@ -63,8 +63,8 @@ TEST_CASE("fizzbuzz", "[comprehensive][entity][view]")
 	{
 		std::string result;
 
-		auto view = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_Any, NumberComponent, NameComponent>();
-		view.forEach([&result](Kunlaboro::Entity&, NumberComponent* number, NameComponent* name) {
+		view.withComponents<Kunlaboro::Match_Any, NumberComponent, NameComponent>()
+		    .forEach([&result](Kunlaboro::Entity&, NumberComponent* number, NameComponent* name) {
 			if (name)
 				result += name->Name + " ";
 			if (number)
@@ -78,13 +78,29 @@ TEST_CASE("fizzbuzz", "[comprehensive][entity][view]")
 	{
 		std::string result;
 
-		auto view = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, NumberComponent, NameComponent>();
-		view.forEach([&result](Kunlaboro::Entity&, NumberComponent& number, NameComponent& name) {
+		view.withComponents<Kunlaboro::Match_All, NumberComponent, NameComponent>()
+		    .forEach([&result](Kunlaboro::Entity&, NumberComponent& number, NameComponent& name) {
 			result += std::to_string(number.Number);
 			result += name.Name + " ";
 		});
 
 		REQUIRE(result == "3fizz 5buzz 6fizz 9fizz 10buzz 12fizz 15fizzbuzz ");
+	}
+
+	SECTION("forEach - match any, predicated")
+	{
+		std::string result;
+
+		view.withComponents<Kunlaboro::Match_Any, NumberComponent, NameComponent>()
+		    .where([](const Kunlaboro::Entity& ent) { return ent.getId().getIndex() % 2 == 0; })
+		    .forEach([&result](Kunlaboro::Entity&, NumberComponent* number, NameComponent* name) {
+			if (name)
+				result += name->Name + " ";
+			if (number)
+				result += std::to_string(number->Number) + " ";
+		});
+
+		REQUIRE(result == "fizz 3 buzz 5 fizz 9 fizzbuzz 15 ");
 	}
 }
 
