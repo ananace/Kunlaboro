@@ -26,7 +26,7 @@ struct NameComponent : public Kunlaboro::Component
 	std::string Name;
 };
 
-TEST_CASE("fizzbuzz", "[entity][view]")
+TEST_CASE("fizzbuzz", "[comprehensive][entity][view]")
 {
 	Kunlaboro::EntitySystem es;
 
@@ -67,11 +67,11 @@ TEST_CASE("fizzbuzz", "[entity][view]")
 		view.forEach([&result](Kunlaboro::Entity&, NumberComponent* number, NameComponent* name) {
 			if (name)
 				result += name->Name + " ";
-			else
+			if (number)
 				result += std::to_string(number->Number) + " ";
 		});
 
-		REQUIRE(result == "1 2 fizz 4 buzz fizz 7 8 fizz buzz 11 fizz 13 14 fizzbuzz ");
+		REQUIRE(result == "1 2 fizz 3 4 buzz 5 fizz 6 7 8 fizz 9 buzz 10 11 fizz 12 13 14 fizzbuzz 15 ");
 	}
 
 	SECTION("forEach - match all")
@@ -107,111 +107,107 @@ struct Velocity : public Kunlaboro::Component
 	volatile float X, Y;
 };
 
-TEST_CASE("Simple n-body simulation", "[performance][view]")
+TEST_CASE("Simple n-body simulation - 100 particles", "[comprehensive][performance][view]")
 {
 	Kunlaboro::EntitySystem es;
 
-	SECTION("Creation, 100 particles")
+	const int ParticleCount = 100;
+
+	std::random_device rand;
+	std::uniform_real_distribution<float> ang(0, 3.14159f * 2);
+	std::uniform_real_distribution<float> mag(0, 100);
+
+	for (int i = 0; i < ParticleCount; ++i)
 	{
-		const int ParticleCount = 100;
+		auto ent = es.entityCreate();
+		float angle = ang(rand);
+		float magnitude = mag(rand);
 
-		std::random_device rand;
-		std::uniform_real_distribution<float> ang(0, 3.14159f * 2);
-		std::uniform_real_distribution<float> mag(0, 100);
+		ent.addComponent<Position>(std::cos(angle) * magnitude, std::sin(angle) * magnitude);
+		ent.addComponent<Velocity>((mag(rand) - 50) / 5, (mag(rand) - 50) / 5);
+	}
 
-		for (int i = 0; i < ParticleCount; ++i)
+	REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Position>::getFamily()).countBits() == ParticleCount);
+	REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Velocity>::getFamily()).countBits() == ParticleCount);
+
+	SECTION("forEach Iteration, 100 steps, 100 000 calls per step")
+	{
+		const int IterationCount = 100;
+
+		std::atomic<uint32_t> gravityIterations(0)
+		                    , velocityIterations(0);
+
+		auto entityView = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position,Velocity>();
+		auto particleList = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position>();
+
+		for (int step = 0; step < IterationCount; ++step)
 		{
-			auto ent = es.entityCreate();
-			float angle = ang(rand);
-			float magnitude = mag(rand);
+			entityView.forEach([&gravityIterations, &velocityIterations, &particleList](Kunlaboro::Entity& ent, Position& pos, Velocity& vel) {
+				particleList.forEach([&gravityIterations, &ent, &pos, &vel](Kunlaboro::Entity& ent2, Position& pos2) {
+					if (ent == ent2)
+						return;
 
-			ent.addComponent<Position>(std::cos(angle) * magnitude, std::sin(angle) * magnitude);
-			ent.addComponent<Velocity>((mag(rand) - 50) / 5, (mag(rand) - 50) / 5);
-		}
+					const float xDelta = (pos2.X - pos.X);
+					const float yDelta = (pos2.Y - pos.Y);
+					const float deltaSqrt = std::sqrt(xDelta*xDelta + yDelta*yDelta + 1e-9f);
+					const float invDist = 1 / deltaSqrt;
+					const float invDist2 = invDist * invDist;
 
-		REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Position>::getFamily()).countBits() == ParticleCount);
-		REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Velocity>::getFamily()).countBits() == ParticleCount);
+					vel.X += xDelta * invDist2;
+					vel.Y += yDelta * invDist2;
 
-		SECTION("Iteration, 100 steps, 100 000 calls per step")
-		{
-			const int IterationCount = 100;
-
-			std::atomic<uint32_t> gravityIterations(0)
-			                    , velocityIterations(0);
-
-			auto entityView = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position,Velocity>();
-			auto particleList = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position>();
-
-			for (int step = 0; step < IterationCount; ++step)
-			{
-				entityView.forEach([&gravityIterations, &velocityIterations, &particleList](Kunlaboro::Entity& ent, Position& pos, Velocity& vel) {
-					particleList.forEach([&gravityIterations, &ent, &pos, &vel](Kunlaboro::Entity& ent2, Position& pos2) {
-						if (ent == ent2)
-							return;
-
-						const float xDelta = (pos2.X - pos.X);
-						const float yDelta = (pos2.Y - pos.Y);
-						const float deltaSqrt = std::sqrt(xDelta*xDelta + yDelta*yDelta + 1e-9f);
-						const float invDist = 1 / deltaSqrt;
-						const float invDist2 = invDist * invDist;
-
-						vel.X += xDelta * invDist2;
-						vel.Y += yDelta * invDist2;
-
-						gravityIterations.fetch_add(1);
-					});
-
-					pos.X += vel.X;
-					pos.Y += vel.Y;
-
-					velocityIterations.fetch_add(1);
+					gravityIterations.fetch_add(1);
 				});
-			}
 
-			REQUIRE(gravityIterations  == ParticleCount * (ParticleCount - 1) * IterationCount);
-			REQUIRE(velocityIterations == ParticleCount * IterationCount);
+				pos.X += vel.X;
+				pos.Y += vel.Y;
+
+				velocityIterations.fetch_add(1);
+			});
 		}
 
-		SECTION("Parallel gravity iteration, 100 steps, 100 000 calls per step")
+		REQUIRE(gravityIterations  == ParticleCount * (ParticleCount - 1) * IterationCount);
+		REQUIRE(velocityIterations == ParticleCount * IterationCount);
+	}
+
+	SECTION("Parallel gravity iteration, 100 steps, 100 000 calls per step")
+	{
+		const int IterationCount = 100;
+
+		std::atomic<uint32_t> gravityIterations(0)
+		                    , velocityIterations(0);
+
+		Kunlaboro::detail::JobQueue queue;
+		auto entityView = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position,Velocity>();
+		auto particleList = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position>().parallel(queue);
+
+		for (int step = 0; step < IterationCount; ++step)
 		{
-			const int IterationCount = 100;
+			entityView.forEach([&gravityIterations, &velocityIterations, &particleList](Kunlaboro::Entity& ent, Position& pos, Velocity& vel) {
+				particleList.forEach([&gravityIterations, &ent, &pos, &vel](Kunlaboro::Entity& ent2, Position& pos2) {
+					if (ent == ent2)
+						return;
 
-			std::atomic<uint32_t> gravityIterations(0)
-			                    , velocityIterations(0);
+					const float xDelta = (pos2.X - pos.X);
+					const float yDelta = (pos2.Y - pos.Y);
+					const float deltaSqrt = std::sqrt(xDelta*xDelta + yDelta*yDelta + 1e-9f);
+					const float invDist = 1 / deltaSqrt;
+					const float invDist2 = invDist * invDist;
 
-			Kunlaboro::detail::JobQueue queue;
-			auto entityView = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position,Velocity>();
-			auto particleList = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position>().parallel(queue);
+					vel.X += xDelta * invDist2;
+					vel.Y += yDelta * invDist2;
 
-			for (int step = 0; step < IterationCount; ++step)
-			{
-				entityView.forEach([&gravityIterations, &velocityIterations, &particleList](Kunlaboro::Entity& ent, Position& pos, Velocity& vel) {
-					particleList.forEach([&gravityIterations, &ent, &pos, &vel](Kunlaboro::Entity& ent2, Position& pos2) {
-						if (ent == ent2)
-							return;
-
-						const float xDelta = (pos2.X - pos.X);
-						const float yDelta = (pos2.Y - pos.Y);
-						const float deltaSqrt = std::sqrt(xDelta*xDelta + yDelta*yDelta + 1e-9f);
-						const float invDist = 1 / deltaSqrt;
-						const float invDist2 = invDist * invDist;
-
-						vel.X += xDelta * invDist2;
-						vel.Y += yDelta * invDist2;
-
-						gravityIterations.fetch_add(1, std::memory_order_relaxed);
-					});
-
-					pos.X += vel.X;
-					pos.Y += vel.Y;
-
-					velocityIterations.fetch_add(1, std::memory_order_relaxed);
+					gravityIterations.fetch_add(1, std::memory_order_relaxed);
 				});
-			}
 
-			REQUIRE(gravityIterations  == ParticleCount * (ParticleCount - 1) * IterationCount);
-			REQUIRE(velocityIterations == ParticleCount * IterationCount);
+				pos.X += vel.X;
+				pos.Y += vel.Y;
+
+				velocityIterations.fetch_add(1, std::memory_order_relaxed);
+			});
 		}
 
+		REQUIRE(gravityIterations  == ParticleCount * (ParticleCount - 1) * IterationCount);
+		REQUIRE(velocityIterations == ParticleCount * IterationCount);
 	}
 }
