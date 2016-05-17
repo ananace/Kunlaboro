@@ -100,7 +100,7 @@ TEST_CASE("fizzbuzz", "[comprehensive][view]")
 				result += std::to_string(number->Number) + " ";
 		});
 
-		REQUIRE(result == "fizz 3 buzz 5 fizz 9 fizzbuzz 15 ");
+		REQUIRE(result == "1 fizz 3 buzz 5 7 fizz 9 11 13 fizzbuzz 15 ");
 	}
 }
 

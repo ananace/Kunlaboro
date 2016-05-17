@@ -210,9 +210,8 @@ TEST_CASE("Component views", "[component][view]")
 	SECTION("View iteration with predicated forEach")
 	{
 		int combinedValue = 0;
-		collection
-			.where([](const TestComponent& comp) { return comp.getData() < 5; })
-			.forEach([&combinedValue](TestComponent& comp) { combinedValue += comp.getData(); });
+		collection.where([](const TestComponent& comp) { return comp.getData() < 5; })
+		          .forEach([&combinedValue](TestComponent& comp) { combinedValue += comp.getData(); });
 
 		REQUIRE(combinedValue == 10);
 	}
