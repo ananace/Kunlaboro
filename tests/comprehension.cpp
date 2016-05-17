@@ -146,7 +146,7 @@ TEST_CASE("Simple n-body simulation - 100 particles", "[comprehensive][performan
 	REQUIRE(es.entityGetList().size() == ParticleCount);
 	REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Position>::getFamily()).countBits() == ParticleCount);
 	REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Velocity>::getFamily()).countBits() == ParticleCount);
-
+	/*
 	SECTION("forEach Iteration, 100 steps, 100 000 calls per step")
 	{
 		const int IterationCount = 100;
@@ -186,7 +186,7 @@ TEST_CASE("Simple n-body simulation - 100 particles", "[comprehensive][performan
 		REQUIRE(gravityIterations  == ParticleCount * (ParticleCount - 1) * IterationCount);
 		REQUIRE(velocityIterations == ParticleCount * IterationCount);
 	}
-
+	*/
 	SECTION("Parallel gravity iteration, 100 steps, 100 000 calls per step")
 	{
 		const int IterationCount = 100;

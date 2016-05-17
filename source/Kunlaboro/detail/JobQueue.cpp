@@ -43,33 +43,6 @@ void JobQueue::wait()
 	joinAll();
 }
 
-std::future<void> JobQueue::submit(typename ident<std::function<void()>>::type&& functor)
-{
-	assert(!mExiting);
-
-	typedef std::pair<std::promise<void>, std::function<void()>> data_t;
-	auto data = std::make_shared<data_t>(std::promise<void>(), std::move(functor));
-	auto future = data->first.get_future();
-
-	{
-		std::lock_guard<std::mutex> lock(mMutex);
-		mJobQueue.emplace_back([data]() {
-			try
-			{
-				data->second();
-				data->first.set_value();
-			}
-			catch(...)
-			{
-				data->first.set_exception(std::current_exception());
-			}
-		});
-	}
-	mSignal.notify_one();
-
-	return std::move(future);
-}
-
 void JobQueue::joinAll()
 {
 	for (auto& t : mThreadPool)

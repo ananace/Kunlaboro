@@ -29,9 +29,44 @@ namespace Kunlaboro
 			void stop();
 			void wait();
 
-			template<typename Ret>
-			std::future<Ret> submit(typename ident<std::function<Ret()>>::type&& functor);
-			std::future<void> submit(typename ident<std::function<void()>>::type&& functor);
+			template<typename Functor, typename... Args>
+			auto submit(Functor&& functor, Args&&... args) -> std::future<decltype(functor(args...))>
+			{
+				assert(!mExiting);
+
+				auto data = std::make_shared<std::packaged_task<decltype(functor(args...))()>>(
+					std::bind(std::forward<Functor>(functor), std::forward<Args>(args)...)
+					);
+
+				{
+					std::lock_guard<std::mutex> lock(mMutex);
+					mJobQueue.emplace_back([data]() {
+						(*data)();
+					});
+				}
+				mSignal.notify_one();
+
+				return data->get_future();
+			}
+			template<typename Functor>
+			auto submit(Functor&& functor) -> std::future<decltype(functor())>
+			{
+				assert(!mExiting);
+
+				auto data = std::make_shared<std::packaged_task<decltype(functor())()>>(
+					std::forward<Functor>(functor)
+					);
+
+				{
+					std::lock_guard<std::mutex> lock(mMutex);
+					mJobQueue.emplace_back([data]() {
+						(*data)();
+					});
+				}
+				mSignal.notify_one();
+
+				return data->get_future();
+			}
 
 		private:
 			void workThread();
@@ -46,33 +81,13 @@ namespace Kunlaboro
 			               , mCompleteWork;
 		};
 
-
-		template<typename Ret>
-		std::future<Ret> JobQueue::submit(typename ident<std::function<Ret()>>::type&& functor)
-		{
-			assert(!mExiting);
-
-			typedef std::pair<std::promise<Ret>, std::function<Ret()>> data_t;
-			auto data = std::make_shared<data_t>(std::promise<Ret>(), std::move(functor));
-			auto future = data->first.get_future();
-
-			{
-				std::lock_guard<std::mutex> lock(mMutex);
-				mJobQueue.emplace_back([data]() {
-					try
-					{
-						data->first.set_value(data->second());
-					}
-					catch(...)
-					{
-						data->first.set_exception(std::current_exception());
-					}
-				});
-			}
-			mSignal.notify_one();
-
-			return std::move(future);
-		}
+		/*
+		template<typename Functor, typename... Args>
+		auto JobQueue::submit(Functor&& functor, Args&&... args) -> std::future<decltype(functor(args...))>
+		
+		template<typename Functor>
+		auto JobQueue::submit(Functor&& functor) -> std::future<decltype(functor())>
+		*/
 
 	}
 

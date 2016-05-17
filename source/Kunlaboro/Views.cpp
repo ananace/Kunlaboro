@@ -51,7 +51,7 @@ void EntityView::forEach(const Function& func)
 		if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)))
 		{
 			if (queue)
-				jobs.push_back(queue->submit(std::bind([&func](Entity& ent) { func(ent); }, ent)));
+				jobs.push_back(queue->submit(Function(func), std::move(ent)));
 			else
 				func(ent);
 		}

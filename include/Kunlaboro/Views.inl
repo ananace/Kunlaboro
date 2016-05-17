@@ -180,7 +180,7 @@ namespace Kunlaboro
 				if (!impl::BaseView<ComponentView, T>::mPred || impl::BaseView<ComponentView, T>::mPred(comp))
 				{
 					if (queue)
-						jobs.push_back(queue->submit([&func,&comp]() { func(comp); }));
+						jobs.push_back(queue->submit(Function(func), std::move(comp)));
 					else
 						func(comp);
 				}
@@ -234,7 +234,7 @@ namespace Kunlaboro
 			if (es->entityAlive(eid) && (!pred || pred(ent)))
 			{
 				if (queue)
-					jobs.push_back(queue->submit(std::bind([&func](Entity& ent) { func(ent); }, ent)));
+					jobs.push_back(queue->submit(Function(func), std::move(ent)));
 				else
 					func(ent);
 			}
@@ -247,6 +247,8 @@ namespace Kunlaboro
 	template<MatchType MT, typename... Components>
 	void TypedEntityView<MT, Components...>::forEach(const typename ident<std::function<void(Entity&, Components*...)>>::type& func)
 	{
+		typedef typename ident<std::function<void(Entity&, Components*...)>>::type TypedFunction;
+
 		const auto* es = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mES;
 		const auto& pred = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mPred;
 		auto* queue = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mQueue;
@@ -263,7 +265,7 @@ namespace Kunlaboro
 			if (ent && (!pred || pred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, MT))
 			{
 				if (queue)
-					jobs.push_back(queue->submit(std::bind([&func](Entity& ent, Components*... args) { func(ent, args...); }, ent, (ent.getComponent<Components>().get())...)));
+					jobs.push_back(queue->submit(TypedFunction(func), std::move(ent), std::move(ent.getComponent<Components>().get())...));
 				else
 					func(ent, (ent.getComponent<Components>().get())...);
 			}
@@ -277,6 +279,8 @@ namespace Kunlaboro
 	void TypedEntityView<MT, Components...>::forEach(const typename ident<std::function<void(Entity&, Components&...)>>::type& func)
 	{
 		static_assert(MT == Match_All, "Can't use references unless matching all components.");
+
+		typedef typename ident<std::function<void(Entity&, Components&...)>>::type TypedFunction;
 
 		const auto* es = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mES;
 		const auto& pred = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mPred;
@@ -294,7 +298,7 @@ namespace Kunlaboro
 			if (es->entityAlive(eid) && (!pred || pred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, MT))
 			{
 				if (queue)
-					jobs.push_back(queue->submit(std::bind([&func](Entity& ent, Components&... args) { func(ent, args...); }, ent, *(ent.getComponent<Components>().get())...)));
+					jobs.push_back(queue->submit(TypedFunction(func), std::move(ent), std::move(*(ent.getComponent<Components>().get()))...));
 				else
 					func(ent, *(ent.getComponent<Components>().get())...);
 			}
