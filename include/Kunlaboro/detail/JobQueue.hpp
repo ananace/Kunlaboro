@@ -30,43 +30,9 @@ namespace Kunlaboro
 			void wait();
 
 			template<typename Functor, typename... Args>
-			auto submit(Functor&& functor, Args&&... args) -> std::future<decltype(functor(args...))>
-			{
-				assert(!mExiting);
-
-				auto data = std::make_shared<std::packaged_task<decltype(functor(args...))()>>(
-					std::bind(std::forward<Functor>(functor), std::forward<Args>(args)...)
-					);
-
-				{
-					std::lock_guard<std::mutex> lock(mMutex);
-					mJobQueue.emplace_back([data]() {
-						(*data)();
-					});
-				}
-				mSignal.notify_one();
-
-				return data->get_future();
-			}
+			auto submit(Functor&& functor, Args&&... args)->std::future<decltype(functor(args...))>;
 			template<typename Functor>
-			auto submit(Functor&& functor) -> std::future<decltype(functor())>
-			{
-				assert(!mExiting);
-
-				auto data = std::make_shared<std::packaged_task<decltype(functor())()>>(
-					std::forward<Functor>(functor)
-					);
-
-				{
-					std::lock_guard<std::mutex> lock(mMutex);
-					mJobQueue.emplace_back([data]() {
-						(*data)();
-					});
-				}
-				mSignal.notify_one();
-
-				return data->get_future();
-			}
+			auto submit(Functor&& functor)->std::future<decltype(functor())>;
 
 		private:
 			void workThread();
@@ -81,13 +47,45 @@ namespace Kunlaboro
 			               , mCompleteWork;
 		};
 
-		/*
 		template<typename Functor, typename... Args>
 		auto JobQueue::submit(Functor&& functor, Args&&... args) -> std::future<decltype(functor(args...))>
+		{
+			assert(!mExiting);
+
+			auto data = std::make_shared<std::packaged_task<decltype(functor(args...))()>>(
+				std::bind(std::forward<Functor>(functor), std::forward<Args>(args)...)
+				);
+
+			{
+				std::lock_guard<std::mutex> lock(mMutex);
+				mJobQueue.emplace_back([data]() {
+					(*data)();
+				});
+			}
+			mSignal.notify_one();
+
+			return data->get_future();
+		}
 		
 		template<typename Functor>
 		auto JobQueue::submit(Functor&& functor) -> std::future<decltype(functor())>
-		*/
+		{
+			assert(!mExiting);
+
+			auto data = std::make_shared<std::packaged_task<decltype(functor())()>>(
+				std::forward<Functor>(functor)
+			);
+
+			{
+				std::lock_guard<std::mutex> lock(mMutex);
+				mJobQueue.emplace_back([data]() {
+					(*data)();
+				});
+			}
+			mSignal.notify_one();
+
+			return data->get_future();
+		}
 
 	}
 

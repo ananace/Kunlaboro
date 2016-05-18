@@ -123,11 +123,11 @@ struct Velocity : public Kunlaboro::Component
 	volatile float X, Y;
 };
 
-TEST_CASE("Simple n-body simulation - 100 particles", "[comprehensive][performance][view]")
+TEST_CASE("Simple n-body simulation - 1000 particles", "[comprehensive][performance][view]")
 {
 	Kunlaboro::EntitySystem es;
 
-	const int ParticleCount = 100;
+	const int ParticleCount = 1000;
 
 	std::random_device rand;
 	std::uniform_real_distribution<float> ang(0, 3.14159f * 2);
@@ -146,10 +146,10 @@ TEST_CASE("Simple n-body simulation - 100 particles", "[comprehensive][performan
 	REQUIRE(es.entityGetList().size() == ParticleCount);
 	REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Position>::getFamily()).countBits() == ParticleCount);
 	REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Velocity>::getFamily()).countBits() == ParticleCount);
-	/*
-	SECTION("forEach Iteration, 100 steps, 100 000 calls per step")
+	
+	SECTION("forEach Iteration, 20 steps, 1 000 000 calls per step")
 	{
-		const int IterationCount = 100;
+		const int IterationCount = 20;
 
 		std::atomic<uint32_t> gravityIterations(0)
 		                    , velocityIterations(0);
@@ -186,17 +186,17 @@ TEST_CASE("Simple n-body simulation - 100 particles", "[comprehensive][performan
 		REQUIRE(gravityIterations  == ParticleCount * (ParticleCount - 1) * IterationCount);
 		REQUIRE(velocityIterations == ParticleCount * IterationCount);
 	}
-	*/
-	SECTION("Parallel gravity iteration, 100 steps, 100 000 calls per step")
+	
+	SECTION("Parallel iteration, 20 steps, 1 000 000 calls per step")
 	{
-		const int IterationCount = 100;
+		const int IterationCount = 20;
 
 		std::atomic<uint32_t> gravityIterations(0)
 		                    , velocityIterations(0);
 
 		Kunlaboro::detail::JobQueue queue;
-		auto entityView = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position,Velocity>();
-		auto particleList = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position>().parallel(queue);
+		auto entityView = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position,Velocity>().parallel(queue);
+		auto particleList = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position>();
 
 		for (int step = 0; step < IterationCount; ++step)
 		{
