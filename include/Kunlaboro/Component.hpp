@@ -26,21 +26,8 @@ namespace Kunlaboro
 
 		virtual ~Component() = default;
 
-		struct BaseMessage
-		{
-			uint32_t MessageId;
-		};
-
-		struct IdentifiedMessage : public BaseMessage
-		{
-			ComponentId SenderComponent;
-			EntityId SenderEntity;
-		};
-
 		const ComponentId& getId() const;
 		const EntityId& getEntityId() const;
-
-		virtual void onMessage(BaseMessage*) { }
 
 		EntitySystem* getEntitySystem();
 		const EntitySystem* getEntitySystem() const;

@@ -7,22 +7,6 @@
 class TestComponent : public Kunlaboro::Component
 {
 public:
-	struct Message : public BaseMessage
-	{
-		static constexpr uint16_t Id = 0x0532;
-
-		Message()
-			: BaseMessage{ Id }
-			, NewData(0)
-		{}
-		Message(int data)
-			: BaseMessage{ Id }
-			, NewData(data)
-		{}
-
-		int NewData;
-	};
-
 	TestComponent()
 		: mData(-1)
 	{
@@ -36,12 +20,6 @@ public:
 	}
 
 	int getData() const { return mData; }
-
-	virtual void onMessage(BaseMessage* msg) override
-	{
-		if (msg->MessageId == Message::Id)
-			mData = static_cast<Message*>(msg)->NewData;
-	}
 
 private:
 	int mData;
@@ -146,22 +124,6 @@ TEST_CASE("Component handling", "[component]")
 
 		REQUIRE(copy != component);
 		REQUIRE(copy->getData() == component->getData());
-	}
-
-	SECTION("Low-level message handling")
-	{
-		REQUIRE(es.componentAlive(component->getId()));
-		CHECK(component->getData() == -1);
-
-		TestComponent::Message newData(1);
-
-		component->onMessage(&newData);
-		REQUIRE(component->getData() == 1);
-
-		newData.NewData = 23;
-		es.componentSendMessage(component->getId(), &newData);
-
-		REQUIRE(component->getData() == 23);
 	}
 }
 

@@ -104,30 +104,6 @@ bool EntitySystem::entityHasComponent(ComponentId::FamilyType family, EntityId e
 	return componentAlive(entity.Components[family]);
 }
 
-void EntitySystem::componentSendMessage(ComponentId id, Component::BaseMessage* msg)
-{
-	if (!componentAlive(id))
-		return;
-
-	auto& data = mComponentFamilies[id.getFamily()];
-	static_cast<Component*>(data.MemoryPool->getData(id.getIndex()))->onMessage(msg);
-}
-void EntitySystem::entitySendMessage(EntityId id, Component::BaseMessage* msg)
-{
-	if (!entityAlive(id))
-		return;
-
-	auto& entity = mEntities[id.getIndex()];
-	const auto* components = entity.Components.data();
-	for (ComponentId::FamilyType family = 0; family < entity.Components.size(); ++family)
-	{
-		if (!entity.ComponentBits.hasBit(family) || !componentAlive(components[family]))
-			continue;
-
-		auto& data = mComponentFamilies[family];
-		static_cast<Component*>(data.MemoryPool->getData(components[family].getIndex()))->onMessage(msg);
-	}
-}
 void EntitySystem::componentDestroy(ComponentId id)
 {
 	if (!componentAlive(id))

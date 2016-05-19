@@ -42,9 +42,6 @@ namespace Kunlaboro
 		ComponentHandle<Component> entityGetComponent(ComponentId::FamilyType family, EntityId eid) const;
 		bool entityHasComponent(ComponentId::FamilyType family, EntityId eid) const;
 
-		void componentSendMessage(ComponentId id, Component::BaseMessage* msg);
-		void entitySendMessage(EntityId id, Component::BaseMessage* msg);
-
 		template<typename T, typename... Args>
 		ComponentHandle<T> componentCreate(Args...);
 		void componentDestroy(ComponentId);
