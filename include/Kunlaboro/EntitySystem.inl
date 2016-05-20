@@ -56,7 +56,6 @@ namespace Kunlaboro
 
 		comp->mES = this;
 		comp->mId = ComponentId(index, component.Generation, family);
-		comp->mOwnerId = EntityId();
 
 		return ComponentHandle<T>(comp, component.RefCount);
 	}

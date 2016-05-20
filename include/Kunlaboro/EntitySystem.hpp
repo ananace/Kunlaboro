@@ -51,6 +51,8 @@ namespace Kunlaboro
 		void componentAttach(ComponentId cid, EntityId eid);
 		void componentDetach(ComponentId cid, EntityId eid);
 		
+		EntityId componentGetEntity(ComponentId cid) const;
+
 	private:
 		
 

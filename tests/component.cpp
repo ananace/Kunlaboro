@@ -28,10 +28,11 @@ private:
 TEST_CASE("Component handling", "[component]")
 {
 	Kunlaboro::EntitySystem es;
-	auto component = es.componentCreate<TestComponent>();
 
 	SECTION("Component creation")
 	{
+		auto component = es.componentCreate<TestComponent>();
+
 		REQUIRE(component->getEntitySystem() == &es);
 		REQUIRE(es.getComponent(component->getId()) == component);
 		REQUIRE(es.componentAlive(component->getId()));
@@ -41,6 +42,8 @@ TEST_CASE("Component handling", "[component]")
 
 	SECTION("Ref counting")
 	{
+		auto component = es.componentCreate<TestComponent>();
+
 		{
 			auto copy = component;
 
@@ -88,6 +91,7 @@ TEST_CASE("Component handling", "[component]")
 
 	SECTION("Component destruction")
 	{
+		auto component = es.componentCreate<TestComponent>();
 		es.componentDestroy(component->getId());
 
 		CHECK(component->getEntitySystem() == &es);
@@ -100,6 +104,7 @@ TEST_CASE("Component handling", "[component]")
 	SECTION("Non-trivial construction")
 	{
 		auto component = es.componentCreate<TestComponent>(42);
+		auto component2 = es.componentCreate<TestComponent>(23);
 
 		REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<TestComponent>::getFamily()).countBits() == 2);
 
@@ -109,10 +114,12 @@ TEST_CASE("Component handling", "[component]")
 		CHECK(component.getRefCount() == 1);
 
 		REQUIRE(component->getData() == 42);
+		REQUIRE(component2->getData() == 23);
 	}
 
 	SECTION("Non-trivial copy construction")
 	{
+		auto component = es.componentCreate<TestComponent>();
 		auto copy = es.componentCreate<TestComponent>(*component);
 
 		REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<TestComponent>::getFamily()).countBits() == 2);

@@ -10,7 +10,6 @@ ComponentId::FamilyType BaseComponentFamily::sFamilyCounter = 0;
 Component::Component()
 	: mES(nullptr)
 	, mId()
-	, mOwnerId()
 {
 
 }
@@ -20,9 +19,9 @@ const ComponentId& Component::getId() const
 {
 	return mId;
 }
-const EntityId& Component::getEntityId() const
+EntityId Component::getEntityId() const
 {
-	return mOwnerId;
+	return mES->componentGetEntity(mId);
 }
 const EntitySystem* Component::getEntitySystem() const
 {

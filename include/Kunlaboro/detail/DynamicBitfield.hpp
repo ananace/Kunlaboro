@@ -23,9 +23,15 @@ namespace Kunlaboro
 			bool operator==(const DynamicBitfield& rhs) const;
 			bool operator!=(const DynamicBitfield& rhs) const;
 
-			inline bool hasBit(std::size_t bit) const { return (mBits[bit / 64] & (1ull << (bit % 64))) != 0; }
+			inline bool hasBit(std::size_t bit) const { return mSize > bit && (mBits[bit / 64] & (1ull << (bit % 64))) != 0; }
 			inline void setBit(std::size_t bit) { ensure(bit); mBits[bit / 64] |= (1ull << (bit % 64)); }
-			inline void clearBit(std::size_t bit) { ensure(bit); mBits[bit / 64] &= ~(1ull << (bit % 64)); }
+			inline void clearBit(std::size_t bit) {
+				ensure(bit);
+				mBits[bit / 64] &= ~(1ull << (bit % 64));
+				// TODO: Shrink size properly
+				if (mSize == bit)
+					--mSize;
+			}
 
 		private:
 			std::vector<std::uint64_t> mBits;

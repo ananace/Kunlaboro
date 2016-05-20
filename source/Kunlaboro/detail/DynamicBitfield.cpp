@@ -46,7 +46,8 @@ void DynamicBitfield::ensure(std::size_t bit)
 		mCapacity = bytes;
 	}
 
-	mSize = count;
+	if (mSize < count)
+	    mSize = count;
 }
 
 std::size_t DynamicBitfield::countBits() const

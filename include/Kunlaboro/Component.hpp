@@ -27,7 +27,7 @@ namespace Kunlaboro
 		virtual ~Component() = default;
 
 		const ComponentId& getId() const;
-		const EntityId& getEntityId() const;
+		EntityId getEntityId() const;
 
 		EntitySystem* getEntitySystem();
 		const EntitySystem* getEntitySystem() const;
@@ -37,7 +37,6 @@ namespace Kunlaboro
 
 		EntitySystem* mES;
 		ComponentId mId;
-		EntityId mOwnerId;
 	};
 
 	template<typename T>
