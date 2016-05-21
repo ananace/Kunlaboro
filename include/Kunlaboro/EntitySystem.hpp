@@ -48,13 +48,17 @@ namespace Kunlaboro
 		bool componentAlive(ComponentId) const;
 
 		bool componentAttached(ComponentId cid, EntityId eid) const;
-		void componentAttach(ComponentId cid, EntityId eid);
+		void componentAttach(ComponentId cid, EntityId eid, bool checkDetach = true);
 		void componentDetach(ComponentId cid, EntityId eid);
 		
 		EntityId componentGetEntity(ComponentId cid) const;
 
-	private:
-		
+		template<typename Event>
+		void eventRegister(const std::function<void(const Event&)>& func);
+		template<typename Event, typename... Args>
+		void eventEmit(Args... args) const;
+		template<typename Event>
+		void eventEmit(const Event& event) const;
 
 	public:
 		struct ComponentData
@@ -90,7 +94,6 @@ namespace Kunlaboro
 		const std::vector<ComponentData>& componentGetList(ComponentId::FamilyType family) const;
 		const std::vector<EntityData>& entityGetList() const;
 
-	private:
 		struct ComponentFamily
 		{
 			ComponentFamily()

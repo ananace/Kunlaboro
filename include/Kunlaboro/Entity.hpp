@@ -43,8 +43,6 @@ namespace Kunlaboro
 
 		void destroy();
 
-		//const EntitySystem::ComponentIterator& getAllComponents() const;
-
 	private:
 		Entity(EntitySystem* sys, EntityId id);
 

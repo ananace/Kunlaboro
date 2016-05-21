@@ -156,7 +156,7 @@ bool EntitySystem::componentAttached(ComponentId cid, EntityId eid) const
 
 	return entity.ComponentBits.hasBit(cid.getFamily()) && entity.Components[cid.getFamily()] == cid;
 }
-void EntitySystem::componentAttach(ComponentId cid, EntityId eid)
+void EntitySystem::componentAttach(ComponentId cid, EntityId eid, bool checkDetach)
 {
 	if (!entityAlive(eid) || !componentAlive(cid))
 		return;
@@ -165,20 +165,23 @@ void EntitySystem::componentAttach(ComponentId cid, EntityId eid)
 	while (entity.Components.size() <= cid.getFamily())
 		entity.Components.push_back(ComponentId::Invalid());
 
-	auto comp = getComponent(cid);
-	if (comp->getEntityId() == eid)
-		return;
+	if (checkDetach)
+	{
+		auto comp = getComponent(cid);
+		if (comp->getEntityId() == eid)
+			return;
 
-	if (componentGetEntity(cid) != EntityId())
-		componentDetach(cid, comp->getEntityId());
+		if (componentGetEntity(cid) != EntityId())
+			componentDetach(cid, comp->getEntityId());
 
-	if (entity.Components[cid.getFamily()] != ComponentId::Invalid())
-		componentDetach(entity.Components[cid.getFamily()], eid);
+		if (entity.Components[cid.getFamily()] != ComponentId::Invalid())
+			componentDetach(entity.Components[cid.getFamily()], eid);
+
+		comp.unlink();
+	}
 
 	entity.ComponentBits.setBit(cid.getFamily());
 	entity.Components[cid.getFamily()] = cid;
-
-	comp.unlink();
 }
 void EntitySystem::componentDetach(ComponentId cid, EntityId eid)
 {
