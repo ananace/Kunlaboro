@@ -1,6 +1,8 @@
 #include <Kunlaboro/EntitySystem.hpp>
 #include <Kunlaboro/EntitySystem.inl>
 #include <Kunlaboro/Entity.hpp>
+#include <Kunlaboro/EventSystem.hpp>
+#include <Kunlaboro/MessageSystem.hpp>
 #include <Kunlaboro/Component.hpp>
 #include <Kunlaboro/Component.inl>
 
@@ -229,4 +231,27 @@ const std::vector<EntitySystem::ComponentData>& EntitySystem::componentGetList(C
 const std::vector<EntitySystem::EntityData>& EntitySystem::entityGetList() const
 {
 	return mEntities;
+}
+
+EventSystem& EntitySystem::getEventSystem()
+{
+	if (!mEventSystem)
+		mEventSystem = new EventSystem(this);
+	return *mEventSystem;
+}
+const EventSystem& EntitySystem::getEventSystem() const
+{
+	assert(mEventSystem);
+	return *mEventSystem;
+}
+MessageSystem& EntitySystem::getMessageSystem()
+{
+	if (!mMessageSystem)
+		mMessageSystem = new MessageSystem(this);
+	return *mMessageSystem;
+}
+const MessageSystem& EntitySystem::getMessageSystem() const
+{
+	assert(mMessageSystem);
+	return *mMessageSystem;
 }

@@ -21,6 +21,9 @@ namespace Kunlaboro
 		class BaseComponentPool;
 	}
 
+	class EventSystem;
+	class MessageSystem;
+
 	class EntitySystem
 	{
 	public:
@@ -54,12 +57,10 @@ namespace Kunlaboro
 		
 		EntityId componentGetEntity(ComponentId cid) const;
 
-		template<typename Event>
-		void eventRegister(const std::function<void(const Event&)>& func);
-		template<typename Event, typename... Args>
-		void eventEmit(Args... args) const;
-		template<typename Event>
-		void eventEmit(const Event& event) const;
+		EventSystem& getEventSystem();
+		const EventSystem& getEventSystem() const;
+		MessageSystem& getMessageSystem();
+		const MessageSystem& getMessageSystem() const;
 
 	public:
 		struct ComponentData
@@ -111,5 +112,8 @@ namespace Kunlaboro
 
 		std::vector<ComponentFamily> mComponentFamilies;
 		std::vector<EntityData> mEntities;
+
+		EventSystem* mEventSystem;
+		MessageSystem* mMessageSystem;
 	};
 }
