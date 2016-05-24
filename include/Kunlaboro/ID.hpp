@@ -44,6 +44,10 @@ namespace Kunlaboro
 		BaseEntityId(indexType index, generationType generation)
 			: mId(static_cast<idType>(index & sIndexMask) | (static_cast<idType>(generation & sGenerationMask) << sIndexBits))
 		{ }
+		static BaseEntityId Invalid()
+		{
+			return BaseEntityId(~indexType(0), ~generationType(0));
+		}
 
 		explicit BaseEntityId(idType fullId) : mId(fullId) { }
 
@@ -104,17 +108,15 @@ namespace Kunlaboro
 		static_assert(sIndexBits + sGenerationBits + sFamilyBits == sizeof(idType) * 8, "Id bit counts must add up to the total Id size.");
 
 		BaseComponentId() : mId(~idType(0)) { }
-		static BaseComponentId Invalid()
-		{
-			return BaseComponentId(~indexType(0), ~generationType(0), ~familyType(0));
-		}
 		BaseComponentId(indexType index, generationType generation, familyType family)
 			: mId(static_cast<idType>(index & sIndexMask) |
 				(static_cast<idType>(generation & sGenerationMask) << sIndexBits) |
 				(static_cast<idType>(family & sFamilyMask) << (sIndexBits + sGenerationBits)))
 		{ }
-
-		explicit BaseComponentId(idType fullId) : mId(fullId) { }
+		static BaseComponentId Invalid()
+		{
+			return BaseComponentId(~indexType(0), ~generationType(0), ~familyType(0));
+		}
 
 		inline bool operator==(const BaseComponentId& other) const { return mId == other.mId; }
 		inline bool operator!=(const BaseComponentId& other) const { return mId != other.mId; }
@@ -134,7 +136,16 @@ namespace Kunlaboro
 	typedef BaseEntityId<uint64_t, uint32_t, 32, uint32_t, 32> EntityId;
 	typedef BaseComponentId<uint64_t, uint32_t, 32, uint32_t, 24, uint8_t, 8> ComponentId;
 #else
+	/**
+	 * \note 20 bits for index, ~1 million entities possible.
+	 * \note 12 bits for generation, 4096 entity slots can be reused before IDs become non-unique.
+	 */
 	typedef BaseEntityId<uint32_t, uint32_t, 20, uint16_t, 12> EntityId;
+	/**
+	 * \note 21 bits for index, ~2 million components possible.
+	 * \note 5 bits for generation, 32 component slots can be reused before component IDs become non-unique.
+	 * \note 6 bits for family, 64 distinct component types can exist.
+	 */
 	typedef BaseComponentId<uint32_t, uint32_t, 21, uint8_t, 5, uint8_t, 6> ComponentId;
 #endif
 

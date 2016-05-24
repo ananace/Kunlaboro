@@ -32,6 +32,8 @@ namespace Kunlaboro
 		EventSystem(EntitySystem* es);
 
 		friend class EntitySystem;
+
+		EntitySystem* mES;
 	};
 
 }
