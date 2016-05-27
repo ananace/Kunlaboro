@@ -1,6 +1,7 @@
 #pragma once
 
-#include <functional>
+#include "Message.hpp"
+
 #include <unordered_map>
 #include <deque>
 
@@ -26,6 +27,15 @@ namespace Kunlaboro
 		friend class EntitySystem;
 
 		EntitySystem* mES;
+
+		struct MessageData
+		{
+#ifdef _DEBUG
+			std::string Name;
+#endif
+			std::deque<Message> Callbacks;
+		};
+		std::unordered_map<uint32_t, MessageData> mMessages;
 	};
 /*
 	class MessagingComponent : public Component
