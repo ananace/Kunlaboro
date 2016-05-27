@@ -33,7 +33,7 @@ namespace Kunlaboro
 #ifdef _DEBUG
 			std::string Name;
 #endif
-			std::deque<Message> Callbacks;
+			std::deque<BaseMessage*> Callbacks;
 		};
 		std::unordered_map<uint32_t, MessageData> mMessages;
 	};

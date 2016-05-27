@@ -40,6 +40,8 @@ set(Kunlaboro_HEADERS
 	include/Kunlaboro/Event.inl
 	include/Kunlaboro/EventSystem.hpp
 	include/Kunlaboro/EventSystem.inl
+	include/Kunlaboro/Message.hpp
+	include/Kunlaboro/Message.inl
 	include/Kunlaboro/MessageSystem.hpp
 	include/Kunlaboro/MessageSystem.inl
 	include/Kunlaboro/ID.hpp
@@ -57,6 +59,7 @@ set(Kunlaboro_SOURCES
 	source/Kunlaboro/EntitySystem.cpp
 	source/Kunlaboro/Event.cpp
 	source/Kunlaboro/EventSystem.cpp
+	source/Kunlaboro/Message.cpp
 	source/Kunlaboro/MessageSystem.cpp
 	source/Kunlaboro/Views.cpp
 
