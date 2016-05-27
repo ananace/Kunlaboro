@@ -13,9 +13,96 @@ Requirements
 
 Kunlaboro is built using many C++11 and 14 features, therefore it requires a reasonably modern compiler to work properly.
 
-Current development is done on Visual Studio 2015, with additional testing on GCC-4.9. Other compilers that support C++14 will most likely also work.
+Current development is done on Visual Studio 2015, with additional testing on GCC-4.9 and Clang-3.4. Other compilers that support C++14 will most likely also work.
+
+TODO
+----
+
+- High performance event system.
+- High level message passing system.
+- Functions for shrinking arrays, collecting garbage.
+- Better job queue.
+- Split into interfaces and implementation.
+- Better creation of POD components.
 
 Code Examples
 -------------
 
-Coming soon...
+3D Particle system;
+
+```c++
+struct Position : public Kunlaboro::Component
+{
+	float X, Y, Z;
+};
+struct Velocity : public Kunlaboro::Component
+{
+	float dX, dY, dZ;
+};
+struct Friction : public Kunlaboro::Component
+{
+	float Friction;
+};
+struct Lifetime : public Kunlaboro::Component
+{
+	float Time;
+};
+
+class ParticleSystem
+{
+public:
+	ParticleSystem(Kunlaboro::EntitySystem& es)
+		: mES(es)
+	{ }
+
+	void update(float dt)
+	{
+		mDT = dt;
+
+		auto iter = Kunlaboro::EntityView(mES);
+		iter.withComponents<Kunlaboro::Match_All, Position, Velocity>.forEach(iterate);
+		iter.withComponents<Kunlaboro::Match_All, Velocity, Friction>.forEach(iterate);
+		iter.withComponents<Kunlaboro::Match_All, Lifetime>.forEach(iterate);
+	}
+
+	void addParticle(float x, float y, float z, float dx, float dy, float dz)
+	{
+		auto ent = mES.entityCreate();
+		ent.addComponent<Position>(x, y, z);
+		ent.addComponent<Velocity>(dx, dy, dz);
+	}
+
+	void addParticle(float x, float y, float z, float dx, float dy, float dz, float life)
+	{
+		auto ent = mES.entityCreate();
+		ent.addComponent<Position>(x, y, z);
+		ent.addComponent<Velocity>(dx, dy, dz);
+		ent.addComponent<Lifetime>(life);
+	}
+
+private:
+	void iterate(const Kunlaboro::Entity& ent, Position& pos, Velocity& vel)
+	{
+		pos.X += dX * mDT;
+		pos.Y += dY * mDT;
+		pos.Z += dZ * mDT;
+	}
+	void iterate(const Kunlaboro::Entity& ent, Velocity& vel, Friction& fric)
+	{
+		float frictionDelta = 1 - fric.Friction * mDT;
+
+		vel.dX *= frictionDelta;
+		vel.dY *= frictionDelta;
+		vel.dZ *= frictionDelta;
+	}
+	void iterate(const Kunlaboro::Entity& ent, Lifetime& time)
+	{
+		time.Time -= mDT;
+
+		if (time.Time <= 0)
+			ent.destroy();
+	}
+
+	float mDT;
+};
+```
