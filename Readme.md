@@ -29,6 +29,8 @@ TODO
   - Run garbage collection on memory pools, on user request.
 - Better creation of POD components?
   - Look into possibility of having true POD components.
+- Improve job queue
+  - Allow for reusing queue without restarting threads.
 
 Code Examples
 -------------

@@ -147,9 +147,9 @@ TEST_CASE("Simple n-body simulation - 1000 particles", "[comprehensive][performa
 	REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Position>::getFamily()).countBits() == ParticleCount);
 	REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Velocity>::getFamily()).countBits() == ParticleCount);
 	
-	SECTION("forEach Iteration, 10 steps, 1 000 000 calls per step")
+	SECTION("Sequential iteration, 5 steps, 1 000 000 calls per step")
 	{
-		const int IterationCount = 10;
+		const int IterationCount = 5;
 
 		std::atomic<uint32_t> gravityIterations(0)
 		                    , velocityIterations(0);
@@ -187,7 +187,7 @@ TEST_CASE("Simple n-body simulation - 1000 particles", "[comprehensive][performa
 		REQUIRE(velocityIterations == ParticleCount * IterationCount);
 	}
 	
-	SECTION("Parallel iteration, 20 steps, 1 000 000 calls per step")
+	SECTION("Parallel entity iteration, 20 steps, 1 000 000 calls per step")
 	{
 		const int IterationCount = 20;
 
@@ -225,6 +225,47 @@ TEST_CASE("Simple n-body simulation - 1000 particles", "[comprehensive][performa
 		}
 
 		REQUIRE(gravityIterations  == ParticleCount * (ParticleCount - 1) * IterationCount);
+		REQUIRE(velocityIterations == ParticleCount * IterationCount);
+	}
+
+	SECTION("Parallel gravity calculation, 5 steps, 1 000 000 calls per step")
+	{
+		const int IterationCount = 5;
+
+		std::atomic<uint32_t> gravityIterations(0)
+			, velocityIterations(0);
+
+		Kunlaboro::detail::JobQueue queue;
+		auto entityView = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position, Velocity>();
+		auto particleList = Kunlaboro::EntityView(es).withComponents<Kunlaboro::Match_All, Position>().parallel(queue);
+
+		for (int step = 0; step < IterationCount; ++step)
+		{
+			entityView.forEach([&gravityIterations, &velocityIterations, &particleList](Kunlaboro::Entity& ent, Position& pos, Velocity& vel) {
+				particleList.forEach([&gravityIterations, &ent, &pos, &vel](Kunlaboro::Entity& ent2, Position& pos2) {
+					if (ent == ent2)
+						return;
+
+					const float xDelta = (pos2.X - pos.X);
+					const float yDelta = (pos2.Y - pos.Y);
+					const float deltaSqrt = std::sqrt(xDelta*xDelta + yDelta*yDelta + 1e-9f);
+					const float invDist = 1 / deltaSqrt;
+					const float invDist2 = invDist * invDist;
+
+					vel.X += xDelta * invDist2;
+					vel.Y += yDelta * invDist2;
+
+					gravityIterations.fetch_add(1, std::memory_order_relaxed);
+				});
+
+				pos.X += vel.X;
+				pos.Y += vel.Y;
+
+				velocityIterations.fetch_add(1, std::memory_order_relaxed);
+			});
+		}
+
+		REQUIRE(gravityIterations == ParticleCount * (ParticleCount - 1) * IterationCount);
 		REQUIRE(velocityIterations == ParticleCount * IterationCount);
 	}
 }
