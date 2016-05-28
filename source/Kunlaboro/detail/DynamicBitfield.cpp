@@ -35,21 +35,6 @@ void DynamicBitfield::clear()
 	mSize = mCapacity = 0;
 }
 
-void DynamicBitfield::ensure(std::size_t bit)
-{
-	const auto count = bit + 1;
-	const std::size_t bytes = static_cast<std::size_t>(std::ceil(count / 64.f));
-
-	if (mCapacity < bytes)
-	{
-		mBits.resize(bytes, 0);
-		mCapacity = bytes;
-	}
-
-	if (mSize < count)
-	    mSize = count;
-}
-
 std::size_t DynamicBitfield::countBits() const
 {
 	const std::size_t bytes = static_cast<std::size_t>(std::ceil(mSize / 64.f));
