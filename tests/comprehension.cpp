@@ -147,9 +147,9 @@ TEST_CASE("Simple n-body simulation - 1000 particles", "[comprehensive][performa
 	REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Position>::getFamily()).countBits() == ParticleCount);
 	REQUIRE(es.componentGetPool(Kunlaboro::ComponentFamily<Velocity>::getFamily()).countBits() == ParticleCount);
 	
-	SECTION("forEach Iteration, 20 steps, 1 000 000 calls per step")
+	SECTION("forEach Iteration, 10 steps, 1 000 000 calls per step")
 	{
-		const int IterationCount = 20;
+		const int IterationCount = 10;
 
 		std::atomic<uint32_t> gravityIterations(0)
 		                    , velocityIterations(0);

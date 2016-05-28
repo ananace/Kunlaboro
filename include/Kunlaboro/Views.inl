@@ -170,8 +170,6 @@ namespace Kunlaboro
 		auto& pool = impl::BaseView<ComponentView, T>::mES->componentGetPool(family);
 		auto* queue = impl::BaseView<ComponentView, T>::mQueue;
 
-		std::list<std::future<void>> jobs;
-
 		for (std::size_t i = 0; i < pool.getSize(); ++i)
 			if (pool.hasBit(i))
 			{
@@ -180,11 +178,14 @@ namespace Kunlaboro
 				if (!impl::BaseView<ComponentView, T>::mPred || impl::BaseView<ComponentView, T>::mPred(comp))
 				{
 					if (queue)
-						jobs.push_back(queue->submit(Function(func), std::move(comp)));
+						queue->submit(Function(func), std::move(comp));
 					else
 						func(comp);
 				}
 			}
+
+		if (queue)
+			queue->wait();
 	}
 
 	template<MatchType mt, typename... Components>
@@ -223,7 +224,6 @@ namespace Kunlaboro
 		auto* queue = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mQueue;
 
 		auto& list = es->entityGetList();
-		std::list<std::future<void>> jobs;
 
 		for (size_t i = 0; i < list.size(); ++i)
 		{
@@ -234,14 +234,14 @@ namespace Kunlaboro
 			if (es->entityAlive(eid) && (!pred || pred(ent)))
 			{
 				if (queue)
-					jobs.push_back(queue->submit(Function(func), std::move(ent)));
+					queue->submit(Function(func), std::move(ent));
 				else
 					func(ent);
 			}
 		}
 
-		for (auto& job : jobs)
-			job.wait();
+		if (queue)
+			queue->wait();
 	}
 
 	template<MatchType MT, typename... Components>
@@ -254,7 +254,6 @@ namespace Kunlaboro
 		auto* queue = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mQueue;
 
 		auto& list = es->entityGetList();
-		std::list<std::future<void>> jobs;
 
 		for (size_t i = 0; i < list.size(); ++i)
 		{
@@ -265,14 +264,14 @@ namespace Kunlaboro
 			if (ent && (!pred || pred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, MT))
 			{
 				if (queue)
-					jobs.push_back(queue->submit(TypedFunction(func), std::move(ent), std::move(ent.getComponent<Components>().get())...));
+					queue->submit(TypedFunction(func), std::move(ent), std::move(ent.getComponent<Components>().get())...);
 				else
 					func(ent, (ent.getComponent<Components>().get())...);
 			}
 		}
 
-		for (auto& job : jobs)
-			job.wait();
+		if (queue)
+			queue->wait();
 	}
 
 	template<MatchType MT, typename... Components>
@@ -287,7 +286,6 @@ namespace Kunlaboro
 		auto* queue = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mQueue;
 
 		auto& list = es->entityGetList();
-		std::list<std::future<void>> jobs;
 
 		for (size_t i = 0; i < list.size(); ++i)
 		{
@@ -298,13 +296,13 @@ namespace Kunlaboro
 			if (es->entityAlive(eid) && (!pred || pred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, MT))
 			{
 				if (queue)
-					jobs.push_back(queue->submit(TypedFunction(func), std::move(ent), std::move(*(ent.getComponent<Components>().get()))...));
+					queue->submit(TypedFunction(func), std::move(ent), std::move(*(ent.getComponent<Components>().get()))...);
 				else
 					func(ent, *(ent.getComponent<Components>().get())...);
 			}
 		}
 
-		for (auto& job : jobs)
-			job.wait();
+		if (queue)
+			queue->wait();
 	}
 }

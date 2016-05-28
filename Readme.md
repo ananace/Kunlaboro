@@ -27,8 +27,6 @@ TODO
 - Functions for shrinking arrays, collecting garbage.
   - Clear unused bitfield slots, reduce size on bit removal.
   - Run garbage collection on memory pools, on user request.
-- Better job queue.
-  - Simpler jobs, CV instead of promises.
 - Better creation of POD components?
   - Look into possibility of having true POD components.
 

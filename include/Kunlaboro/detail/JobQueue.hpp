@@ -1,8 +1,8 @@
 #pragma once
 
+#include <atomic>
 #include <chrono>
 #include <deque>
-#include <future>
 #include <condition_variable>
 #include <functional>
 #include <thread>
@@ -26,13 +26,14 @@ namespace Kunlaboro
 			~JobQueue();
 
 			void abort();
+			void start();
 			void stop();
-			void wait();
+			void wait(bool restart = true);
 
 			template<typename Functor, typename... Args>
-			auto submit(Functor&& functor, Args&&... args)->std::future<decltype(functor(args...))>;
+			void submit(Functor&& functor, Args&&... args);
 			template<typename Functor>
-			auto submit(Functor&& functor)->std::future<decltype(functor())>;
+			void submit(Functor&& functor);
 
 		private:
 			void workThread();
@@ -48,43 +49,27 @@ namespace Kunlaboro
 		};
 
 		template<typename Functor, typename... Args>
-		auto JobQueue::submit(Functor&& functor, Args&&... args) -> std::future<decltype(functor(args...))>
+		void JobQueue::submit(Functor&& functor, Args&&... args)
 		{
 			assert(!mExiting);
 
-			auto data = std::make_shared<std::packaged_task<decltype(functor(args...))()>>(
-				std::bind(std::forward<Functor>(functor), std::forward<Args>(args)...)
-				);
-
 			{
 				std::lock_guard<std::mutex> lock(mMutex);
-				mJobQueue.emplace_back([data]() {
-					(*data)();
-				});
+				mJobQueue.emplace_back(std::bind(std::forward<Functor>(functor), std::forward<Args>(args)...));
 			}
 			mSignal.notify_one();
-
-			return data->get_future();
 		}
 		
 		template<typename Functor>
-		auto JobQueue::submit(Functor&& functor) -> std::future<decltype(functor())>
+		void JobQueue::submit(Functor&& functor)
 		{
 			assert(!mExiting);
 
-			auto data = std::make_shared<std::packaged_task<decltype(functor())()>>(
-				std::forward<Functor>(functor)
-			);
-
 			{
 				std::lock_guard<std::mutex> lock(mMutex);
-				mJobQueue.emplace_back([data]() {
-					(*data)();
-				});
+				mJobQueue.emplace_back(std::forward<Functor>(functor));
 			}
 			mSignal.notify_one();
-
-			return data->get_future();
 		}
 
 	}

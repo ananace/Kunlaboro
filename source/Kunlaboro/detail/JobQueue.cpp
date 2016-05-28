@@ -30,6 +30,22 @@ void JobQueue::abort()
 		mJobQueue.clear();
 	}
 }
+void JobQueue::start()
+{
+	assert(mExiting);
+
+	joinAll();
+
+	mExiting = false;
+	mCompleteWork = true;
+
+	auto count = mThreadPool.size();
+	mThreadPool.clear();
+
+	mThreadPool.reserve(count);
+	while (count--)
+		mThreadPool.emplace_back(std::thread(&JobQueue::workThread, this));
+}
 void JobQueue::stop()
 {
 	mExiting = true;
@@ -37,16 +53,20 @@ void JobQueue::stop()
 	mSignal.notify_all();
 }
 
-void JobQueue::wait()
+void JobQueue::wait(bool restart)
 {
 	stop();
 	joinAll();
+
+	if (restart)
+		start();
 }
 
 void JobQueue::joinAll()
 {
 	for (auto& t : mThreadPool)
-		t.join();
+		if (t.joinable())
+			t.join();
 }
 
 void JobQueue::workThread()
