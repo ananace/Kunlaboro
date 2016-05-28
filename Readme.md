@@ -18,12 +18,19 @@ Current development is done on Visual Studio 2015, with additional testing on GC
 TODO
 ----
 
-- High performance event system.
-- High level message passing system.
+- Low level, high performance, event system.
+  - Events indexed by POD structs containing event data.
+  - Fast iteration and calling of registered events.
+- High level, acceptable performance, message passing system.
+  - Messages indexed by hashed string values (32/64-bit).
+  - Message passing done in an RPC-like way.
 - Functions for shrinking arrays, collecting garbage.
+  - Clear unused bitfield slots, reduce size on bit removal.
+  - Run garbage collection on memory pools, on user request.
 - Better job queue.
-- Split into interfaces and implementation.
-- Better creation of POD components.
+  - Simpler jobs, CV instead of promises.
+- Better creation of POD components?
+  - Look into possibility of having true POD components.
 
 Code Examples
 -------------
