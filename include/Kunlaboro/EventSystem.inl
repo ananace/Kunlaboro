@@ -1,5 +1,7 @@
 #include "EventSystem.hpp"
 
+#include <type_traits>
+
 namespace Kunlaboro
 {
 
@@ -31,6 +33,8 @@ namespace Kunlaboro
 	template<typename Event, typename... Args>
 	void EventSystem::eventEmit(Args... args) const
 	{
+		// static_assert(std::is_trivial<Event>::value, "Must be a POD type.");
+
 		Event toSend{ std::forward<Args>(args)... };
 		eventEmit(toSend);
 	}
