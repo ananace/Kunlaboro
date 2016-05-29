@@ -7,6 +7,7 @@
 
 namespace Kunlaboro
 {
+
 	template<typename T>
 	ComponentHandle<T> EntitySystem::getComponent(ComponentId id) const
 	{
