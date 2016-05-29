@@ -2,6 +2,7 @@
 #include <Kunlaboro/EntitySystem.inl>
 #include <Kunlaboro/Entity.hpp>
 #include <Kunlaboro/EventSystem.hpp>
+#include <Kunlaboro/EventSystem.inl>
 #include <Kunlaboro/MessageSystem.hpp>
 #include <Kunlaboro/Component.hpp>
 #include <Kunlaboro/Component.inl>
@@ -53,6 +54,9 @@ Entity EntitySystem::entityCreate()
 	}
 
 	auto eid = EntityId(id, mEntities[id].Generation);
+	if (mEventSystem)
+		mEventSystem->eventEmit<EntityCreatedEvent>(eid, this);
+
 	return Entity(this, eid);
 }
 void EntitySystem::entityDestroy(EntityId id)
@@ -72,6 +76,9 @@ void EntitySystem::entityDestroy(EntityId id)
 
 	++mEntities[id.getIndex()].Generation;
 	mFreeEntityIndices.push_back(id.getIndex());
+
+	if (mEventSystem)
+		mEventSystem->eventEmit<EntityDestroyedEvent>(id, this);
 }
 
 bool EntitySystem::entityAlive(EntityId id) const
@@ -133,6 +140,9 @@ void EntitySystem::componentDestroy(ComponentId id)
 	++comp.Generation;
 
 	data.FreeIndices.push_back(id.getIndex());
+
+	if (mEventSystem)
+		mEventSystem->eventEmit<ComponentDestroyedEvent>(id, this);
 }
 inline bool EntitySystem::componentAlive(ComponentId id) const
 {

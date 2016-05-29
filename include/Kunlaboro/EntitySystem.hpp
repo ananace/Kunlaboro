@@ -33,6 +33,10 @@ namespace Kunlaboro
 
 		EntitySystem& operator=(const EntitySystem&) = delete;
 
+		// TODO:
+		// void setEmitEvents(bool emit = true);
+		// bool getEmitEvents() const;
+
 		template<typename T>
 		ComponentHandle<T> getComponent(ComponentId id) const;
 		ComponentHandle<Component> getComponent(ComponentId id) const;

@@ -57,6 +57,10 @@ namespace Kunlaboro
 		comp->mES = this;
 		comp->mId = ComponentId(index, component.Generation, family);
 
+		// TODO: Move more of this out of header
+		// if (mEventSystem)
+		//     mEventSystem->eventEmit<ComponentCreatedEvent>(comp->mId, this);
+
 		return ComponentHandle<T>(comp, component.RefCount);
 	}
 
