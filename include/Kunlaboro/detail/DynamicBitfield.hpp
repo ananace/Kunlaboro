@@ -33,7 +33,7 @@ namespace Kunlaboro
 			inline void shrink()
 			{
 				// TODO: Shrink size properly
-				while (!hasBit(mSize - 1))
+				while (mSize > 0 && !hasBit(mSize - 1))
 					--mSize;
 			}
 
