@@ -29,6 +29,7 @@ namespace Kunlaboro
 		void eventRegister(ComponentId cId, Functor&& func);
 		template<typename Event, typename Functor>
 		std::size_t eventRegister(Functor&& func);
+		void eventUnregisterAll(ComponentId cId);
 		template<typename Event>
 		void eventUnregister(ComponentId cId);
 		template<typename Event>
