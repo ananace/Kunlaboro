@@ -12,27 +12,6 @@ namespace Kunlaboro
 
 	class EntitySystem;
 
-	struct ComponentCreatedEvent
-	{
-		ComponentId Component;
-		EntitySystem* EntitySystem;
-	};
-	struct ComponentDestroyedEvent
-	{
-		ComponentId Component;
-		EntitySystem* EntitySystem;
-	};
-	struct EntityCreatedEvent
-	{
-		EntityId Entity;
-		EntitySystem* EntitySystem;
-	};
-	struct EntityDestroyedEvent
-	{
-		EntityId Entity;
-		EntitySystem* EntitySystem;
-	};
-
 	class EventSystem
 	{
 	public:
@@ -46,9 +25,9 @@ namespace Kunlaboro
 
 		EventSystem& operator=(const EventSystem&) = delete;
 
-		template<typename Functor, typename Event>
+		template<typename Event, typename Functor>
 		void eventRegister(ComponentId cId, Functor&& func);
-		template<typename Functor, typename Event>
+		template<typename Event, typename Functor>
 		std::size_t eventRegister(Functor&& func);
 		template<typename Event>
 		void eventUnregister(ComponentId cId);

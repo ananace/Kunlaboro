@@ -20,34 +20,35 @@ namespace Kunlaboro
 			ComponentId Component;
 		};
 		template<typename Event>
-		struct BaseLooseEvent : public EventSystem::BaseEvent
+		struct BaseLooseEvent : public EventType<Event>
 		{
 			std::size_t ID;
 		};
 	}
 
-	template<typename Functor, typename Event>
+	template<typename Event, typename Functor>
 	void EventSystem::eventRegister(ComponentId cId, Functor&& func)
 	{
 		auto& list = mEvents[typeid(Event)];
 
-		auto* ev = new detail::ComponentEvent<Functor>();
+		auto* ev = new detail::BaseComponentEvent<Event>();
 		ev->Component = cId;
-		ev->func = std::move(func);
+		ev->Func = std::move(func);
 		ev->Type = sComponentEvent;
+
 		list.push_back(ev);
 	}
-	template<typename Functor, typename Event>
+	template<typename Event, typename Functor>
 	std::size_t EventSystem::eventRegister(Functor&& func)
 	{
 		auto& list = mEvents[typeid(Event)];
 
-		auto* ev = new detail::LooseEvent<Functor>();
-		ev->func = std::move(func);
+		auto* ev = new detail::BaseLooseEvent<Event>();
+		ev->Func = std::move(func);
 		ev->ID = list.size();
 		ev->Type = sLooseEvent;
-		list.push_back(ev);
 
+		list.push_back(ev);
 		return ev->ID;
 	}
 	template<typename Event>

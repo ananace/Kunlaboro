@@ -14,6 +14,8 @@
 using namespace Kunlaboro;
 
 EntitySystem::EntitySystem()
+	: mEventSystem(nullptr)
+	, mMessageSystem(nullptr)
 {
 
 }
@@ -22,6 +24,11 @@ EntitySystem::~EntitySystem()
 	for (auto& comp : mComponentFamilies)
 		if (comp.MemoryPool)
 			delete comp.MemoryPool;
+
+	if (mEventSystem)
+		delete mEventSystem;
+	if (mMessageSystem)
+		delete mMessageSystem;
 }
 
 ComponentHandle<Component> EntitySystem::getComponent(ComponentId id) const

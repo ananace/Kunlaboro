@@ -7,3 +7,7 @@ MessageSystem::MessageSystem(EntitySystem* es)
 	: mES(es)
 {
 }
+
+MessageSystem::~MessageSystem()
+{
+}

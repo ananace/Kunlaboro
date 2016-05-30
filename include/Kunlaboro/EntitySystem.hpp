@@ -27,6 +27,27 @@ namespace Kunlaboro
 	class EntitySystem
 	{
 	public:
+		struct ComponentCreatedEvent
+		{
+			ComponentId Component;
+			EntitySystem* EntitySystem;
+		};
+		struct ComponentDestroyedEvent
+		{
+			ComponentId Component;
+			EntitySystem* EntitySystem;
+		};
+		struct EntityCreatedEvent
+		{
+			EntityId Entity;
+			EntitySystem* EntitySystem;
+		};
+		struct EntityDestroyedEvent
+		{
+			EntityId Entity;
+			EntitySystem* EntitySystem;
+		};
+
 		EntitySystem();
 		EntitySystem(const EntitySystem&) = delete;
 		~EntitySystem();

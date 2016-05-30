@@ -228,9 +228,11 @@ TEST_CASE("Simple n-body simulation - 1000 particles", "[comprehensive][performa
 		REQUIRE(velocityIterations == ParticleCount * IterationCount);
 	}
 
-	SECTION("Parallel gravity calculation, 5 steps, 1 000 000 calls per step")
+	// TODO: Reduce job queue teardown, then enable
+	/*
+	SECTION("Parallel gravity calculation, 10 steps, 1 000 000 calls per step")
 	{
-		const int IterationCount = 5;
+		const int IterationCount = 10;
 
 		std::atomic<uint32_t> gravityIterations(0)
 			, velocityIterations(0);
@@ -268,4 +270,5 @@ TEST_CASE("Simple n-body simulation - 1000 particles", "[comprehensive][performa
 		REQUIRE(gravityIterations == ParticleCount * (ParticleCount - 1) * IterationCount);
 		REQUIRE(velocityIterations == ParticleCount * IterationCount);
 	}
+	*/
 }

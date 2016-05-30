@@ -7,3 +7,7 @@ EventSystem::EventSystem(EntitySystem* es)
 	: mES(es)
 {
 }
+
+EventSystem::~EventSystem()
+{
+}
