@@ -75,8 +75,8 @@ namespace Kunlaboro
 	{
 		auto& list = mEvents[typeid(Event)];
 
-		auto it = std::find_if(list.cbegin(), list.cend(), [cId](const BaseEvent* ev) {
-			return ev->Type == sLooseEvent && static_cast<const detail::BaseLooseEvent*>(ev)->Component == cId;
+		auto it = std::find_if(list.cbegin(), list.cend(), [id](const BaseEvent* ev) {
+			return ev->Type == sLooseEvent && static_cast<const detail::BaseLooseEvent*>(ev)->ID == id;
 		});
 
 		if (it != list.cend())
