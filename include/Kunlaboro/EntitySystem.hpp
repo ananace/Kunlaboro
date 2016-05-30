@@ -30,22 +30,22 @@ namespace Kunlaboro
 		struct ComponentCreatedEvent
 		{
 			ComponentId Component;
-			EntitySystem* EntitySystem;
+			EntitySystem* ES;
 		};
 		struct ComponentDestroyedEvent
 		{
 			ComponentId Component;
-			EntitySystem* EntitySystem;
+			EntitySystem* ES;
 		};
 		struct EntityCreatedEvent
 		{
 			EntityId Entity;
-			EntitySystem* EntitySystem;
+			EntitySystem* ES;
 		};
 		struct EntityDestroyedEvent
 		{
 			EntityId Entity;
-			EntitySystem* EntitySystem;
+			EntitySystem* ES;
 		};
 
 		EntitySystem();
