@@ -43,7 +43,7 @@ namespace Kunlaboro
 	inline void MessageSystem::messageSendIdTo(const char* const message, ComponentId cId, Args... args) const
 	{
 		auto mId = BaseMessageType::Hash(message);
-		messageSendto<Args...>(mId, cId, std::forward<Args>(args)...);
+		messageSendTo<Args...>(mId, cId, std::forward<Args>(args)...);
 	}
 
 	template<typename... Args>
