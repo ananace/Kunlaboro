@@ -61,6 +61,10 @@ namespace Kunlaboro
 
 		new(pool->getData(index)) T(std::forward<Args>(args)...);
 
+		// In case copy-construction happens
+		comp->mES = this;
+		comp->mId = id;
+
 		// TODO: Move more of this out of header
 		// if (mEventSystem)
 		//     mEventSystem->eventEmit<ComponentCreatedEvent>(comp->mId, this);
