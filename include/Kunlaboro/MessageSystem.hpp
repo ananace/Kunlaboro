@@ -21,18 +21,18 @@ namespace Kunlaboro
 		MessageSystem& operator=(const MessageSystem&) = delete;
 
 		template<typename... Args>
-		void messageRegister(const char* const name);
+		void messageRegisterId(const char* const name);
 
 		template<typename... Args, typename Functor>
-		void messageRequest(ComponentId cId, const char* const message, Functor&& func, float prio = 0);
-		void messageUnrequest(ComponentId cId, const char* const message);
+		void messageRequestId(ComponentId cId, const char* const message, Functor&& func, float prio = 0);
+		void messageUnrequestId(ComponentId cId, const char* const message);
 
-		void messageReprioritize(ComponentId cId, const char* const message, float prio);
+		void messageReprioritizeId(ComponentId cId, const char* const message, float prio);
 
 		template<typename... Args>
-		void messageSend(const char* const message, Args... args) const;
+		void messageSendId(const char* const message, Args... args) const;
 		template<typename... Args>
-		void messageSendTo(const char* const message, ComponentId cId, Args... args) const;
+		void messageSendIdTo(const char* const message, ComponentId cId, Args... args) const;
 
 		template<typename... Args>
 		void messageRegister(MessageId mId);

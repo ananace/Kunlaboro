@@ -24,6 +24,7 @@ TODO
 - ~~High level, acceptable performance, message passing system.~~
   - ~~Messages indexed by hashed string values (32/64-bit).~~
   - Message passing done in an RPC-like way.
+  - Global/Local message requests.
 - Functions for shrinking arrays, collecting garbage.
   - Clear unused bitfield slots, reduce size on bit removal.
   - Run garbage collection on memory pools, on user request.

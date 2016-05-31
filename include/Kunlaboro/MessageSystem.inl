@@ -7,7 +7,7 @@
 namespace Kunlaboro
 {
 	template<typename... Args>
-	inline void MessageSystem::messageRegister(const char* const name)
+	inline void MessageSystem::messageRegisterId(const char* const name)
 	{
 		auto mId = BaseMessageType::Hash(name);
 		messageRegister<Args...>(mId);
@@ -18,29 +18,29 @@ namespace Kunlaboro
 	}
 
 	template<typename... Args, typename Functor>
-	inline void MessageSystem::messageRequest(ComponentId cId, const char* const message, Functor&& func, float prio)
+	inline void MessageSystem::messageRequestId(ComponentId cId, const char* const message, Functor&& func, float prio)
 	{
 		auto mId = BaseMessageType::Hash(message);
 		messageRequest<Args...>(cId, mId, std::forward<Functor&&>(func), prio);
 	}
-	inline void MessageSystem::messageUnrequest(ComponentId cId, const char* const message)
+	inline void MessageSystem::messageUnrequestId(ComponentId cId, const char* const message)
 	{
 		auto mId = BaseMessageType::Hash(message);
 		messageUnrequest(cId, mId);
 	}
-	inline void MessageSystem::messageReprioritize(ComponentId cId, const char* const message, float prio)
+	inline void MessageSystem::messageReprioritizeId(ComponentId cId, const char* const message, float prio)
 	{
 		auto mId = BaseMessageType::Hash(message);
 		messageReprioritize(cId, mId, prio);
 	}
 	template<typename... Args>
-	inline void MessageSystem::messageSend(const char* const message, Args... args) const
+	inline void MessageSystem::messageSendId(const char* const message, Args... args) const
 	{
 		auto mId = BaseMessageType::Hash(message);
 		messageSend<Args...>(mId, std::forward<Args>(args)...);
 	}
 	template<typename... Args>
-	inline void MessageSystem::messageSendTo(const char* const message, ComponentId cId, Args... args) const
+	inline void MessageSystem::messageSendIdTo(const char* const message, ComponentId cId, Args... args) const
 	{
 		auto mId = BaseMessageType::Hash(message);
 		messageSendto<Args...>(mId, cId, std::forward<Args>(args)...);

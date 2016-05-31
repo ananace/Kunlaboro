@@ -58,12 +58,12 @@ TEST_CASE("entity creation", "[entity]")
 TEST_CASE("Message passing", "[entity][message]")
 {
 	Kunlaboro::EntitySystem es;
-	es.getMessageSystem().messageRegister<int>("SetData");
+	es.getMessageSystem().messageRegisterId<int>("SetData");
 
 	auto ent = es.entityCreate();
 	ent.addComponent<MessagingTestComponent>(42);
 
-	es.getMessageSystem().messageSend("SetData", 5);
+	es.getMessageSystem().messageSendId("SetData", 5);
 
 	auto comp = ent.getComponent<MessagingTestComponent>();
 	REQUIRE(comp->getData() == 5);
