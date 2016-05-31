@@ -24,7 +24,7 @@ build:
 
 test_script:
     - ps: |
-        & 'tests\($env:configuration)\testsuite.exe' -r junit > testresult.xml
+        & "tests\($env:configuration)\testsuite.exe" -r junit > testresult.xml
         $url = "https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)"
         $file = "testresult.xml"
         (New-Object 'System.Net.WebClient').UploadFile($url, (Resolve-Path $file))
