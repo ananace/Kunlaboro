@@ -52,11 +52,14 @@ namespace Kunlaboro
 		component.RefCount->store(0);
 
 		pool->setBit(index);
-		new(pool->getData(index)) T(std::forward<Args>(args)...);
 		auto* comp = static_cast<T*>(pool->getData(index));
 
+		auto id = ComponentId(index, component.Generation, family);
+
 		comp->mES = this;
-		comp->mId = ComponentId(index, component.Generation, family);
+		comp->mId = id;
+
+		new(pool->getData(index)) T(std::forward<Args>(args)...);
 
 		// TODO: Move more of this out of header
 		// if (mEventSystem)

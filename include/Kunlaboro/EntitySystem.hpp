@@ -27,6 +27,18 @@ namespace Kunlaboro
 	class EntitySystem
 	{
 	public:
+		struct ComponentAttachedEvent
+		{
+			ComponentId Component;
+			EntityId Entity;
+			EntitySystem* ES;
+		};
+		struct ComponentDetachedEvent
+		{
+			ComponentId Component;
+			EntityId Entity;
+			EntitySystem* ES;
+		};
 		struct ComponentCreatedEvent
 		{
 			ComponentId Component;

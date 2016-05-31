@@ -22,6 +22,9 @@ void EventSystem::eventUnregisterAll(ComponentId cId)
 		});
 
 		if (it != kv.second.cend())
+		{
+			delete *it;
 			kv.second.erase(it);
+		}
 	}
 }

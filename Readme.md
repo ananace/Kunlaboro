@@ -21,8 +21,8 @@ TODO
 - ~~Low level, high performance, event system.~~
   - ~~Events indexed by POD structs containing event data.~~
   - ~~Fast iteration and calling of registered events.~~
-- High level, acceptable performance, message passing system.
-  - Messages indexed by hashed string values (32/64-bit).
+- ~~High level, acceptable performance, message passing system.~~
+  - ~~Messages indexed by hashed string values (32/64-bit).~~
   - Message passing done in an RPC-like way.
 - Functions for shrinking arrays, collecting garbage.
   - Clear unused bitfield slots, reduce size on bit removal.

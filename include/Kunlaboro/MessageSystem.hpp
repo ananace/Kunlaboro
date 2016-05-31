@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ID.hpp"
 #include "Message.hpp"
 
 #include <unordered_map>
@@ -19,7 +20,37 @@ namespace Kunlaboro
 
 		MessageSystem& operator=(const MessageSystem&) = delete;
 
+		template<typename... Args>
+		void messageRegister(const char* const name);
 
+		template<typename... Args, typename Functor>
+		void messageRequest(ComponentId cId, const char* const message, Functor&& func, float prio = 0);
+		void messageUnrequest(ComponentId cId, const char* const message);
+
+		void messageReprioritize(ComponentId cId, const char* const message, float prio);
+
+		template<typename... Args>
+		void messageSend(const char* const message, Args... args) const;
+		template<typename... Args>
+		void messageSendTo(const char* const message, ComponentId cId, Args... args) const;
+
+		template<typename... Args>
+		void messageRegister(MessageId mId);
+
+		template<typename... Args, typename Functor>
+		void messageRequest(ComponentId cId, MessageId mId, Functor&& func, float prio = 0);
+		void messageUnrequest(ComponentId cId, MessageId mId);
+
+		void messageReprioritize(ComponentId cId, MessageId mId, float prio);
+
+		template<typename... Args>
+		void messageSend(MessageId mId, Args... args) const;
+		template<typename... Args>
+		void messageSendTo(MessageId mId, ComponentId cId, Args... args) const;
+		// template<typename... Args>
+		// void messageSendTo(MessageId mId, EntityId eId, Args... args) const;
+
+		void messageUnrequestAll(ComponentId cId);
 
 	private:
 		MessageSystem(EntitySystem* es);
@@ -28,37 +59,39 @@ namespace Kunlaboro
 
 		EntitySystem* mES;
 
+		struct BaseMessageCallback
+		{
+			BaseMessageCallback(ComponentId cId, float p)
+				: Component(cId)
+				, Priority(p)
+			{ }
+
+			ComponentId Component;
+			float Priority;
+
+			inline bool operator<(const BaseMessageCallback& cb) const
+			{
+				return Priority < cb.Priority;
+			}
+		};
+		template<typename... Args>
+		struct MessageCallback : public BaseMessageCallback
+		{
+			MessageCallback(ComponentId cId, float p, std::function<void(Args...)>&& func)
+				: BaseMessageCallback(cId, p)
+				, Func(func)
+			{ }
+
+			std::function<void(Args...)> Func;
+		};
+
 		struct MessageData
 		{
-#ifdef _DEBUG
-			std::string Name;
-#endif
-			std::deque<BaseMessage*> Callbacks;
+			BaseMessageType* Type;
+
+			std::deque<BaseMessageCallback*> Callbacks;
 		};
-		std::unordered_map<uint32_t, MessageData> mMessages;
+		std::unordered_map<MessageId, MessageData> mMessages;
 	};
-/*
-	class MessagingComponent : public Component
-	{
-	public:
 
-	protected:
-		virtual void addedToEntity() = 0;
-
-		template<typename... Args>
-		void requestMessage(uint32_t id, const std::function<void(Args...)>& func, float prio = 0);
-		void unrequestMessage(uint32_t id);
-		void reprioritizeMessage(uint32_t id, float prio);
-
-		template<typename... Args>
-		void sendMessage(uint32_t id, Args... args);
-		template<typename... Args>
-		void sendMessageTo(EntityId ent, uint32_t id, Args... args);
-		template<typename... Args>
-		void sendMessageTo(ComponentId comp, uint32_t id, Args... args);
-
-	private:
-		MessageSystem* mMS;
-	};
-*/
 }

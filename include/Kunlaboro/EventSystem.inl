@@ -1,3 +1,5 @@
+#pragma once
+
 #include "EventSystem.hpp"
 
 #include <algorithm>
@@ -68,7 +70,10 @@ namespace Kunlaboro
 		});
 
 		if (it != list.cend())
+		{
+			delete *it;
 			list.erase(it);
+		}
 	}
 	template<typename Event>
 	void EventSystem::eventUnregister(std::size_t id)
@@ -80,7 +85,10 @@ namespace Kunlaboro
 		});
 
 		if (it != list.cend())
+		{
+			delete *it;
 			list.erase(it);
+		}
 	}
 	template<typename Event>
 	void EventSystem::eventEmit(const Event& toSend) const

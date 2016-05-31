@@ -140,6 +140,11 @@ void EntitySystem::componentDestroy(ComponentId id)
 		++eid;
 	}
 
+	if (mEventSystem)
+		mEventSystem->eventUnregisterAll(id);
+	if (mMessageSystem)
+		mMessageSystem->messageUnrequestAll(id);
+
 	data.MemoryPool->destroy(id.getIndex());
 	data.MemoryPool->resetBit(id.getIndex());
 	auto& comp = data.Components[id.getIndex()];
@@ -201,6 +206,9 @@ void EntitySystem::componentAttach(ComponentId cid, EntityId eid, bool checkDeta
 
 	entity.ComponentBits.setBit(cid.getFamily());
 	entity.Components[cid.getFamily()] = cid;
+
+	if (mEventSystem)
+		mEventSystem->eventEmit<ComponentAttachedEvent>(cid, eid, this);
 }
 void EntitySystem::componentDetach(ComponentId cid, EntityId eid)
 {
@@ -217,6 +225,9 @@ void EntitySystem::componentDetach(ComponentId cid, EntityId eid)
 
 	entity.ComponentBits.clearBit(cid.getFamily());
 	entity.Components[cid.getFamily()] = ComponentId::Invalid();
+
+	if (mEventSystem)
+		mEventSystem->eventEmit<ComponentDetachedEvent>(cid, eid, this);
 
 	comp.release();
 }

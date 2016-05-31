@@ -6,7 +6,6 @@ using namespace Kunlaboro;
 
 Entity::Entity()
 	: mES(nullptr)
-	, mId()
 {
 
 }
