@@ -24,39 +24,80 @@ namespace Kunlaboro
 	class EventSystem;
 	class MessageSystem;
 
+	/** An entity system
+	 */
 	class EntitySystem
 	{
 	public:
+		/** This event is emitted every time a component is attached to an entity.
+		 */
 		struct ComponentAttachedEvent
 		{
+			/// The ID of the component that was attached.
 			ComponentId Component;
+			/// The ID of the entity it was attached to.
 			EntityId Entity;
+			/// The entity system from where the event originates.
 			EntitySystem* ES;
 		};
+		/** This event is emitted every time a component is detached from an entity.
+		 *
+		 * \note When this event is emitted, the component is already dangling
+		 *       and may even be destroyed.
+		 */
 		struct ComponentDetachedEvent
 		{
+			/// The ID of the component that was detached.
 			ComponentId Component;
+			/// The ID of the entity it was detached from.
 			EntityId Entity;
+			/// The entity system from where the event originates.
 			EntitySystem* ES;
 		};
+		/** This event is emitted every time a component is created.
+		 *
+		 * \note Attaching too many listeners to this event might lead
+		 *       to a performance hit in component creation.
+		 */
 		struct ComponentCreatedEvent
 		{
+			/// The ID of the component that was created.
 			ComponentId Component;
+			/// The entity system from where the event originates.
 			EntitySystem* ES;
 		};
+		/** This event is emitted every time a component is destroyed.
+		 *
+		 * \note This event is emitted after the component is destroyed,
+		 *       the destructor has already been called and all references
+		 *       released.
+		 *
+		 * \note Attaching too many listeners to this event might lead
+		 *       to decreased component performance.
+		 */
 		struct ComponentDestroyedEvent
 		{
+			/// The ID of the component that was destroyed.
 			ComponentId Component;
+			/// The entity system from where the event originates.
 			EntitySystem* ES;
 		};
+		/** This event is emitted every time an entity is created.
+		 */
 		struct EntityCreatedEvent
 		{
+			/// The ID of the entity that was created.
 			EntityId Entity;
+			/// The entity system from where the event originates.
 			EntitySystem* ES;
 		};
+		/** This event is emitted every time an entity is destroyed.
+		 */
 		struct EntityDestroyedEvent
 		{
+			/// The ID of the entity that was destroyed.
 			EntityId Entity;
+			/// The entity system from where the event originates.
 			EntitySystem* ES;
 		};
 
@@ -70,8 +111,24 @@ namespace Kunlaboro
 		// void setEmitEvents(bool emit = true);
 		// bool getEmitEvents() const;
 
+		/** Gets a handle to the given component ID.
+		 *
+		 * \tparam T The type of the component.
+		 * \param id The ID of the component.
+		 *
+		 * \note This method can return an invalid handle if the
+		 *       component doesn't exist or has been destroyed.
+		 */
 		template<typename T>
 		ComponentHandle<T> getComponent(ComponentId id) const;
+		/** Gets a generic handle to the given component ID.
+		 *
+		 * \param id The ID of the component.
+		 *
+		 * \note This method holds no performance benefits to the
+		 *       specialized method.
+		 * \sa getComponent<T>(ComponentId) const
+		 */
 		ComponentHandle<Component> getComponent(ComponentId id) const;
 		Entity getEntity(EntityId id) const;
 
@@ -79,7 +136,7 @@ namespace Kunlaboro
 		void entityDestroy(EntityId id);
 		bool entityAlive(EntityId id) const;
 		template<typename T>
-		ComponentHandle<T> entityGetComponent(ComponentId::FamilyType family, EntityId eid) const;
+		ComponentHandle<T> entityGetComponent(EntityId eid) const;
 		ComponentHandle<Component> entityGetComponent(ComponentId::FamilyType family, EntityId eid) const;
 		bool entityHasComponent(ComponentId::FamilyType family, EntityId eid) const;
 

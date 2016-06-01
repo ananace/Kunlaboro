@@ -15,9 +15,9 @@ namespace Kunlaboro
 	}
 
 	template<typename T>
-	ComponentHandle<T> EntitySystem::entityGetComponent(ComponentId::FamilyType family, EntityId eid) const
+	ComponentHandle<T> EntitySystem::entityGetComponent(EntityId eid) const
 	{
-		return static_cast<ComponentHandle<T>>(entityGetComponent(family, eid));
+		return static_cast<ComponentHandle<T>>(entityGetComponent(Kunlaboro::ComponentFamily<T>::getFamily(), eid));
 	}
 
 	template<typename T, typename... Args>

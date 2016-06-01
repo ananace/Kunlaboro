@@ -42,7 +42,7 @@ namespace Kunlaboro
 		explicit operator EntityId() const;
 		/** Checks if the entity is valid.
 		 *
-		 * \sa isValid()const
+		 * \sa isValid() const
 		 */
 		operator bool() const;
 
@@ -50,45 +50,95 @@ namespace Kunlaboro
 		 */
 		const EntityId& getId() const;
 		/** Checks that the entity is valid.
+		 *
+		 * \sa EntitySystem::entityAlive()
 		 */
 		bool isValid() const;
 
 		/** Adds a component to the entity.
 		 *
+		 * This method is functionally identical to the following block of code;
+		 * \code{.cpp}
+		 * auto componentId = EntitySystem.componentCreate<T>(Args...);
+		 * EntitySystem.componentAttach(entityId, componentId);
+		 * \endcode
+		 *
 		 * \tparam T The component type to add to the entity.
 		 * \tparam Args The constructor arguments to create the component with.
+		 *
+		 * \sa EntitySystem::componentCreate()
+		 * \sa EntitySystem::componentAttach()
 		 */
 		template<typename T, typename... Args>
 		void addComponent(Args...);
 		/** Adds or replaces a component in the entity
 		 *
+		 * Difference between this and \a addComponent is that this method
+		 * will destroy any existing component of the given type, before
+		 * creating a new one from the given arguments.
+		 *
 		 * \tparam T The component type to add/replace in the entity.
 		 * \tparam Args The constructor arguments to create the component with.
+		 *
+		 * \sa EntitySystem::entityHasComponent()
+		 * \sa EntitySystem::componentDetach()
+		 * \sa EntitySystem::componentCreate()
+		 * \sa EntitySystem::componentAttach()
 		 */
 		template<typename T, typename... Args>
 		void replaceComponent(Args...);
 		/** Removes a component from the entity.
 		 *
+		 * This method is functionally identical to the following block of code;
+		 * \code{.cpp}
+		 * auto componentId = EntitySystem.entityGetComponent<T>(entityId);
+		 * EntitySystem.componentDetach(componentId, entityId);
+		 * \endcode
+		 *
 		 * \tparam T The component type to remove.
+		 *
+		 * \sa EntitySystem::componentDetach()
 		 */
 		template<typename T>
 		void removeComponent();
 		/** Checks if the entity contains a component of the given type.
 		 *
+		 * This method is functionally identical to the following block of code;
+		 * \code{.cpp}
+		 * return EntitySystem.entityHasComponent(ComponentFamily<T>::getFamily());
+		 * \endcode
+		 *
 		 * \tparam T The component type to check for.
+		 *
+		 * \sa EntitySystem::entityHasComponent()
 		 */
 		template<typename T>
 		bool hasComponent() const;
 		/** Gets a handle to a component of the given type.
 		 *
+		 * This method is functionally identical to the following block of code;
+		 * \code{.cpp}
+		 * return EntitySystem.entityGetComponent<T>(entityId);
+		 * \endcode
+		 *
 		 * \tparam T The component type to get.
 		 * \note Always check the validity of the handle before using it,
 		 *       as the entity might not contain a component of the wanted type.
+		 *
+		 * \sa EntitySystem::entityGetComponent()
+		 * \sa EntitySystem::getComponent()
 		 */
 		template<typename T>
 		ComponentHandle<T> getComponent() const;
 
 		/** Destroys the entity.
+		 *
+		 * This method is functionally identical to the following block of code;
+		 * \code{.cpp}
+		 * EntitySystem.entityDestroy(entityId);
+		 * \endcode
+		 *
+		 * \sa EntitySystem::entityDestroy()
 		 */
 		void destroy();
 
