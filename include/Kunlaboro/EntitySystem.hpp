@@ -130,30 +130,131 @@ namespace Kunlaboro
 		 * \sa getComponent<T>(ComponentId) const
 		 */
 		ComponentHandle<Component> getComponent(ComponentId id) const;
+		/** Gets a reference to the entity with the given ID.
+		 *
+		 * \param id The ID of the entity.
+		 */
 		Entity getEntity(EntityId id) const;
 
+		/** Creates a new entity.
+		 *
+		 * \returns A reference to the newly created entity.
+		 */
 		Entity entityCreate();
+		/** Destroys an entity with the given ID.
+		 *
+		 * \param id The ID of the entity to destroy.
+		 * \note This method will not do anything when given invalid IDs.
+		 */
 		void entityDestroy(EntityId id);
+		/** Checks if the given entity ID is alive.
+		 *
+		 * This method will validate that an entity with the given ID
+		 * exists and hasn't been destroyed.
+		 */
 		bool entityAlive(EntityId id) const;
+		/** Gets a handle to a component of the given type in an entity.
+		 *
+		 * \tparam T The type of the component to find.
+		 * \param eid The ID of the entity to look in.
+		 *
+		 * \sa Entity::getComponent()
+		 */
 		template<typename T>
 		ComponentHandle<T> entityGetComponent(EntityId eid) const;
+		/** Gets a generic handle to a component of the given type in an entity.
+		*
+		* \param family The family ID of the component to look for.
+		* \param eid The ID of the entity to look in.
+		*
+		* \sa ComponentFamily::getFamily()
+		* \sa Entity::getComponent()
+		*/
 		ComponentHandle<Component> entityGetComponent(ComponentId::FamilyType family, EntityId eid) const;
+		/** Checks if an entity contains a component of the given type.
+		 *
+		 * \param family The component family ID to look for.
+		 * \param eid The ID of the entity to look in.
+		 *
+		 * \sa ComponentFamily::getFamily()
+		 * \sa Entity::hasComponent()
+		 */
 		bool entityHasComponent(ComponentId::FamilyType family, EntityId eid) const;
 
+		/** Creates a component and returns a handle to it.
+		 *
+		 * \tparam T The type of component to create.
+		 * \param args The arguments to pass to the constructor of the component.
+		 */
 		template<typename T, typename... Args>
-		ComponentHandle<T> componentCreate(Args...);
-		void componentDestroy(ComponentId);
-		bool componentAlive(ComponentId) const;
+		ComponentHandle<T> componentCreate(Args... args);
+		/** Destroys the component with the given ID.
+		 *
+		 * \param cid The ID of the component to destroy.
+		 * \note When given an invalid ID, this method does nothing.
+		 */
+		void componentDestroy(ComponentId cid);
+		/** Checks if the given component ID is alive.
+		 *
+		 * \param cid The ID of the component to check.
+		 */
+		bool componentAlive(ComponentId cid) const;
 
+		/** Checks if the given component ID is attached to the given entity ID.
+		 *
+		 * \param cid The ID of the component to check.
+		 * \param eid The ID of the entity to look in.
+		 */
 		bool componentAttached(ComponentId cid, EntityId eid) const;
+		/** Attaches the component with the given ID to the given entity ID.
+		 *
+		 * \param cid The ID of the component to attach.
+		 * \param eid The ID of the entity to attach it to.
+		 * \param checkDetach
+		 * \parblock
+		 * Should the entity system check and detach any already
+		 * existing components that might conflict.
+		 *
+		 * This sanity check takes a while to run, so it might be
+		 * desired to skip it when collisions are guaranteed not to occur.
+		 * \endparblock
+		 */
 		void componentAttach(ComponentId cid, EntityId eid, bool checkDetach = true);
+		/** Detaches the component with the given ID from the given entity ID.
+		 *
+		 * \param cid The ID of the component to detach.
+		 * \param eid The ID of the entity to detach it from.
+		 *
+		 * \note If the entity is the only thing keeping a handle to the component
+		 *       then this method might result in the component being destroyed.
+		 */
 		void componentDetach(ComponentId cid, EntityId eid);
-		
+
+		/** Gets the ID of the entity that the given component ID is attached to.
+		 *
+		 * \param cid The ID of the component to check.
+		 * \note This method is O(n) on number of entities,
+		 *       so caching the return value is recommended.
+		 */
 		EntityId componentGetEntity(ComponentId cid) const;
 
+		/** Gets or creates the EventSystem.
+		 */
 		EventSystem& getEventSystem();
+		/** Gets a reference to the EventSystem.
+		 *
+		 * \warning This method will null-reference if an EventSystem
+		 *          has not been created beforehand.
+		 */
 		const EventSystem& getEventSystem() const;
+		/** Gets or creates the MessageSystem.
+		 */
 		MessageSystem& getMessageSystem();
+		/** Gets a reference to the MessageSystem.
+		 *
+		 * \warning This method will null-reference if a MessageSystem
+		 *          has not been created beforehand.
+		 */
 		const MessageSystem& getMessageSystem() const;
 
 	public:
