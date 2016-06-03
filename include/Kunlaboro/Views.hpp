@@ -23,6 +23,7 @@ namespace Kunlaboro
 
 	namespace impl
 	{
+
 		template<typename ViewType, typename ViewedType>
 		class BaseView
 		{
@@ -32,10 +33,26 @@ namespace Kunlaboro
 
 			virtual ~BaseView();
 
+			/** Enables or disables parallel view iteration.
+			 *
+			 * \param parallell Should the view be iterated in parallel or sequentially.
+			 */
 			ViewType parallel(bool parallell = true) const;
+			/** Sets the view to iterate in parallel, using the given job queue.
+			 *
+			 * \param queue The job queue to use for the iteration.
+			 */
 			ViewType parallel(detail::JobQueue& queue) const;
 
+			/** Limits the view to values matching the given predicate function.
+			 *
+			 * \param pred The predicate to match.
+			 */
 			ViewType where(const Predicate& pred) const;
+			/** Calls a given function with all the matching entries.
+			 *
+			 * \param func The function to call.
+			 */
 			virtual void forEach(const Function& func) = 0;
 
 			const EntitySystem& getEntitySystem() const;
@@ -85,6 +102,9 @@ namespace Kunlaboro
 		bool matchBitfield(const detail::DynamicBitfield& entity, const detail::DynamicBitfield& bitField, MatchType match);
 	}
 
+	/** A view for iterating components in an entity system.
+	 *
+	 */
 	template<typename T>
 	class ComponentView : public impl::BaseView<ComponentView<T>, T>
 	{
@@ -93,7 +113,9 @@ namespace Kunlaboro
 
 		ComponentView(const EntitySystem& es);
 
+		/// The predicate function type.
 		typedef std::function<bool(const T&)> Predicate;
+		/// The function-call function type.
 		typedef std::function<void(T&)> Function;
 
 		struct Iterator : public impl::BaseIterator<Iterator, T>
@@ -126,6 +148,8 @@ namespace Kunlaboro
 	template<MatchType MT, typename... Components>
 	class TypedEntityView;
 
+	/** A view for iterating entities in the given entity system.
+	 */
 	class EntityView : public impl::BaseView<EntityView, Entity>
 	{
 	public:
@@ -157,12 +181,22 @@ namespace Kunlaboro
 		Iterator begin();
 		Iterator end();
 
+		/** Limits the entities to those with matching components.
+		 *
+		 * \tparam match The method for matching the components, can be either \p Match_Any or \p Match_All
+		 * \tparam Components The components to match on the entities.
+		 */
 		template<MatchType match = Match_All, typename... Components>
 		TypedEntityView<match, Components...> withComponents() const;
 
 		virtual void forEach(const Function& func);
 	};
 
+	/** A view for iterating entities with given components in the given entity system.
+	 *
+	 * \tparam MT The method for matching the given components, can be either \p Match_Any or \p Match_All
+	 * \tparam Components The component contained in the iterated entities.
+	 */
 	template<MatchType MT, typename... Components>
 	class TypedEntityView : public impl::BaseView<TypedEntityView<MT, Components...>, Entity>
 	{
@@ -179,7 +213,15 @@ namespace Kunlaboro
 		Iterator begin();
 		Iterator end();
 
+		/** Iterates all entities, using either \p Match_Any or \p Match_All matching.
+		 *
+		 * \param func The function to call with every matching entity and its component pointers.
+		 */
 		void forEach(const typename ident<std::function<void(Entity&, Components*...)>>::type& func);
+		/** Iterates all entities, using \p Match_All matching.
+		 *
+		 * \param func The function to call with every matching entity and its component references.
+		 */
 		void forEach(const typename ident<std::function<void(Entity&, Components&...)>>::type& func);
 
 		virtual void forEach(const Function& func);
