@@ -41,7 +41,6 @@ namespace Kunlaboro
 	template<typename T>
 	ComponentHandle<T> Entity::getComponent() const
 	{
-		auto gen = ComponentFamily<T>::getFamily();
-		return mES->entityGetComponent<T>(gen, mId);;
+		return mES->entityGetComponent<T>(mId);;
 	}
 }
