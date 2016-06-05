@@ -57,7 +57,8 @@ namespace Kunlaboro
 		);
 
 #ifdef _DEBUG
-		mMessages[mId].Type->Name = name;
+		if (name)
+			mMessages[mId].Type->Name = name;
 #endif
 	}
 

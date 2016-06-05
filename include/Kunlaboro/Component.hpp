@@ -16,7 +16,34 @@ namespace Kunlaboro
 		static ComponentId::FamilyType sFamilyCounter;
 	};
 
-	/** A Kunlaboro Component.
+	/** The Kunlaboro Component base class.
+	 *
+	 * This is the base class that needs to be used when registering
+	 * component types for use in the Kunlaboro entity system.
+	 *
+	 * Simple example dealing with a cooldown for a trigger;
+	 * \code{.cpp}
+	 * class CooldownComponent : public Kunlaboro::Component
+	 * {
+	 * public:
+	 * 	CooldownComponent(float time)
+	 * 		: Time(time)
+	 * 	{ }
+	 *
+	 * 	void update(float dt)
+	 * 	{
+	 * 		Time -= dt;
+	 *
+	 * 		if (Time > 0)
+	 * 			return;
+	 *
+	 * 		getEntitySystem()->componentDestroy(getId());
+	 * 	}
+	 *
+	 * 	// Time remaining on the cooldown
+	 * 	float Time;
+	 * };
+	 * \endcode
 	 *
 	 * \todo Look into reducing the base memory footprint.
 	 */
@@ -25,25 +52,53 @@ namespace Kunlaboro
 	public:
 		enum
 		{
-			/** The preferred component count per pool block.
-			 * 
-			 * Larger values mean bigger memory blocks in allocation.
-			 * but faster iteration of the memory.
-			 */ 
+			/** The preferred component count per block of pool memory.
+			 *
+			 * \note Larger values mean bigger memory blocks per allocation,
+			 *       reducing number of allocations needed for large amounts
+			 *       of components.
+			 */
 			sPreferredChunkSize = 256
 		};
 
 		virtual ~Component() = default;
 
+		/** Gets the ID of the component.
+		 *
+		 * On creation each component is given an identifier based on its
+		 * type, index, and generation of that index. This is guaranteed to
+		 * be unique in most cases, while still favouring lower indexes and
+		 * therefore faster memory lookups.
+		 *
+		 * \note
+		 * This identifier may no longer be unique after ComponentId::sMaxGeneration
+		 * of generations have passed.
+		 */
 		const ComponentId& getId() const;
+		/** Gets the ID of the entity containing the component.
+		 *
+		 * Each component can only be held by a single entity at a time,
+		 * so this is guaranteed to be either a valid entity or EntityId::Invalid()
+		 *
+		 * \note This function will require iterating the entity table,
+		 *       so performance is O(n) on number of existing entities.
+		 *       Recommended is to cache the resulting value if it's to
+		 *       be used repeatedly.
+		 */
 		EntityId getEntityId() const;
 
+		/// Gets the pointer to the entity system that owns the component.
 		EntitySystem* getEntitySystem();
+		/// Gets a const pointer to the entity system that owns the component.
 		const EntitySystem* getEntitySystem() const;
 
 	private:
 		friend class EntitySystem;
 
+		/** The pointer to the EntitySystem that owns the component.
+		 *
+		 * \note This might be removed in order to reduce component footprint.
+		 */
 		EntitySystem* mES;
 		ComponentId mId;
 	};
@@ -58,6 +113,12 @@ namespace Kunlaboro
 	public:
 		static_assert(std::is_base_of<Component, T>::value, "Only components have families");
 
+		/** Retrieves the ID of the requested component family.
+		 *
+		 * \note This is backed by an incrementing global counter for now,
+		 *       which might lead to issues when using several separate
+		 *       entity systems in the same application.
+		 */
 		static const ComponentId::FamilyType getFamily()
 		{
 			static ComponentId::FamilyType sFamily = sFamilyCounter++;
@@ -66,8 +127,6 @@ namespace Kunlaboro
 		}
 	};
 
-	/** Abstract base class for a component handle.
-	 */
 	class BaseComponentHandle
 	{
 	public:
@@ -102,8 +161,6 @@ namespace Kunlaboro
 		void unlink();
 
 		/** Adds a reference to the counter.
-		 *
-		 * 
 		 */
 		void addRef();
 		/** Explicitly releases the component reference.

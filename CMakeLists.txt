@@ -31,7 +31,7 @@ endif()
 set(Kunlaboro_HEADERS
 	include/Kunlaboro/Component.hpp
 	include/Kunlaboro/Component.inl
-    include/Kunlaboro/Config.hpp
+	include/Kunlaboro/Config.hpp
 	include/Kunlaboro/Entity.hpp
 	include/Kunlaboro/Entity.inl
 	include/Kunlaboro/EntitySystem.hpp
@@ -83,7 +83,11 @@ if (WIN32 OR CYGWIN OR APPLE OR WITH_PIC OR DISABLE_SHARED OR NOT CMAKE_SHARED_L
 endif()
 
 if (NOT _SKIP_PIC)
-  set_target_properties(Kunlaboro PROPERTIES COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}")
+	set_target_properties(Kunlaboro PROPERTIES COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}")
+
+	if (Kunlaboro_BUILD_TESTS)
+		set_target_properties(testsuite PROPERTIES COMPILE_FLAGS "${CMAKE_SHARED_LIBRARY_C_FLAGS}")
+	endif()
 endif()
 
 include_directories(
