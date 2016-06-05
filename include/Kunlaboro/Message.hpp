@@ -31,10 +31,21 @@ namespace Kunlaboro
 		template<typename S>
 		struct hash_func : public hash_internal<S>
 		{
+			/** Hash a C-string using the Fowler-Null-Vo hashing method.
+			 *
+			 * \param string The string to hash
+			 * \param val The default FNV offset
+			 */
 			constexpr static inline S hash(const char* const string, const S val = hash_internal<S>::default_offset)
 			{
 				return (string[0] == 0) ? val : hash(string + 1, (val * hash_internal<S>::prime) ^ S(string[0]));
 			}
+			/** Hash a fixed-length string using the Fowler-Null-Vo hashing method.
+			 *
+			 * \param string The string to hash
+			 * \param strlen The length of the string to hash
+			 * \param val The default FNV offset
+			 */
 			static inline S hashF(const char* const string, const size_t strlen, const S val = hash_internal<S>::default_offset)
 			{
 				return (strlen == 0) ? val : hashF(string + 1, strlen - 1, (val * hash_internal<S>::prime) ^ S(string[0]));

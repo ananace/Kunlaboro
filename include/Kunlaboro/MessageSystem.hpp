@@ -11,6 +11,11 @@ namespace Kunlaboro
 
 	class EntitySystem;
 
+	/** Message passing system
+	 *
+	 * \note Uses hashed strings as message IDs
+	 * \todo Do collision testing on debug builds
+	 */
 	class MessageSystem
 	{
 	public:
