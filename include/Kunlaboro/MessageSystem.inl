@@ -47,7 +47,7 @@ namespace Kunlaboro
 	}
 
 	template<typename... Args>
-	inline void MessageSystem::messageRegister(MessageId mId)
+	inline void MessageSystem::messageRegister(MessageId mId, const char* const name)
 	{
 		if (mMessages.count(mId) > 0)
 			return;
@@ -55,6 +55,10 @@ namespace Kunlaboro
 		mMessages[mId].Type = new MessageType<Args...>(
 			mId
 		);
+
+#ifdef _DEBUG
+		mMessages[mId].Type->Name = name;
+#endif
 	}
 
 	template<typename... Args, typename Functor>
