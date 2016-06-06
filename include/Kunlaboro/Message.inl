@@ -55,20 +55,20 @@ namespace Kunlaboro
 	template<typename... Args, typename Functor>
 	void MessagingComponent::requestMessageId(const char* const id, Functor&& func, float prio)
 	{
-		requestMessage(BaseMessageType::Hash(id), func, prio);
+		requestMessage(MessageSystem::hash(id), func, prio);
 	}
 	template<typename... Args, typename Obj>
 	void MessagingComponent::requestMessageId(const char* const id, void (Obj::*func)(Args...), float prio)
 	{
-		requestMessage(BaseMessageType::Hash(id), func, prio);
+		requestMessage(MessageSystem::hash(id), func, prio);
 	}
 	void MessagingComponent::unrequestMessageId(const char* const id)
 	{
-		unrequestMessage(BaseMessageType::Hash(id));
+		unrequestMessage(MessageSystem::hash(id));
 	}
 	void MessagingComponent::reprioritizeMessageId(const char* const id, float prio)
 	{
-		reprioritizeMessage(BaseMessageType::Hash(id), prio);
+		reprioritizeMessage(MessageSystem::hash(id), prio);
 	}
 
 	template<typename... Args>

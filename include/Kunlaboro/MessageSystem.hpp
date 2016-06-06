@@ -19,6 +19,22 @@ namespace Kunlaboro
 	class MessageSystem
 	{
 	public:
+		/** The locality of the message.
+		 *
+		 * This is used to differentiate between global and local
+		 * message requests, as well as ones that should accept
+		 * both global as well as local messages.
+		 */
+		enum MessageLocality : uint8_t
+		{
+			/// The message is only accepted when sent globally.
+			Message_Global = 1 << 0,
+			/// The message is only accepted when sent locally.
+			Message_Local  = 1 << 1,
+			/// Accept both global and local messages.
+			Message_Either = Message_Global | Message_Local
+		};
+
 		MessageSystem(const MessageSystem&) = delete;
 		MessageSystem(MessageSystem&&) = delete;
 		~MessageSystem();
@@ -34,7 +50,7 @@ namespace Kunlaboro
 		 *       to prevent passing messages with invalid arguments.
 		 */
 		template<typename... Args>
-		void messageRegisterId(const char* const name);
+		void messageRegisterId(const char* const name, MessageLocality locality = Message_Either);
 
 		/** Add a request for messages with the given name and arguments.
 		 *
@@ -101,7 +117,7 @@ namespace Kunlaboro
 		 * \param name The name of the message, used for debugging if provided.
 		 */
 		template<typename... Args>
-		void messageRegister(MessageId mId, const char* const name = nullptr);
+		void messageRegister(MessageId mId, const char* const name = nullptr, MessageLocality locality = Message_Either);
 
 		/** Request a message by ID.
 		 *
@@ -164,6 +180,15 @@ namespace Kunlaboro
 		 */
 		void messageUnrequestAll(ComponentId cId);
 
+		inline static constexpr MessageId hash(const char* const msg)
+		{
+			return detail::hash_func<MessageId>::hash(msg);
+		}
+		inline static MessageId hash(const std::string& msg)
+		{
+			return detail::hash_func<MessageId>::hashF(msg.c_str(), msg.size());
+		}
+
 	private:
 		MessageSystem(EntitySystem* es);
 
@@ -197,8 +222,56 @@ namespace Kunlaboro
 			std::function<void(Args...)> Func;
 		};
 
+
+		/** Helper struct for storing registered messages.
+			*
+			*/
+		struct BaseMessageType
+		{
+			BaseMessageType(MessageId mId)
+				: Id(mId)
+			{ }
+
+			/// The ID of the message.
+			MessageId Id;
+#ifdef _DEBUG
+			/// The unhashed name of the message, for Debug-time collision checking.
+			std::string Name;
+#endif
+		};
+
+		template<typename... Args>
+		struct MessageType : public BaseMessageType
+		{
+		private:
+			struct can_call_test
+			{
+				template<typename F>
+				static decltype(std::declval<F>()(std::declval<Args>()...), std::true_type())
+					f(int);
+
+				template<typename F>
+				static std::false_type
+					f(...);
+			};
+
+			template<typename F>
+			using can_call = decltype(can_call_test::template f<F>(0));
+
+		public:
+			/** Checks that the given functor can be called with the message arguments.
+				*/
+			template<typename Functor>
+			static constexpr bool isValid(Functor&&) { return can_call<Functor>{}; }
+
+			MessageType(MessageId mId)
+				: BaseMessageType(mId)
+			{ }
+		};
+
 		struct MessageData
 		{
+			MessageLocality Locality;
 			BaseMessageType* Type;
 
 			std::deque<BaseMessageCallback*> Callbacks;

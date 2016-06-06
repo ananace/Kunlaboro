@@ -7,14 +7,10 @@
 namespace Kunlaboro
 {
 	template<typename... Args>
-	inline void MessageSystem::messageRegisterId(const char* const name)
+	inline void MessageSystem::messageRegisterId(const char* const name, MessageLocality locality)
 	{
 		auto mId = BaseMessageType::Hash(name);
-		messageRegister<Args...>(mId);
-
-#ifdef _DEBUG
-		mMessages[mId].Type->Name = name;
-#endif
+		messageRegister<Args...>(mId, name, locality);
 	}
 
 	template<typename... Args, typename Functor>
@@ -47,18 +43,20 @@ namespace Kunlaboro
 	}
 
 	template<typename... Args>
-	inline void MessageSystem::messageRegister(MessageId mId, const char* const name)
+	inline void MessageSystem::messageRegister(MessageId mId, const char* const name, MessageLocality locality)
 	{
 		if (mMessages.count(mId) > 0)
 			return;
 
-		mMessages[mId].Type = new MessageType<Args...>(
+		auto& message = mMessages[mId];
+		message.Type = new MessageType<Args...>(
 			mId
 		);
+		message.Locality = locality;
 
 #ifdef _DEBUG
 		if (name)
-			mMessages[mId].Type->Name = name;
+			message.Type->Name = name;
 #endif
 	}
 
@@ -125,10 +123,13 @@ namespace Kunlaboro
 			return;
 
 		auto& message = mMessages.at(mId);
-		auto copy = message.Callbacks;
+		if (message.Locality & Message_Global)
+		{
+			auto copy = message.Callbacks;
 
-		for (auto& cb : copy)
-			static_cast<MessageCallback<Args...>*>(cb)->Func(std::forward<Args>(args)...);
+			for (auto& cb : copy)
+				static_cast<MessageCallback<Args...>*>(cb)->Func(std::forward<Args>(args)...);
+		}
 	}
 	template<typename... Args>
 	inline void MessageSystem::messageSendTo(MessageId mId, ComponentId cId, Args... args) const
@@ -137,11 +138,14 @@ namespace Kunlaboro
 			return;
 
 		auto& message = mMessages.at(mId);
-		auto it = std::find_if(message.Callbacks.cbegin(), message.Callbacks.cend(), [cId](const BaseMessageCallback* cb) { return cb->Component == cId; });
+		if (message.Locality & Message_Local)
+		{
+			auto it = std::find_if(message.Callbacks.cbegin(), message.Callbacks.cend(), [cId](const BaseMessageCallback* cb) { return cb->Component == cId; });
 
-		if (it == message.Callbacks.cend())
-			return;
+			if (it == message.Callbacks.cend())
+				return;
 
-		static_cast<MessageCallback<Args...>*>(*it)->Func(std::forward<Args>(args)...);
+			static_cast<MessageCallback<Args...>*>(*it)->Func(std::forward<Args>(args)...);
+		}
 	}
 }
