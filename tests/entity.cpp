@@ -7,16 +7,16 @@
 #include <Kunlaboro/Views.inl>
 #include "catch.hpp"
 
-class MessagingTestComponent : public Kunlaboro::MessagingComponent
+class EntityMessagingTestComponent : public Kunlaboro::MessagingComponent
 {
 public:
-	MessagingTestComponent()
+	EntityMessagingTestComponent()
 		: mData(-1)
 	{
 
 	}
 
-	MessagingTestComponent(int data)
+	EntityMessagingTestComponent(int data)
 		: mData(data)
 	{
 
@@ -24,7 +24,7 @@ public:
 
 	void addedToEntity()
 	{
-		requestMessageId<float>("SetData", &MessagingTestComponent::setData);
+		requestMessageId<float>("SetData", &EntityMessagingTestComponent::setData);
 	}
 
 	int getData() const { return mData; }
@@ -45,12 +45,12 @@ TEST_CASE("entity creation", "[entity]")
 	es.getEventSystem().eventRegister<Kunlaboro::EntitySystem::EntityCreatedEvent>(func);
 
 	auto ent = es.entityCreate();
-	ent.addComponent<MessagingTestComponent>(42);
+	ent.addComponent<EntityMessagingTestComponent>(42);
 
-	REQUIRE(ent.hasComponent<MessagingTestComponent>());
+	REQUIRE(ent.hasComponent<EntityMessagingTestComponent>());
 	REQUIRE(i == 1);
 
-	auto comp = ent.getComponent<MessagingTestComponent>();
+	auto comp = ent.getComponent<EntityMessagingTestComponent>();
 
 	REQUIRE(comp->getData() == 42);
 }
@@ -61,10 +61,10 @@ TEST_CASE("Message passing", "[entity][message]")
 	es.getMessageSystem().messageRegisterId<int>("SetData");
 
 	auto ent = es.entityCreate();
-	ent.addComponent<MessagingTestComponent>(42);
+	ent.addComponent<EntityMessagingTestComponent>(42);
 
 	es.getMessageSystem().messageSendId("SetData", 5);
 
-	auto comp = ent.getComponent<MessagingTestComponent>();
+	auto comp = ent.getComponent<EntityMessagingTestComponent>();
 	REQUIRE(comp->getData() == 5);
 }

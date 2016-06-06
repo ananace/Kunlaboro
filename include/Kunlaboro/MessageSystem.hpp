@@ -224,8 +224,8 @@ namespace Kunlaboro
 
 
 		/** Helper struct for storing registered messages.
-			*
-			*/
+		 *
+		 */
 		struct BaseMessageType
 		{
 			BaseMessageType(MessageId mId)
@@ -260,7 +260,7 @@ namespace Kunlaboro
 
 		public:
 			/** Checks that the given functor can be called with the message arguments.
-				*/
+			 */
 			template<typename Functor>
 			static constexpr bool isValid(Functor&&) { return can_call<Functor>{}; }
 

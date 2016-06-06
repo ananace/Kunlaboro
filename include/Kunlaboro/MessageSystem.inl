@@ -9,36 +9,36 @@ namespace Kunlaboro
 	template<typename... Args>
 	inline void MessageSystem::messageRegisterId(const char* const name, MessageLocality locality)
 	{
-		auto mId = BaseMessageType::Hash(name);
+		auto mId = hash(name);
 		messageRegister<Args...>(mId, name, locality);
 	}
 
 	template<typename... Args, typename Functor>
 	inline void MessageSystem::messageRequestId(ComponentId cId, const char* const message, Functor&& func, float prio)
 	{
-		auto mId = BaseMessageType::Hash(message);
+		auto mId = hash(message);
 		messageRequest<Args...>(cId, mId, std::forward<Functor&&>(func), prio);
 	}
 	inline void MessageSystem::messageUnrequestId(ComponentId cId, const char* const message)
 	{
-		auto mId = BaseMessageType::Hash(message);
+		auto mId = hash(message);
 		messageUnrequest(cId, mId);
 	}
 	inline void MessageSystem::messageReprioritizeId(ComponentId cId, const char* const message, float prio)
 	{
-		auto mId = BaseMessageType::Hash(message);
+		auto mId = hash(message);
 		messageReprioritize(cId, mId, prio);
 	}
 	template<typename... Args>
 	inline void MessageSystem::messageSendId(const char* const message, Args... args) const
 	{
-		auto mId = BaseMessageType::Hash(message);
+		auto mId = hash(message);
 		messageSend<Args...>(mId, std::forward<Args>(args)...);
 	}
 	template<typename... Args>
 	inline void MessageSystem::messageSendIdTo(const char* const message, ComponentId cId, Args... args) const
 	{
-		auto mId = BaseMessageType::Hash(message);
+		auto mId = hash(message);
 		messageSendTo<Args...>(mId, cId, std::forward<Args>(args)...);
 	}
 

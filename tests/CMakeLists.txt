@@ -1,15 +1,13 @@
-SET(SRCROOT "${PROJECT_SOURCE_DIR}/tests")
-
 SET(SRC
-    "${SRCROOT}/main.cpp"
+    main.cpp
 
-    "${SRCROOT}/comprehension.cpp"
-
-    "${SRCROOT}/component.cpp"
-    "${SRCROOT}/entity.cpp"
-    "${SRCROOT}/speed.cpp"
-    "${SRCROOT}/system.cpp"
-    "${SRCROOT}/threading.cpp"
+    component.cpp
+    comprehension.cpp
+    entity.cpp
+    messages.cpp
+    speed.cpp
+    system.cpp
+    threading.cpp
 )
 
 find_package (Threads)
