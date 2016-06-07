@@ -180,10 +180,18 @@ namespace Kunlaboro
 		 */
 		void messageUnrequestAll(ComponentId cId);
 
+		/** Hash a message string into a MessageId at compile time.
+		 *
+		 * \param msg The c-string to hash
+		 */
 		inline static constexpr MessageId hash(const char* const msg)
 		{
 			return detail::hash_func<MessageId>::hash(msg);
 		}
+		/** Hash a message string into a MessageId at runtime.
+		 *
+		 * \param msg The c++ stl string to hash
+		 */
 		inline static MessageId hash(const std::string& msg)
 		{
 			return detail::hash_func<MessageId>::hashF(msg.c_str(), msg.size());
