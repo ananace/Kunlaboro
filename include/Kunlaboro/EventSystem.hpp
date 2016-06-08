@@ -13,6 +13,11 @@ namespace Kunlaboro
 	class EntitySystem;
 
 	/** A low-level event emitting system.
+	 *
+	 * Useful for events where the higher-level message
+	 * passing holds too much overhead.
+	 *
+	 * \todo See if performance can be improved further.
 	 */
 	class EventSystem
 	{
