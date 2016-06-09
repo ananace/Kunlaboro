@@ -16,6 +16,11 @@ namespace Kunlaboro
 	namespace detail
 	{
 
+		/** Threaded job queue.
+		 *
+		 * \todo Improve performance when repeatedly launching and waiting for job groups.
+		 * \todo Look into moving out of API.
+		 */
 		class JobQueue
 		{
 			template<typename T> struct ident { typedef T type; };

@@ -10,7 +10,11 @@ namespace Kunlaboro
 
 	namespace detail
 	{
-		
+
+		/** Acceptable performance memory pool for components
+		 *
+		 * \todo Look into moving out of API, interface possibly?
+		 */
 		class BaseComponentPool
 		{
 		public:

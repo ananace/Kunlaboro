@@ -10,6 +10,10 @@ namespace Kunlaboro
 	namespace detail
 	{
 
+		/** Dynamic size bitfield.
+		 *
+		 * \todo Look into moving out of API.
+		 */
 		class DynamicBitfield
 		{
 		public:
