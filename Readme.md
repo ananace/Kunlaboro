@@ -3,10 +3,9 @@ Kunlaboro [![Build Status](https://travis-ci.org/ace13/Kunlaboro.svg?branch=rewr
 
 [Source](https://github.com/ace13/Kunlaboro) | [Issues](https://github.com/ace13/Kunlaboro/issues) | [Documentation](https://ace13.github.io/Kunlaboro)
 
-So I see you've stumbled upon this little project of mine.
 Kunlaboro - which is esperanto and means *cooperation* - is a C++ Entity-Component System licensed under the MIT license.
 
-Currently undergoing a rewrite to provide a higher performance data-driven approach to components, while still providing a high-level message passing system.
+It is currently undergoing a complete rewrite to hold a higher performance - data-driven - approach to components, while still providing a high-level message passing system.
 
 Requirements
 ------------
@@ -23,8 +22,8 @@ TODO
   - ~~Fast iteration and calling of registered events.~~
 - ~~High level, acceptable performance, message passing system.~~
   - ~~Messages indexed by hashed string values (32/64-bit).~~
-  - Message passing done in an RPC-like way.
-  - Global/Local message requests.
+  - ~~Message passing done in an RPC-like way.~~
+  - ~~Global/Local message requests.~~
 - Functions for shrinking arrays, collecting garbage.
   - Clear unused bitfield slots, reduce size on bit removal.
   - Run garbage collection on memory pools, on user request.
@@ -38,7 +37,7 @@ TODO
 Code Examples
 -------------
 
-3D Particle system;
+3D Particle system; **Note**: Uses true POD components, which is not supported at the moment.
 
 ```c++
 struct Position : public Kunlaboro::Component
