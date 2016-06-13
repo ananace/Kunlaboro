@@ -8,3 +8,15 @@
 #include "Message.inl"
 #include "MessageSystem.inl"
 #include "Views.inl"
+
+/** \mainpage
+ *
+ * \section Kunlaboro Kunlaboro
+ *
+ * \todo Write up information for Doxygen.
+ *       (Possibly use include directive and add readme.md?)
+ *
+ *
+ *
+ *
+ */

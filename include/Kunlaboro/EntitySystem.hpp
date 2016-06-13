@@ -24,7 +24,16 @@ namespace Kunlaboro
 	class EventSystem;
 	class MessageSystem;
 
-	/** An entity system
+	/** The Kunlaboro main EntitySystem class.
+	 *
+	 * This is the piece that links the entire Kunlaboro ecosystem together,
+	 * providing functions for creation of both components and entitites as well
+	 * as management and usage of them.
+	 *
+	 * \todo Write up EntitySystem code examples.
+	 * \todo Write better Event documentation.
+	 * \todo Add garbage collection functionality, to clean up unused component
+	 *       and entity lists.
 	 */
 	class EntitySystem
 	{
