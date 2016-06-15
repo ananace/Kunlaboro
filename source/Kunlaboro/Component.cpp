@@ -98,7 +98,7 @@ void BaseComponentHandle::release()
 		auto count = mCounter->fetch_sub(1);
 		
 		if (count <= 1)
-			es->isAlive(id);
+			es->destroyComponent(id);
 	}
 }
 uint32_t BaseComponentHandle::getRefCount() const
