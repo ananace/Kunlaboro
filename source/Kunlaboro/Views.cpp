@@ -47,7 +47,7 @@ void EntityView::forEach(const Function& func)
 		EntityId eid(i, entData.Generation);
 
 		Entity ent(const_cast<EntitySystem*>(mES), eid);
-		if (BaseView<EntityView, Entity>::mES->entityAlive(eid) && (!mPred || mPred(ent)))
+		if (BaseView<EntityView, Entity>::mES->isAlive(eid) && (!mPred || mPred(ent)))
 		{
 			if (queue)
 				queue->submit(Function(func), std::move(ent));

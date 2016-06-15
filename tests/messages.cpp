@@ -52,7 +52,7 @@ TEST_CASE("Message passing locality", "[message]")
 	ms.messageRegisterId<int>("Global.SetValue", Kunlaboro::MessageSystem::Message_Global);
 	ms.messageRegisterId<int>("Local.SetValue", Kunlaboro::MessageSystem::Message_Local);
 
-	auto ent = es.entityCreate();
+	auto ent = es.createEntity();
 	ent.addComponent<MessagingTestComponent>();
 
 	SECTION("Either locality messages")

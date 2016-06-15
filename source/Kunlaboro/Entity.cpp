@@ -45,11 +45,11 @@ bool Entity::isValid() const
 {
 	if (!mES)
 		return false;
-	return mES->entityAlive(mId);
+	return mES->isAlive(mId);
 }
 
 void Entity::destroy()
 {
-	mES->entityDestroy(mId);
+	mES->isAlive(mId);
 	mES = nullptr;
 }

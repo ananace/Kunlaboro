@@ -33,7 +33,7 @@ EntitySystem::~EntitySystem()
 
 ComponentHandle<Component> EntitySystem::getComponent(ComponentId id) const
 {
-	if (!componentAlive(id))
+	if (!isAlive(id))
 		return ComponentHandle<Component>();
 
 	auto& data = mComponentFamilies[id.getFamily()];
@@ -44,7 +44,7 @@ Entity EntitySystem::getEntity(EntityId id) const
 	return Entity(const_cast<EntitySystem*>(this), id);
 }
 
-Entity EntitySystem::entityCreate()
+Entity EntitySystem::createEntity()
 {
 	EntityId::IndexType id;
 	if (mFreeEntityIndices.empty())
@@ -66,19 +66,19 @@ Entity EntitySystem::entityCreate()
 
 	return Entity(this, eid);
 }
-void EntitySystem::entityDestroy(EntityId id)
+void EntitySystem::destroyEntity(EntityId id)
 {
-	if (!entityAlive(id))
+	if (!isAlive(id))
 		return;
 
 	auto& entity = mEntities[id.getIndex()];
 	const auto* components = entity.Components.data();
 	for (ComponentId::FamilyType family = 0; family < entity.Components.size(); ++family)
 	{
-		if (!entity.ComponentBits.hasBit(family) || !componentAlive(components[family]))
+		if (!entity.ComponentBits.hasBit(family) || !isAlive(components[family]))
 			continue;
 
-		componentDestroy(components[family]);
+		destroyComponent(components[family]);
 	}
 
 	++mEntities[id.getIndex()].Generation;
@@ -88,14 +88,14 @@ void EntitySystem::entityDestroy(EntityId id)
 		mEventSystem->eventEmit<EntityDestroyedEvent>(id, this);
 }
 
-bool EntitySystem::entityAlive(EntityId id) const
+bool EntitySystem::isAlive(EntityId id) const
 {
 	return id.getIndex() < mEntities.size() && mEntities[id.getIndex()].Generation == id.getGeneration();
 }
 
-ComponentHandle<Component> EntitySystem::entityGetComponent(ComponentId::FamilyType family, EntityId eid) const
+ComponentHandle<Component> EntitySystem::getComponent(ComponentId::FamilyType family, EntityId eid) const
 {
-	if (!entityAlive(eid))
+	if (!isAlive(eid))
 		return ComponentHandle<Component>();
 
 	auto& entity = mEntities[eid.getIndex()];
@@ -103,26 +103,26 @@ ComponentHandle<Component> EntitySystem::entityGetComponent(ComponentId::FamilyT
 		return ComponentHandle<Component>();
 
 	auto cid = entity.Components[family];
-	if (!componentAlive(cid))
+	if (!isAlive(cid))
 		return ComponentHandle<Component>();
 
 	return getComponent(cid);
 }
-bool EntitySystem::entityHasComponent(ComponentId::FamilyType family, EntityId eid) const
+bool EntitySystem::hasComponent(ComponentId::FamilyType family, EntityId eid) const
 {
-	if (!entityAlive(eid))
+	if (!isAlive(eid))
 		return false;
 
 	auto& entity = mEntities[eid.getIndex()];
 	if (entity.Components.size() <= family || !entity.ComponentBits.hasBit(family))
 		return false;
 
-	return componentAlive(entity.Components[family]);
+	return isAlive(entity.Components[family]);
 }
 
-void EntitySystem::componentDestroy(ComponentId id)
+void EntitySystem::destroyComponent(ComponentId id)
 {
-	if (!componentAlive(id))
+	if (!isAlive(id))
 		return;
 
 	auto& data = mComponentFamilies[id.getFamily()];
@@ -134,7 +134,7 @@ void EntitySystem::componentDestroy(ComponentId id)
 	{
 		if (ent.ComponentBits.hasBit(id.getFamily()) && ent.Components[id.getFamily()] == id)
 		{
-			componentDetach(id, EntityId(eid, ent.Generation));
+			detachComponent(id, EntityId(eid, ent.Generation));
 			break;
 		}
 		++eid;
@@ -156,7 +156,7 @@ void EntitySystem::componentDestroy(ComponentId id)
 	if (mEventSystem)
 		mEventSystem->eventEmit<ComponentDestroyedEvent>(id, this);
 }
-inline bool EntitySystem::componentAlive(ComponentId id) const
+inline bool EntitySystem::isAlive(ComponentId id) const
 {
 	if (mComponentFamilies.size() <= id.getFamily())
 		return false;
@@ -169,9 +169,9 @@ inline bool EntitySystem::componentAlive(ComponentId id) const
 	return component.Generation == id.getGeneration() && components.MemoryPool->hasBit(id.getIndex());
 }
 
-bool EntitySystem::componentAttached(ComponentId cid, EntityId eid) const
+bool EntitySystem::isAttached(ComponentId cid, EntityId eid) const
 {
-	if (!entityAlive(eid) || !componentAlive(cid))
+	if (!isAlive(eid) || !isAlive(cid))
 		return false;
 
 	auto& entity = mEntities[eid.getIndex()];
@@ -180,9 +180,9 @@ bool EntitySystem::componentAttached(ComponentId cid, EntityId eid) const
 
 	return entity.ComponentBits.hasBit(cid.getFamily()) && entity.Components[cid.getFamily()] == cid;
 }
-void EntitySystem::componentAttach(ComponentId cid, EntityId eid, bool checkDetach)
+void EntitySystem::attachComponent(ComponentId cid, EntityId eid, bool checkDetach)
 {
-	if (!entityAlive(eid) || !componentAlive(cid))
+	if (!isAlive(eid) || !isAlive(cid))
 		return;
 
 	auto& entity = mEntities[eid.getIndex()];
@@ -195,11 +195,11 @@ void EntitySystem::componentAttach(ComponentId cid, EntityId eid, bool checkDeta
 		if (comp->getEntityId() == eid)
 			return;
 
-		if (componentGetEntity(cid) != EntityId())
-			componentDetach(cid, comp->getEntityId());
+		if (getEntity(cid) != EntityId())
+			detachComponent(cid, comp->getEntityId());
 
 		if (entity.Components[cid.getFamily()] != ComponentId::Invalid())
-			componentDetach(entity.Components[cid.getFamily()], eid);
+			detachComponent(entity.Components[cid.getFamily()], eid);
 
 		comp.unlink();
 	}
@@ -210,9 +210,9 @@ void EntitySystem::componentAttach(ComponentId cid, EntityId eid, bool checkDeta
 	if (mEventSystem)
 		mEventSystem->eventEmit<ComponentAttachedEvent>(cid, eid, this);
 }
-void EntitySystem::componentDetach(ComponentId cid, EntityId eid)
+void EntitySystem::detachComponent(ComponentId cid, EntityId eid)
 {
-	if (!entityAlive(eid) || !componentAlive(cid))
+	if (!isAlive(eid) || !isAlive(cid))
 		return;
 
 	auto& entity = mEntities[eid.getIndex()];
@@ -231,9 +231,9 @@ void EntitySystem::componentDetach(ComponentId cid, EntityId eid)
 
 	comp.release();
 }
-EntityId EntitySystem::componentGetEntity(ComponentId cid) const
+EntityId EntitySystem::getEntity(ComponentId cid) const
 {
-	if (!componentAlive(cid))
+	if (!isAlive(cid))
 		return EntityId();
 
 	EntityId::IndexType i = 0;

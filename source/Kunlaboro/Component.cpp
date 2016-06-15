@@ -12,7 +12,7 @@ const ComponentId& Component::getId() const
 }
 EntityId Component::getEntityId() const
 {
-	return mES->componentGetEntity(mId);
+	return mES->getEntity(mId);
 }
 const EntitySystem* Component::getEntitySystem() const
 {
@@ -93,12 +93,12 @@ void BaseComponentHandle::release()
 	const auto& id = mPtr->getId();
 	auto* es = mPtr->getEntitySystem();
 
-	if (es->componentAlive(id))
+	if (es->isAlive(id))
 	{
 		auto count = mCounter->fetch_sub(1);
 		
 		if (count <= 1)
-			es->componentDestroy(id);
+			es->isAlive(id);
 	}
 }
 uint32_t BaseComponentHandle::getRefCount() const

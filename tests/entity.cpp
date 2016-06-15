@@ -44,7 +44,7 @@ TEST_CASE("entity creation", "[entity]")
 	};
 	es.getEventSystem().eventRegister<Kunlaboro::EntitySystem::EntityCreatedEvent>(func);
 
-	auto ent = es.entityCreate();
+	auto ent = es.createEntity();
 	ent.addComponent<EntityMessagingTestComponent>(42);
 
 	REQUIRE(ent.hasComponent<EntityMessagingTestComponent>());
@@ -60,7 +60,7 @@ TEST_CASE("Message passing", "[entity][message]")
 	Kunlaboro::EntitySystem es;
 	es.getMessageSystem().messageRegisterId<int>("SetData");
 
-	auto ent = es.entityCreate();
+	auto ent = es.createEntity();
 	ent.addComponent<EntityMessagingTestComponent>(42);
 
 	es.getMessageSystem().messageSendId("SetData", 5);

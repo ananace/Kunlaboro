@@ -40,14 +40,14 @@ TEST_CASE("POD component creation - 1 000 000", "[.performance][component]")
 	SECTION("POD creation")
 	{
 		for (int i = 0; i < 1000000; ++i)
-			es.componentCreate<PODComponent>().unlink();
+			es.createComponent<PODComponent>().unlink();
 
 		CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<PODComponent>::getFamily()).countBits() == 1000000);
 	}
 	SECTION("large chunk POD creation")
 	{
 		for (int i = 0; i < 1000000; ++i)
-			es.componentCreate<PODComponentLargeChunks>().unlink();
+			es.createComponent<PODComponentLargeChunks>().unlink();
 
 		CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<PODComponentLargeChunks>::getFamily()).countBits() == 1000000);
 	}
@@ -58,7 +58,7 @@ TEST_CASE("POD component destruction - 1 000 000", "[.performance][component]")
 	Kunlaboro::EntitySystem es;
 
 	for (int i = 0; i < 1000000; ++i)
-		es.componentCreate<PODComponent>().unlink();
+		es.createComponent<PODComponent>().unlink();
 
 	CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<PODComponent>::getFamily()).countBits() == 1000000);
 
@@ -66,13 +66,13 @@ TEST_CASE("POD component destruction - 1 000 000", "[.performance][component]")
 	{
 		auto family = Kunlaboro::ComponentFamily<PODComponent>::getFamily();
 		for (int i = 0; i < 1000000; ++i)
-			es.componentDestroy(Kunlaboro::ComponentId(i, 0, family));
+			es.destroyComponent(Kunlaboro::ComponentId(i, 0, family));
 
 		CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<PODComponent>::getFamily()).countBits() == 0);
 	}
 
 	for (int i = 0; i < 1000000; ++i)
-		es.componentCreate<PODComponentLargeChunks>().unlink();
+		es.createComponent<PODComponentLargeChunks>().unlink();
 
 	CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<PODComponentLargeChunks>::getFamily()).countBits() == 1000000);
 
@@ -80,7 +80,7 @@ TEST_CASE("POD component destruction - 1 000 000", "[.performance][component]")
 	{
 		auto family = Kunlaboro::ComponentFamily<PODComponentLargeChunks>::getFamily();
 		for (int i = 0; i < 1000000; ++i)
-			es.componentDestroy(Kunlaboro::ComponentId(i, 0, family));
+			es.destroyComponent(Kunlaboro::ComponentId(i, 0, family));
 
 		CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<PODComponentLargeChunks>::getFamily()).countBits() == 0);
 	}
@@ -91,7 +91,7 @@ TEST_CASE("POD component iteration - 1 000 000", "[.performance][component]")
 	Kunlaboro::EntitySystem es;
 
 	for (int i = 0; i < 1000000; ++i)
-		es.componentCreate<PODComponent>().unlink();
+		es.createComponent<PODComponent>().unlink();
 
 	CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<PODComponent>::getFamily()).countBits() == 1000000);
 
@@ -113,7 +113,7 @@ TEST_CASE("POD component iteration - 1 000 000", "[.performance][component]")
 	}
 
 	for (int i = 0; i < 1000000; ++i)
-		es.componentCreate<PODComponentLargeChunks>().unlink();
+		es.createComponent<PODComponentLargeChunks>().unlink();
 
 	CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<PODComponentLargeChunks>::getFamily()).countBits() == 1000000);
 
@@ -142,19 +142,19 @@ TEST_CASE("non-POD component performance - 1 000 000", "[.performance][component
 	SECTION("non-POD creation")
 	{
 		for (int i = 0; i < 1000000; ++i)
-			es.componentCreate<NonPODComponent>().unlink();
+			es.createComponent<NonPODComponent>().unlink();
 
 		CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<NonPODComponent>::getFamily()).countBits() == 1000000);
 	}
 
 	for (int i = 0; i < 1000000; ++i)
-		es.componentCreate<NonPODComponent>().unlink();
+		es.createComponent<NonPODComponent>().unlink();
 
 	SECTION("non-POD destruction")
 	{
 		auto family = Kunlaboro::ComponentFamily<NonPODComponent>::getFamily();
 		for (int i = 0; i < 1000000; ++i)
-			es.componentDestroy(Kunlaboro::ComponentId(i, 0, family));
+			es.destroyComponent(Kunlaboro::ComponentId(i, 0, family));
 
 		CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<NonPODComponent>::getFamily()).countBits() == 0);
 	}
@@ -184,26 +184,26 @@ TEST_CASE("entity performance - 1 000 000", "[.performance][entity]")
 	SECTION("entity creation")
 	{
 		for (int i = 0; i < 1000000; ++i)
-			es.entityCreate();
+			es.createEntity();
 
 		SECTION("entity destruction")
 		{
 			for (int i = 0; i < 1000000; ++i)
-				es.entityDestroy(Kunlaboro::EntityId(i, 0));
+				es.destroyEntity(Kunlaboro::EntityId(i, 0));
 		}
 
 		SECTION("entity component addition")
 		{
 			for (int i = 0; i < 1000000; ++i)
 			{
-				auto comp = es.componentCreate<PODComponent>();
-				es.componentAttach(comp->getId(), Kunlaboro::EntityId(i, 0));
+				auto comp = es.createComponent<PODComponent>();
+				es.attachComponent(comp->getId(), Kunlaboro::EntityId(i, 0));
 			}
 
 			SECTION("entity destruction")
 			{
 				for (int i = 0; i < 1000000; ++i)
-					es.entityDestroy(Kunlaboro::EntityId(i, 0));
+					es.destroyEntity(Kunlaboro::EntityId(i, 0));
 			}
 		}
 

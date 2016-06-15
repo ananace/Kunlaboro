@@ -15,13 +15,13 @@ namespace Kunlaboro
 	}
 
 	template<typename T>
-	ComponentHandle<T> EntitySystem::entityGetComponent(EntityId eid) const
+	ComponentHandle<T> EntitySystem::getComponent(EntityId eid) const
 	{
-		return static_cast<ComponentHandle<T>>(entityGetComponent(Kunlaboro::ComponentFamily<T>::getFamily(), eid));
+		return static_cast<ComponentHandle<T>>(getComponent(Kunlaboro::ComponentFamily<T>::getFamily(), eid));
 	}
 
 	template<typename T, typename... Args>
-	ComponentHandle<T> EntitySystem::componentCreate(Args... args)
+	ComponentHandle<T> EntitySystem::createComponent(Args... args)
 	{
 		auto family = Kunlaboro::ComponentFamily<T>::getFamily();
 		if (mComponentFamilies.size() <= family)

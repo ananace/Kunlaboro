@@ -127,7 +127,7 @@ namespace Kunlaboro
 	template<typename T>
 	bool ComponentView<T>::Iterator::basePred() const
 	{
-		return Iterator::mES->componentAlive(mCurComponent->getId());
+		return Iterator::mES->isAlive(mCurComponent->getId());
 	}
 	template<typename T>
 	void ComponentView<T>::Iterator::moveNext()
@@ -231,7 +231,7 @@ namespace Kunlaboro
 			EntityId eid(i, entData.Generation);
 
 			Entity ent = es->getEntity(eid);
-			if (es->entityAlive(eid) && (!pred || pred(ent)))
+			if (es->isAlive(eid) && (!pred || pred(ent)))
 			{
 				if (queue)
 					queue->submit(Function(func), std::move(ent));
@@ -293,7 +293,7 @@ namespace Kunlaboro
 			EntityId eid(i, entData.Generation);
 
 			Entity ent = es->getEntity(eid);
-			if (es->entityAlive(eid) && (!pred || pred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, MT))
+			if (es->isAlive(eid) && (!pred || pred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, MT))
 			{
 				if (queue)
 					queue->submit(TypedFunction(func), std::move(ent), std::move(*(ent.getComponent<Components>().get()))...);

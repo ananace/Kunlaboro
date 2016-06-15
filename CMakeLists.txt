@@ -29,6 +29,8 @@ if (Kunlaboro_BUILD_TESTS)
 endif()
 
 set(Kunlaboro_HEADERS
+	include/Kunlaboro/Kunlaboro.hpp
+
 	include/Kunlaboro/Component.hpp
 	include/Kunlaboro/Component.inl
 	include/Kunlaboro/Config.hpp

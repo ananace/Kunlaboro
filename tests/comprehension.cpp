@@ -32,7 +32,7 @@ TEST_CASE("fizzbuzz", "[comprehensive][view]")
 
 	for (int i = 1; i <= 15; ++i)
 	{
-		auto ent = es.entityCreate();
+		auto ent = es.createEntity();
 
 		if (i % 3 == 0 && i % 5 == 0)
 			ent.addComponent<NameComponent>("fizzbuzz");
@@ -135,7 +135,7 @@ TEST_CASE("Simple n-body simulation - 1000 particles", "[comprehensive][performa
 
 	for (int i = 0; i < ParticleCount; ++i)
 	{
-		auto ent = es.entityCreate();
+		auto ent = es.createEntity();
 		float angle = ang(rand);
 		float magnitude = mag(rand);
 
