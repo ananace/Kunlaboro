@@ -143,7 +143,7 @@ void EntitySystem::destroyComponent(ComponentId id)
 	if (mEventSystem)
 		mEventSystem->unregisterAllEvents(id);
 	if (mMessageSystem)
-		mMessageSystem->messageUnrequestAll(id);
+		mMessageSystem->unrequestAllMessages(id);
 
 	data.MemoryPool->destroy(id.getIndex());
 	data.MemoryPool->resetBit(id.getIndex());

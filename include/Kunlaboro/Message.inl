@@ -13,18 +13,18 @@ namespace Kunlaboro
 	template<typename... Args, typename Functor>
 	void MessagingComponent::requestMessage(MessageId id, Functor&& func, float prio)
 	{
-		getEntitySystem()->getMessageSystem().messageRequest<Args...>(getId(), id, func, prio);
+		getEntitySystem()->getMessageSystem().requestMessage<Args...>(getId(), id, func, prio);
 	}
 	template<typename... Args, typename Obj>
 	void MessagingComponent::requestMessage(MessageId id, void (Obj::*func)(Args...), float prio)
 	{
-		getEntitySystem()->getMessageSystem().messageRequest<Args...>(getId(), id, std::bind1st(std::mem_fn(func), static_cast<Obj*>(this)), prio);
+		getEntitySystem()->getMessageSystem().requestMessage<Args...>(getId(), id, std::bind1st(std::mem_fn(func), static_cast<Obj*>(this)), prio);
 	}
 
 	template<typename... Args>
 	void MessagingComponent::sendMessage(MessageId id, Args... args) const
 	{
-		getEntitySystem()->getMessageSystem().messageSend(id, std::forward<Args>(args)...);
+		getEntitySystem()->getMessageSystem().sendMessage(id, std::forward<Args>(args)...);
 	}
 	// template<typename... Args>
 	// void MessagingComponent::sendMessageTo(MessageId id, EntityId ent, Args... args) const
@@ -35,7 +35,7 @@ namespace Kunlaboro
 	template<typename... Args>
 	void MessagingComponent::sendMessageTo(MessageId id, ComponentId comp, Args... args) const
 	{
-		getEntitySystem()->getMessageSystem().messageSendTo(id, comp, std::forward<Args>(args)...);
+		getEntitySystem()->getMessageSystem().sendMessageTo(id, comp, std::forward<Args>(args)...);
 	}
 
 	template<typename... Args, typename Functor>

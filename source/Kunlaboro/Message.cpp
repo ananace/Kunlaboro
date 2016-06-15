@@ -14,11 +14,11 @@ MessagingComponent::MessagingComponent()
 
 void MessagingComponent::unrequestMessage(MessageId id)
 {
-	getEntitySystem()->getMessageSystem().messageUnrequest(getId(), id);
+	getEntitySystem()->getMessageSystem().unrequestMessage(getId(), id);
 }
 void MessagingComponent::reprioritizeMessage(MessageId id, float prio)
 {
-	getEntitySystem()->getMessageSystem().messageReprioritize(getId(), id, prio);
+	getEntitySystem()->getMessageSystem().reprioritizeMessage(getId(), id, prio);
 }
 
 void MessagingComponent::unrequestMessageId(const char* const id)

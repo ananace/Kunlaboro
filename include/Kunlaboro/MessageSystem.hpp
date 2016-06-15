@@ -98,7 +98,7 @@ namespace Kunlaboro
 		 *       to prevent passing messages with invalid arguments.
 		 */
 		template<typename... Args>
-		void messageRegisterId(const char* const name, MessageLocality locality = Message_Either);
+		void registerMessage(const char* const name, MessageLocality locality = Message_Either);
 
 		/** Add a request for messages with the given name and arguments.
 		 *
@@ -113,13 +113,13 @@ namespace Kunlaboro
 		 * \todo Add distinction between global and local messages.
 		 */
 		template<typename... Args, typename Functor>
-		void messageRequestId(ComponentId cId, const char* const message, Functor&& func, float prio = 0);
+		void requestMessage(ComponentId cId, const char* const message, Functor&& func, float prio = 0);
 		/** Remove a request for messages with the given name.
 		 *
 		 * \param cId The ID of the component that posted the original request.
 		 * \param message The name of the message that was requested.
 		 */
-		void messageUnrequestId(ComponentId cId, const char* const message);
+		void unrequestMessage(ComponentId cId, const char* const message);
 
 		/** Change the request priority for the message with the given name.
 		 *
@@ -130,7 +130,7 @@ namespace Kunlaboro
 		 * \todo Reduce performance impact of this functionality, preferrably
 		 *       it should be zero-copy.
 		 */
-		void messageReprioritizeId(ComponentId cId, const char* const message, float prio);
+		void reprioritizeMessage(ComponentId cId, const char* const message, float prio);
 
 		/** Send a global message with the given name and arguments.
 		 *
@@ -141,7 +141,7 @@ namespace Kunlaboro
 		 *       preferrably through run/compile-time switch.
 		 */
 		template<typename... Args>
-		void messageSendId(const char* const message, Args... args) const;
+		void sendMessage(const char* const message, Args... args) const;
 		/** Send a local message to the given component, with name and arguments.
 		 *
 		 * \param message The name of the message to send.
@@ -152,7 +152,7 @@ namespace Kunlaboro
 		 *       preferrably through run/compile-time switch.
 		 */
 		template<typename... Args>
-		void messageSendIdTo(const char* const message, ComponentId cId, Args... args) const;
+		void sendMessageTo(const char* const message, ComponentId cId, Args... args) const;
 
 		// TODO:
 		// template<typename... Args>
@@ -165,7 +165,7 @@ namespace Kunlaboro
 		 * \param name The name of the message, used for debugging if provided.
 		 */
 		template<typename... Args>
-		void messageRegister(MessageId mId, const char* const name = nullptr, MessageLocality locality = Message_Either);
+		void registerMessage(MessageId mId, const char* const name = nullptr, MessageLocality locality = Message_Either);
 
 		/** Request a message by ID.
 		 *
@@ -179,13 +179,13 @@ namespace Kunlaboro
 		 *       preferrably through run/compile-time switch.
 		 */
 		template<typename... Args, typename Functor>
-		void messageRequest(ComponentId cId, MessageId mId, Functor&& func, float prio = 0);
+		void requestMessage(ComponentId cId, MessageId mId, Functor&& func, float prio = 0);
 		/** Remove a request for a message by ID.
 		 *
 		 * \param cId The ID of the component that posted the original request.
 		 * \param mId The ID of the message that was requested.
 		 */
-		void messageUnrequest(ComponentId cId, MessageId mId);
+		void unrequestMessage(ComponentId cId, MessageId mId);
 		/** Change the request priority for the message with the given ID.
 		 *
 		 * \param cId The ID of the component that posted the original request.
@@ -195,7 +195,7 @@ namespace Kunlaboro
 		 * \todo Reduce performance impact of this functionality, preferrably
 		 *       it should be zero-copy.
 		 */
-		void messageReprioritize(ComponentId cId, MessageId mId, float prio);
+		void reprioritizeMessage(ComponentId cId, MessageId mId, float prio);
 
 		/** Send a global message with the given ID and arguments.
 		 *
@@ -206,7 +206,7 @@ namespace Kunlaboro
 		 *       preferrably through run/compile-time switch.
 		 */
 		template<typename... Args>
-		void messageSend(MessageId mId, Args... args) const;
+		void sendMessage(MessageId mId, Args... args) const;
 		/** Send a local message with the given ID and arguments.
 		 *
 		 * \param mId The ID of the message to send.
@@ -217,7 +217,7 @@ namespace Kunlaboro
 		 *       preferrably through run/compile-time switch.
 		 */
 		template<typename... Args>
-		void messageSendTo(MessageId mId, ComponentId cId, Args... args) const;
+		void sendMessageTo(MessageId mId, ComponentId cId, Args... args) const;
 		// TODO:
 		// template<typename... Args>
 		// void messageSendTo(MessageId mId, EntityId eId, Args... args) const;
@@ -226,7 +226,7 @@ namespace Kunlaboro
 		 *
 		 * \param cId The ID of the component to remove all requests from.
 		 */
-		void messageUnrequestAll(ComponentId cId);
+		void unrequestAllMessages(ComponentId cId);
 
 		/** Hash a message string into a MessageId at compile time.
 		 *

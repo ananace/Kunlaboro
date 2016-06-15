@@ -7,43 +7,43 @@
 namespace Kunlaboro
 {
 	template<typename... Args>
-	inline void MessageSystem::messageRegisterId(const char* const name, MessageLocality locality)
+	inline void MessageSystem::registerMessage(const char* const name, MessageLocality locality)
 	{
 		auto mId = hash(name);
-		messageRegister<Args...>(mId, name, locality);
+		registerMessage<Args...>(mId, name, locality);
 	}
 
 	template<typename... Args, typename Functor>
-	inline void MessageSystem::messageRequestId(ComponentId cId, const char* const message, Functor&& func, float prio)
+	inline void MessageSystem::requestMessage(ComponentId cId, const char* const message, Functor&& func, float prio)
 	{
 		auto mId = hash(message);
-		messageRequest<Args...>(cId, mId, std::forward<Functor&&>(func), prio);
+		requestMessage<Args...>(cId, mId, std::forward<Functor&&>(func), prio);
 	}
-	inline void MessageSystem::messageUnrequestId(ComponentId cId, const char* const message)
+	inline void MessageSystem::unrequestMessage(ComponentId cId, const char* const message)
 	{
 		auto mId = hash(message);
-		messageUnrequest(cId, mId);
+		unrequestMessage(cId, mId);
 	}
-	inline void MessageSystem::messageReprioritizeId(ComponentId cId, const char* const message, float prio)
+	inline void MessageSystem::reprioritizeMessage(ComponentId cId, const char* const message, float prio)
 	{
 		auto mId = hash(message);
-		messageReprioritize(cId, mId, prio);
-	}
-	template<typename... Args>
-	inline void MessageSystem::messageSendId(const char* const message, Args... args) const
-	{
-		auto mId = hash(message);
-		messageSend<Args...>(mId, std::forward<Args>(args)...);
+		reprioritizeMessage(cId, mId, prio);
 	}
 	template<typename... Args>
-	inline void MessageSystem::messageSendIdTo(const char* const message, ComponentId cId, Args... args) const
+	inline void MessageSystem::sendMessage(const char* const message, Args... args) const
 	{
 		auto mId = hash(message);
-		messageSendTo<Args...>(mId, cId, std::forward<Args>(args)...);
+		sendMessage<Args...>(mId, std::forward<Args>(args)...);
+	}
+	template<typename... Args>
+	inline void MessageSystem::sendMessageTo(const char* const message, ComponentId cId, Args... args) const
+	{
+		auto mId = hash(message);
+		sendMessageTo<Args...>(mId, cId, std::forward<Args>(args)...);
 	}
 
 	template<typename... Args>
-	inline void MessageSystem::messageRegister(MessageId mId, const char* const name, MessageLocality locality)
+	inline void MessageSystem::registerMessage(MessageId mId, const char* const name, MessageLocality locality)
 	{
 		if (mMessages.count(mId) > 0)
 			return;
@@ -61,7 +61,7 @@ namespace Kunlaboro
 	}
 
 	template<typename... Args, typename Functor>
-	inline void MessageSystem::messageRequest(ComponentId cId, MessageId mId, Functor&& func, float prio)
+	inline void MessageSystem::requestMessage(ComponentId cId, MessageId mId, Functor&& func, float prio)
 	{
 		if (mMessages.count(mId) == 0)
 			return;
@@ -87,7 +87,7 @@ namespace Kunlaboro
 				func
 			));
 	}
-	inline void MessageSystem::messageUnrequest(ComponentId cId, MessageId mId)
+	inline void MessageSystem::unrequestMessage(ComponentId cId, MessageId mId)
 	{
 		if (mMessages.count(mId) == 0)
 			return;
@@ -101,7 +101,7 @@ namespace Kunlaboro
 		message.Callbacks.erase(it);
 	}
 
-	inline void MessageSystem::messageReprioritize(ComponentId cId, MessageId mId, float prio)
+	inline void MessageSystem::reprioritizeMessage(ComponentId cId, MessageId mId, float prio)
 	{
 		if (mMessages.count(mId) == 0)
 			return;
@@ -117,7 +117,7 @@ namespace Kunlaboro
 		message.Callbacks.insert(newPos, *it);
 	}
 	template<typename... Args>
-	inline void MessageSystem::messageSend(MessageId mId, Args... args) const
+	inline void MessageSystem::sendMessage(MessageId mId, Args... args) const
 	{
 		if (mMessages.count(mId) == 0)
 			return;
@@ -132,7 +132,7 @@ namespace Kunlaboro
 		}
 	}
 	template<typename... Args>
-	inline void MessageSystem::messageSendTo(MessageId mId, ComponentId cId, Args... args) const
+	inline void MessageSystem::sendMessageTo(MessageId mId, ComponentId cId, Args... args) const
 	{
 		if (mMessages.count(mId) == 0)
 			return;

@@ -48,9 +48,9 @@ TEST_CASE("Message passing locality", "[message]")
 
 	auto& ms = es.getMessageSystem();
 
-	ms.messageRegisterId<int>("Either.SetValue", Kunlaboro::MessageSystem::Message_Either);
-	ms.messageRegisterId<int>("Global.SetValue", Kunlaboro::MessageSystem::Message_Global);
-	ms.messageRegisterId<int>("Local.SetValue", Kunlaboro::MessageSystem::Message_Local);
+	ms.registerMessage<int>("Either.SetValue", Kunlaboro::MessageSystem::Message_Either);
+	ms.registerMessage<int>("Global.SetValue", Kunlaboro::MessageSystem::Message_Global);
+	ms.registerMessage<int>("Local.SetValue", Kunlaboro::MessageSystem::Message_Local);
 
 	auto ent = es.createEntity();
 	ent.addComponent<MessagingTestComponent>();
@@ -61,10 +61,10 @@ TEST_CASE("Message passing locality", "[message]")
 
 		CHECK(comp->getValue() == 0);
 
-		ms.messageSendId("Either.SetValue", 10);
+		ms.sendMessage("Either.SetValue", 10);
 		REQUIRE(comp->getValue() == 10);
 
-		ms.messageSendIdTo("Either.SetValue", comp->getId(), -5);
+		ms.sendMessageTo("Either.SetValue", comp->getId(), -5);
 		REQUIRE(comp->getValue() == -5);
 	}
 
@@ -74,10 +74,10 @@ TEST_CASE("Message passing locality", "[message]")
 
 		CHECK(comp->getValue() == 0);
 
-		ms.messageSendId("Global.SetValue", 10);
+		ms.sendMessage("Global.SetValue", 10);
 		REQUIRE(comp->getValue() == 10);
 
-		ms.messageSendIdTo("Global.SetValue", comp->getId(), -5);
+		ms.sendMessageTo("Global.SetValue", comp->getId(), -5);
 		REQUIRE(comp->getValue() != -5);
 	}
 
@@ -87,10 +87,10 @@ TEST_CASE("Message passing locality", "[message]")
 
 		CHECK(comp->getValue() == 0);
 
-		ms.messageSendId("Local.SetValue", 10);
+		ms.sendMessage("Local.SetValue", 10);
 		REQUIRE(comp->getValue() != 10);
 
-		ms.messageSendIdTo("Local.SetValue", comp->getId(), -5);
+		ms.sendMessageTo("Local.SetValue", comp->getId(), -5);
 		REQUIRE(comp->getValue() == -5);
 	}
 }

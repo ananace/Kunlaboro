@@ -20,7 +20,7 @@ MessageSystem::~MessageSystem()
 	}
 }
 
-void MessageSystem::messageUnrequestAll(ComponentId cId)
+void MessageSystem::unrequestAllMessages(ComponentId cId)
 {
 	for (auto& msg : mMessages)
 	{
