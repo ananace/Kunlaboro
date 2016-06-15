@@ -15,23 +15,19 @@ namespace Kunlaboro
 	template<typename T, typename... Args>
 	void Entity::replaceComponent(Args... args)
 	{
-		auto gen = ComponentFamily<T>::getFamily();
-
-		auto comp = mES->getComponent<T>(gen, mId);
+		auto comp = mES->getComponent<T>(mId);
 		if (comp)
 			mES->detachComponent(comp->getId(), mId);
 
 		comp = mES->createComponent<T>(std::forward<Args>(args)...);
 		assert(comp);
 
-		mES->attachComponent(comp->getId(), mId);
+		mES->attachComponent(comp->getId(), mId, false);
 	}
 	template<typename T>
 	void Entity::removeComponent()
 	{
-		auto gen = ComponentFamily<T>::getFamily();
-
-		auto comp = mES->getComponent<T>(gen, mId);
+		auto comp = mES->getComponent<T>(mId);
 		if (comp)
 			mES->detachComponent(comp->getId(), mId);
 	}
