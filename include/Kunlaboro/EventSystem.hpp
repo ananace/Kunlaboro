@@ -48,7 +48,7 @@ namespace Kunlaboro
 		 * \tparam Event The event to listen for.
 		 * \param func The functor to call when the event is emitted.
 		 *
-		 * \sa eventUnregister(ComponentId)
+		 * \sa unregisterEvent(ComponentId)
 		 */
 		template<typename Event, typename Functor>
 		void registerEvent(ComponentId cId, Functor&& func);
@@ -59,7 +59,7 @@ namespace Kunlaboro
 		 * \returns The ID of the registered listener, this value is
 		 *          needed for future unregistering.
 		 *
-		 * \sa eventUnregister(std::size_t)
+		 * \sa unregisterEvent(ListenerId)
 		 */
 		template<typename Event, typename Functor>
 		ListenerId registerEvent(Functor&& func);

@@ -21,6 +21,7 @@ namespace Kunlaboro
 		/** Default constructor.
 		 */
 		Entity();
+
 		/** Creates an entity reference from a system and an ID.
 		 *
 		 * \param sys The entity system containing the entity.
@@ -51,7 +52,7 @@ namespace Kunlaboro
 		const EntityId& getId() const;
 		/** Checks that the entity is valid.
 		 *
-		 * \sa EntitySystem::entityAlive()
+		 * \sa EntitySystem::isAlive(EntityId)
 		 */
 		bool isValid() const;
 
@@ -59,15 +60,15 @@ namespace Kunlaboro
 		 *
 		 * This method is functionally identical to the following block of code;
 		 * \code{.cpp}
-		 * auto componentId = EntitySystem.componentCreate<T>(Args...);
-		 * EntitySystem.componentAttach(entityId, componentId);
+		 * auto componentId = EntitySystem.createComponent<T>(Args...);
+		 * EntitySystem.attachComponent(entityId, componentId);
 		 * \endcode
 		 *
 		 * \tparam T The component type to add to the entity.
 		 * \tparam Args The constructor arguments to create the component with.
 		 *
-		 * \sa EntitySystem::componentCreate()
-		 * \sa EntitySystem::componentAttach()
+		 * \sa EntitySystem::createComponent()
+		 * \sa EntitySystem::attachComponent()
 		 */
 		template<typename T, typename... Args>
 		void addComponent(Args...);
@@ -80,10 +81,10 @@ namespace Kunlaboro
 		 * \tparam T The component type to add/replace in the entity.
 		 * \tparam Args The constructor arguments to create the component with.
 		 *
-		 * \sa EntitySystem::entityHasComponent()
-		 * \sa EntitySystem::componentDetach()
-		 * \sa EntitySystem::componentCreate()
-		 * \sa EntitySystem::componentAttach()
+		 * \sa EntitySystem::hasComponent()
+		 * \sa EntitySystem::detachComponent()
+		 * \sa EntitySystem::createComponent()
+		 * \sa EntitySystem::attachComponent()
 		 */
 		template<typename T, typename... Args>
 		void replaceComponent(Args...);
@@ -91,13 +92,13 @@ namespace Kunlaboro
 		 *
 		 * This method is functionally identical to the following block of code;
 		 * \code{.cpp}
-		 * auto componentId = EntitySystem.entityGetComponent<T>(entityId);
-		 * EntitySystem.componentDetach(componentId, entityId);
+		 * auto componentId = EntitySystem.getComponent<T>(entityId);
+		 * EntitySystem.detachComponent(componentId, entityId);
 		 * \endcode
 		 *
 		 * \tparam T The component type to remove.
 		 *
-		 * \sa EntitySystem::componentDetach()
+		 * \sa EntitySystem::detachComponent()
 		 */
 		template<typename T>
 		void removeComponent();
@@ -105,12 +106,12 @@ namespace Kunlaboro
 		 *
 		 * This method is functionally identical to the following block of code;
 		 * \code{.cpp}
-		 * return EntitySystem.entityHasComponent(ComponentFamily<T>::getFamily());
+		 * return EntitySystem.hasComponent(ComponentFamily<T>::getFamily());
 		 * \endcode
 		 *
 		 * \tparam T The component type to check for.
 		 *
-		 * \sa EntitySystem::entityHasComponent()
+		 * \sa EntitySystem::hasComponent()
 		 */
 		template<typename T>
 		bool hasComponent() const;
@@ -118,15 +119,14 @@ namespace Kunlaboro
 		 *
 		 * This method is functionally identical to the following block of code;
 		 * \code{.cpp}
-		 * return EntitySystem.entityGetComponent<T>(entityId);
+		 * return EntitySystem.getComponent<T>(entityId);
 		 * \endcode
 		 *
 		 * \tparam T The component type to get.
 		 * \note Always check the validity of the handle before using it,
 		 *       as the entity might not contain a component of the wanted type.
 		 *
-		 * \sa EntitySystem::entityGetComponent()
-		 * \sa EntitySystem::getComponent()
+		 * \sa EntitySystem::getComponent(EntityId)
 		 */
 		template<typename T>
 		ComponentHandle<T> getComponent() const;
@@ -135,10 +135,10 @@ namespace Kunlaboro
 		 *
 		 * This method is functionally identical to the following block of code;
 		 * \code{.cpp}
-		 * EntitySystem.entityDestroy(entityId);
+		 * EntitySystem.destroyEntity(entityId);
 		 * \endcode
 		 *
-		 * \sa EntitySystem::entityDestroy()
+		 * \sa EntitySystem::destroyEntity()
 		 */
 		void destroy();
 

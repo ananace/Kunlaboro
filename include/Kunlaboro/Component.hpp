@@ -21,12 +21,12 @@ namespace Kunlaboro
 	 * This is the base class that needs to be used when registering
 	 * component types for use in the Kunlaboro entity system.
 	 *
-	 * Simple example dealing with a cooldown for a trigger;
+	 * Simple example dealing with a cooldown for something;
 	 * \code{.cpp}
 	 * class CooldownComponent : public Kunlaboro::Component
 	 * {
 	 * public:
-	 * 	CooldownComponent(float time)
+	 *	CooldownComponent(float time)
 	 * 		: Time(time)
 	 * 	{ }
 	 *
@@ -37,12 +37,23 @@ namespace Kunlaboro
 	 * 		if (Time > 0)
 	 * 			return;
 	 *
-	 * 		getEntitySystem()->componentDestroy(getId());
+	 * 		getEntitySystem()->destroyComponent(getId());
 	 * 	}
 	 *
 	 * 	// Time remaining on the cooldown
 	 * 	float Time;
 	 * };
+	 *
+	 * // Usage example
+	 * void GameLogic::update(float dt)
+	 * {
+	 *	// ...
+	 * 
+	 *	if (ability.hasComponent<CooldownComponent>())
+	 *		ability.getComponent<CooldownComponent>()->update(dt);
+	 *	else
+	 *		// ...
+	 * }
 	 * \endcode
 	 *
 	 * \todo Look into reducing the base memory footprint.
@@ -72,7 +83,7 @@ namespace Kunlaboro
 		 *
 		 * \note
 		 * This identifier may no longer be unique after ComponentId::sMaxGeneration
-		 * of generations have passed.
+		 * worth of generations have passed.
 		 */
 		const ComponentId& getId() const;
 		/** Gets the ID of the entity containing the component.
@@ -105,7 +116,7 @@ namespace Kunlaboro
 
 	/** Method for looking up component family IDs.
 	 * 
-	 * \todo Wrap this up in something nicer, possibly allowing for runtime lookup as well.
+	 * \todo Make this nicer, possibly allowing for runtime lookup as well.
 	 */
 	template<typename T>
 	class ComponentFamily : BaseComponentFamily
