@@ -9,6 +9,54 @@
 namespace Kunlaboro
 {
 
+	/// \todo Look into moving out of public API, only necessary for internal MessageSystem hashing.
+	namespace detail
+	{
+		/** Compile-time capable implementation of the Fowler-Null-Vo string hash method.
+		 *
+		 * Implemented both for 32-bit and 64-bit hashes.
+		 */
+		template<typename S>
+		struct hash_internal;
+
+		template<>
+		struct hash_internal<uint64_t>
+		{
+			constexpr static uint64_t default_offset = 14695981039346656037ULL;
+			constexpr static uint64_t prime = 1099511628211ULL;
+		};
+		template<>
+		struct hash_internal<uint32_t>
+		{
+			constexpr static uint32_t default_offset = 0x811C9DC5;
+			constexpr static uint32_t prime = 0x01000193;
+		};
+
+		template<typename S>
+		struct hash_func : public hash_internal<S>
+		{
+			/** Hash a C-string using the Fowler-Null-Vo hashing method.
+			 *
+			 * \param string The string to hash
+			 * \param val The default FNV offset
+			 */
+			constexpr static inline S hash(const char* const string, const S val = hash_internal<S>::default_offset)
+			{
+				return (string[0] == 0) ? val : hash(string + 1, (val * hash_internal<S>::prime) ^ S(string[0]));
+			}
+			/** Hash a fixed-length string using the Fowler-Null-Vo hashing method.
+			 *
+			 * \param string The string to hash
+			 * \param strlen The length of the string to hash
+			 * \param val The default FNV offset
+			 */
+			static inline S hashF(const char* const string, const size_t strlen, const S val = hash_internal<S>::default_offset)
+			{
+				return (strlen == 0) ? val : hashF(string + 1, strlen - 1, (val * hash_internal<S>::prime) ^ S(string[0]));
+			}
+		};
+	}
+
 	class EntitySystem;
 
 	/** Message passing system
