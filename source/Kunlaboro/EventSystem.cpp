@@ -13,7 +13,7 @@ EventSystem::~EventSystem()
 {
 }
 
-void EventSystem::eventUnregisterAll(ComponentId cId)
+void EventSystem::unregisterAllEvents(ComponentId cId)
 {
 	for (auto& kv : mEvents)
 	{

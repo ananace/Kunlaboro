@@ -6,7 +6,7 @@ using namespace Kunlaboro;
 
 MessagingComponent::MessagingComponent()
 {
-	getEntitySystem()->getEventSystem().eventRegister<EntitySystem::ComponentAttachedEvent>(getId(), [this](const EntitySystem::ComponentAttachedEvent& ev) {
+	getEntitySystem()->getEventSystem().registerEvent<EntitySystem::ComponentAttachedEvent>(getId(), [this](const EntitySystem::ComponentAttachedEvent& ev) {
 		if (ev.Component == getId())
 			addedToEntity();
 	});

@@ -62,7 +62,7 @@ Entity EntitySystem::createEntity()
 
 	auto eid = EntityId(id, mEntities[id].Generation);
 	if (mEventSystem)
-		mEventSystem->eventEmit<EntityCreatedEvent>(eid, this);
+		mEventSystem->emitEvent<EntityCreatedEvent>(eid, this);
 
 	return Entity(this, eid);
 }
@@ -85,7 +85,7 @@ void EntitySystem::destroyEntity(EntityId id)
 	mFreeEntityIndices.push_back(id.getIndex());
 
 	if (mEventSystem)
-		mEventSystem->eventEmit<EntityDestroyedEvent>(id, this);
+		mEventSystem->emitEvent<EntityDestroyedEvent>(id, this);
 }
 
 bool EntitySystem::isAlive(EntityId id) const
@@ -141,7 +141,7 @@ void EntitySystem::destroyComponent(ComponentId id)
 	}
 
 	if (mEventSystem)
-		mEventSystem->eventUnregisterAll(id);
+		mEventSystem->unregisterAllEvents(id);
 	if (mMessageSystem)
 		mMessageSystem->messageUnrequestAll(id);
 
@@ -154,7 +154,7 @@ void EntitySystem::destroyComponent(ComponentId id)
 	data.FreeIndices.push_back(id.getIndex());
 
 	if (mEventSystem)
-		mEventSystem->eventEmit<ComponentDestroyedEvent>(id, this);
+		mEventSystem->emitEvent<ComponentDestroyedEvent>(id, this);
 }
 inline bool EntitySystem::isAlive(ComponentId id) const
 {
@@ -208,7 +208,7 @@ void EntitySystem::attachComponent(ComponentId cid, EntityId eid, bool checkDeta
 	entity.Components[cid.getFamily()] = cid;
 
 	if (mEventSystem)
-		mEventSystem->eventEmit<ComponentAttachedEvent>(cid, eid, this);
+		mEventSystem->emitEvent<ComponentAttachedEvent>(cid, eid, this);
 }
 void EntitySystem::detachComponent(ComponentId cid, EntityId eid)
 {
@@ -227,7 +227,7 @@ void EntitySystem::detachComponent(ComponentId cid, EntityId eid)
 	entity.Components[cid.getFamily()] = ComponentId::Invalid();
 
 	if (mEventSystem)
-		mEventSystem->eventEmit<ComponentDetachedEvent>(cid, eid, this);
+		mEventSystem->emitEvent<ComponentDetachedEvent>(cid, eid, this);
 
 	comp.release();
 }

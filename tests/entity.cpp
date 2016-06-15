@@ -42,7 +42,7 @@ TEST_CASE("entity creation", "[entity]")
 	auto func = [&i](const Kunlaboro::EntitySystem::EntityCreatedEvent& ev) {
 		++i;
 	};
-	es.getEventSystem().eventRegister<Kunlaboro::EntitySystem::EntityCreatedEvent>(func);
+	es.getEventSystem().registerEvent<Kunlaboro::EntitySystem::EntityCreatedEvent>(func);
 
 	auto ent = es.createEntity();
 	ent.addComponent<EntityMessagingTestComponent>(42);

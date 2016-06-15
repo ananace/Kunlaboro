@@ -36,7 +36,7 @@ namespace Kunlaboro
 	}
 
 	template<typename Event, typename Functor>
-	void EventSystem::eventRegister(ComponentId cId, Functor&& func)
+	void EventSystem::registerEvent(ComponentId cId, Functor&& func)
 	{
 		auto& list = mEvents[typeid(Event)];
 
@@ -48,7 +48,7 @@ namespace Kunlaboro
 		list.push_back(ev);
 	}
 	template<typename Event, typename Functor>
-	std::size_t EventSystem::eventRegister(Functor&& func)
+	EventSystem::ListenerId EventSystem::registerEvent(Functor&& func)
 	{
 		auto& list = mEvents[typeid(Event)];
 
@@ -61,7 +61,7 @@ namespace Kunlaboro
 		return ev->ID;
 	}
 	template<typename Event>
-	void EventSystem::eventUnregister(ComponentId cId)
+	void EventSystem::unregisterEvent(ComponentId cId)
 	{
 		auto& list = mEvents[typeid(Event)];
 
@@ -76,7 +76,7 @@ namespace Kunlaboro
 		}
 	}
 	template<typename Event>
-	void EventSystem::eventUnregister(std::size_t id)
+	void EventSystem::unregisterEvent(ListenerId id)
 	{
 		auto& list = mEvents[typeid(Event)];
 
@@ -91,7 +91,7 @@ namespace Kunlaboro
 		}
 	}
 	template<typename Event>
-	void EventSystem::eventEmit(const Event& toSend) const
+	void EventSystem::emitEvent(const Event& toSend) const
 	{
 		if (mEvents.count(typeid(Event)) == 0)
 			return;
@@ -107,12 +107,12 @@ namespace Kunlaboro
 		}
 	}
 	template<typename Event, typename... Args>
-	void EventSystem::eventEmit(Args... args) const
+	void EventSystem::emitEvent(Args... args) const
 	{
 		// static_assert(std::is_trivial<Event>::value, "Must be a POD type.");
 
 		Event toSend{ std::forward<Args>(args)... };
-		eventEmit(toSend);
+		emitEvent(toSend);
 	}
 
 }

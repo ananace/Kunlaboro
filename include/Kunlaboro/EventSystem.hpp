@@ -32,6 +32,8 @@ namespace Kunlaboro
 			std::uint8_t Type;
 		};
 
+		typedef std::size_t ListenerId;
+
 		EventSystem(const EventSystem&) = delete;
 		EventSystem(EventSystem&&) = delete;
 		~EventSystem();
@@ -49,7 +51,7 @@ namespace Kunlaboro
 		 * \sa eventUnregister(ComponentId)
 		 */
 		template<typename Event, typename Functor>
-		void eventRegister(ComponentId cId, Functor&& func);
+		void registerEvent(ComponentId cId, Functor&& func);
 		/** Register a loose listener for the given event.
 		 *
 		 * \tparam Event The event to listen for.
@@ -60,12 +62,12 @@ namespace Kunlaboro
 		 * \sa eventUnregister(std::size_t)
 		 */
 		template<typename Event, typename Functor>
-		std::size_t eventRegister(Functor&& func);
+		ListenerId registerEvent(Functor&& func);
 		/** Unregisters all events attached to the given component.
 		 *
 		 * \param cId The ID of the component to unregister from.
 		 */
-		void eventUnregisterAll(ComponentId cId);
+		void unregisterAllEvents(ComponentId cId);
 		/** Unregister an event from a component.
 		 *
 		 * \tparam Event The event to unregister.
@@ -75,7 +77,7 @@ namespace Kunlaboro
 		 *       of the given event type.
 		 */
 		template<typename Event>
-		void eventUnregister(ComponentId cId);
+		void unregisterEvent(ComponentId cId);
 		/** Unregister a loose event.
 		 *
 		 * \tparam Event The event to unregister.
@@ -85,20 +87,20 @@ namespace Kunlaboro
 		 *       of the given event type.
 		 */
 		template<typename Event>
-		void eventUnregister(std::size_t id);
+		void unregisterEvent(ListenerId id);
 		/** Emits an already created copy of the given event.
 		 *
 		 * \param ev The pre-created event and data to emit.
 		 */
 		template<typename Event>
-		void eventEmit(const Event& ev) const;
+		void emitEvent(const Event& ev) const;
 		/** Emits an event with the given arguments.
 		 *
 		 * \tparam Event The event type to emit.
 		 * \param args The arguments to create the event with.
 		 */
 		template<typename Event, typename... Args>
-		void eventEmit(Args... args) const;
+		void emitEvent(Args... args) const;
 
 	private:
 		enum
