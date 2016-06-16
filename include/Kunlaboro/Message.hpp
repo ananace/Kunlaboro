@@ -26,9 +26,9 @@ namespace Kunlaboro
 		 * \code{.cpp}
 		 * void Example::addedToEntity()
 		 * {
-		 *   requestMessageId<float>("System.Tick", &Example::Tick);
-		 *   requestMessageId("System.Reset", &Example::Reset);
-		 *   requestMessageId<std::string&>("System.Display", &Example::Display, priority);
+		 *   requestMessage<float>("System.Tick", &Example::Tick);
+		 *   requestMessage("System.Reset", &Example::Reset);
+		 *   requestMessage<std::string&>("System.Display", &Example::Display, priority);
 		 *   // Can also be changed later on through
 		 *   // reprioritizeMessageId("System.Display", priority);
 		 * }

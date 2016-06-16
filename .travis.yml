@@ -14,18 +14,18 @@ matrix:
             - cmake
             - cmake-data
       env: COMPILER=g++-4.9
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.6
-            - george-edison55-precise-backports
-          packages:
-            - clang-3.6
-            - cmake
-            - cmake-data
-      env: COMPILER=clang++-3.6
+#    - compiler: clang
+#      addons:
+#        apt:
+#          sources:
+#            - ubuntu-toolchain-r-test
+#            - llvm-toolchain-precise-3.6
+#            - george-edison55-precise-backports
+#          packages:
+#            - clang-3.6
+#            - cmake
+#            - cmake-data
+#      env: COMPILER=clang++-3.6
 
 before_script:
   - mkdir build
