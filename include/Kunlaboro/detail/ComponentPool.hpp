@@ -26,7 +26,7 @@ namespace Kunlaboro
 			inline std::size_t getChunkSize() const { return mChunkSize; }
 
 			void ensure(std::size_t count);
-			void resize(std::size_t count);
+			void resize(std::size_t count, bool shrink = false);
 
 			inline bool hasBit(std::size_t index) const { return mBits.hasBit(index); }
 			inline void setBit(std::size_t index) { mBits.setBit(index); }

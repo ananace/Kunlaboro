@@ -37,19 +37,34 @@ TEST_CASE("POD component creation - 1 000 000", "[.performance][component]")
 {
 	Kunlaboro::EntitySystem es;
 
+	uint8_t family = -1;
+
 	SECTION("POD creation")
 	{
+		family = Kunlaboro::ComponentFamily<PODComponent>::getFamily();
+
 		for (int i = 0; i < 1000000; ++i)
 			es.createComponent<PODComponent>().unlink();
 
-		CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<PODComponent>::getFamily()).countBits() == 1000000);
+		REQUIRE(es.componentGetPool(family).countBits() == 1000000);
 	}
 	SECTION("large chunk POD creation")
 	{
+		family = Kunlaboro::ComponentFamily<PODComponentLargeChunks>::getFamily();
+
 		for (int i = 0; i < 1000000; ++i)
 			es.createComponent<PODComponentLargeChunks>().unlink();
 
-		CHECK(es.componentGetPool(Kunlaboro::ComponentFamily<PODComponentLargeChunks>::getFamily()).countBits() == 1000000);
+		REQUIRE(es.componentGetPool(family).countBits() == 1000000);
+	}
+
+	if (family != -1)
+	{
+		for (int i = 0; i < 1000000; ++i)
+			es.destroyComponent(Kunlaboro::ComponentId(i, 0, family));
+
+		es.cleanComponents();
+		REQUIRE(es.componentGetPool(family).getSize() == 0);
 	}
 }
 

@@ -29,8 +29,20 @@ void BaseComponentPool::ensure(size_t count)
 	mSize = count;
 	mBits.ensure(count);
 }
-void BaseComponentPool::resize(size_t count)
+void BaseComponentPool::resize(size_t count, bool shrink)
 {
+	if (count < mCapacity && shrink)
+	{
+		while (mCapacity - mChunkSize >= count && !mBlocks.empty())
+		{
+			mBlocks.pop_back();
+			mCapacity -= mChunkSize;
+		}
+
+		mSize = count;
+		return;
+	}
+
 	while (mCapacity < count)
 	{
 		auto* chunk = new uint8_t[mComponentSize * mChunkSize];

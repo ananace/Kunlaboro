@@ -60,7 +60,9 @@ Entity EntitySystem::createEntity()
 		mFreeEntityIndices.pop_front();
 	}
 
-	auto eid = EntityId(id, mEntities[id].Generation);
+	auto& ent = mEntities[id];
+	ent.Destroyed = false;
+	auto eid = EntityId(id, ent.Generation);
 	if (mEventSystem)
 		mEventSystem->emitEvent<EntityCreatedEvent>(eid, this);
 
@@ -81,7 +83,8 @@ void EntitySystem::destroyEntity(EntityId id)
 		destroyComponent(components[family]);
 	}
 
-	++mEntities[id.getIndex()].Generation;
+	++entity.Generation;
+	entity.Destroyed = true;
 	mFreeEntityIndices.push_back(id.getIndex());
 
 	if (mEventSystem)
@@ -282,4 +285,49 @@ const MessageSystem& EntitySystem::getMessageSystem() const
 {
 	assert(mMessageSystem);
 	return *mMessageSystem;
+}
+
+void EntitySystem::cleanComponents()
+{
+	for (auto& family : mComponentFamilies)
+	{
+		if (!family.MemoryPool)
+			continue;
+
+		auto removeFrom = family.Components.end();
+		for (auto it = family.Components.rbegin(); it != family.Components.rend(); ++it)
+		{
+			if (!it->RefCount || it->RefCount->load() == 0)
+			{
+				removeFrom = it.base();
+				auto index = removeFrom - family.Components.begin() - 1;
+
+				if (family.FreeIndices.back() == index)
+					family.FreeIndices.pop_back();
+				family.MemoryPool->resetBit(index);
+			}
+		}
+
+		if (removeFrom != family.Components.end())
+		{
+			auto newSize = removeFrom - family.Components.begin() - 1;
+			family.Components.resize(newSize);
+		}
+
+		family.MemoryPool->resize(family.Components.size(), true);
+	}
+}
+
+void EntitySystem::cleanEntities()
+{
+	for (auto it = mEntities.rbegin(); it != mEntities.rend();)
+	{
+		if (it->Destroyed)
+		{
+			auto oldIt = it++;
+			mEntities.erase(oldIt.base());
+		}
+		else
+			++it;
+	}
 }

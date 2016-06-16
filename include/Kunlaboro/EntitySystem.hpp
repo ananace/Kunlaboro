@@ -266,6 +266,17 @@ namespace Kunlaboro
 		 */
 		const MessageSystem& getMessageSystem() const;
 
+		/** Cleans up old component data.
+		 *
+		 * 
+		 */
+		void cleanComponents();
+		/** Cleans up old entity data.
+		 *
+		 *
+		 */
+		void cleanEntities();
+
 	public:
 		struct ComponentData
 		{
@@ -294,6 +305,7 @@ namespace Kunlaboro
 			EntityId::GenerationType Generation;
 			detail::DynamicBitfield ComponentBits;
 			std::vector<ComponentId> Components;
+			bool Destroyed;
 		};
 
 		const detail::BaseComponentPool& componentGetPool(ComponentId::FamilyType family) const;
