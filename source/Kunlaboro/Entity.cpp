@@ -1,6 +1,5 @@
-#include <Kunlaboro/Entity.hpp>
-#include <Kunlaboro/Entity.inl>
 #include <Kunlaboro/EntitySystem.hpp>
+#include <Kunlaboro/Entity.hpp>
 
 using namespace Kunlaboro;
 

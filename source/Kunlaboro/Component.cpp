@@ -1,5 +1,4 @@
 #include <Kunlaboro/Component.hpp>
-#include <Kunlaboro/Component.inl>
 #include <Kunlaboro/EntitySystem.hpp>
 
 using namespace Kunlaboro;

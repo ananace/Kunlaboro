@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Component.hpp"
-
 #include <utility>
 
 namespace Kunlaboro

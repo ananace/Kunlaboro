@@ -1,4 +1,4 @@
-#include <Kunlaboro/Component.inl>
+#include <Kunlaboro/Component.hpp>
 #include <Kunlaboro/Entity.inl>
 #include <Kunlaboro/EntitySystem.inl>
 #include <Kunlaboro/EventSystem.inl>
