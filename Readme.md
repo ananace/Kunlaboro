@@ -26,13 +26,15 @@ TODO
   - ~~Global/Local message requests.~~
 - Functions for shrinking arrays, collecting garbage.
   - Clear unused bitfield slots, reduce size on bit removal.
-  - Run garbage collection on memory pools, on user request.
+  - ~~Run garbage collection on memory pools, on user request.~~
 - Better creation of POD components?
   - Look into possibility of having true POD components.
 - ~~Improve job queue~~
   - Allow for reusing queue without restarting threads.
 - Clean up code, forward declare more things.
   - Include inline through headers.
+- More compile-time code.
+  - Use ID enums to make compile-time bitsets possible.
 
 Code Examples
 -------------
