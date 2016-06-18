@@ -13,6 +13,8 @@ namespace Kunlaboro
 		/** Dynamic size bitfield.
 		 *
 		 * \todo Look into moving out of API.
+		 * \todo Look into possiblity of a static version.
+		 * \todo Better comparison functionality.
 		 */
 		class DynamicBitfield
 		{

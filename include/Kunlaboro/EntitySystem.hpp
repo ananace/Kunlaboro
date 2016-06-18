@@ -268,7 +268,8 @@ namespace Kunlaboro
 
 		/** Cleans up old component data.
 		 *
-		 * 
+		 * \todo Allow clearing up certain component families, instead
+		 *       of all of them.
 		 */
 		void cleanComponents();
 		/** Cleans up old entity data.
