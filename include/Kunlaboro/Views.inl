@@ -245,10 +245,8 @@ namespace Kunlaboro
 	}
 
 	template<MatchType MT, typename... Components>
-	void TypedEntityView<MT, Components...>::forEach(const typename ident<std::function<void(Entity&, Components*...)>>::type& func)
+	void TypedEntityView<MT, Components...>::forEach(const typename ident<std::function<void(const Entity&, Components*...)>>::type& func)
 	{
-		typedef typename ident<std::function<void(Entity&, Components*...)>>::type TypedFunction;
-
 		const auto* es = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mES;
 		const auto& pred = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mPred;
 		auto* queue = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mQueue;
@@ -264,7 +262,9 @@ namespace Kunlaboro
 			if (ent && (!pred || pred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, MT))
 			{
 				if (queue)
-					queue->submit(TypedFunction(func), std::move(ent), std::move(ent.getComponent<Components>().get())...);
+					queue->submit([func, ent]() {
+						func(ent, std::move(ent.getComponent<Components>().get())...);
+					});
 				else
 					func(ent, (ent.getComponent<Components>().get())...);
 			}
@@ -275,11 +275,9 @@ namespace Kunlaboro
 	}
 
 	template<MatchType MT, typename... Components>
-	void TypedEntityView<MT, Components...>::forEach(const typename ident<std::function<void(Entity&, Components&...)>>::type& func)
+	void TypedEntityView<MT, Components...>::forEach(const typename ident<std::function<void(const Entity&, Components&...)>>::type& func)
 	{
 		static_assert(MT == Match_All, "Can't use references unless matching all components.");
-
-		typedef typename ident<std::function<void(Entity&, Components&...)>>::type TypedFunction;
 
 		const auto* es = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mES;
 		const auto& pred = impl::BaseView<TypedEntityView<MT,Components...>, Entity>::mPred;
@@ -296,7 +294,9 @@ namespace Kunlaboro
 			if (es->isAlive(eid) && (!pred || pred(ent)) && impl::matchBitfield(entData.ComponentBits, mBitField, MT))
 			{
 				if (queue)
-					queue->submit(TypedFunction(func), std::move(ent), std::move(*(ent.getComponent<Components>().get()))...);
+					queue->submit([func, ent]() {
+						func(ent, std::move(*(ent.getComponent<Components>().get()))...);
+					});
 				else
 					func(ent, *(ent.getComponent<Components>().get())...);
 			}

@@ -50,7 +50,7 @@ void EntityView::forEach(const Function& func)
 		if (BaseView<EntityView, Entity>::mES->isAlive(eid) && (!mPred || mPred(ent)))
 		{
 			if (queue)
-				queue->submit(Function(func), std::move(ent));
+				queue->submit([func, ent]() { func(ent); });
 			else
 				func(ent);
 		}

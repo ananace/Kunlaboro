@@ -29,7 +29,6 @@ namespace Kunlaboro
 		{
 		public:
 			typedef std::function<bool(const ViewedType&)> Predicate;
-			typedef std::function<void(ViewedType&)> Function;
 
 			virtual ~BaseView();
 
@@ -49,11 +48,6 @@ namespace Kunlaboro
 			 * \param pred The predicate to match.
 			 */
 			ViewType where(const Predicate& pred) const;
-			/** Calls a given function with all the matching entries.
-			 *
-			 * \param func The function to call.
-			 */
-			virtual void forEach(const Function& func) = 0;
 
 			const EntitySystem& getEntitySystem() const;
 			const Predicate& getPredicate() const;
@@ -156,7 +150,7 @@ namespace Kunlaboro
 		EntityView(const EntitySystem& es);
 
 		typedef std::function<bool(const Entity&)> Predicate;
-		typedef std::function<void(Entity&)> Function;
+		typedef std::function<void(const Entity&)> Function;
 
 		struct Iterator : public impl::BaseIterator<Iterator, Entity>
 		{
@@ -217,12 +211,12 @@ namespace Kunlaboro
 		 *
 		 * \param func The function to call with every matching entity and its component pointers.
 		 */
-		void forEach(const typename ident<std::function<void(Entity&, Components*...)>>::type& func);
+		void forEach(const typename ident<std::function<void(const Entity&, Components*...)>>::type& func);
 		/** Iterates all entities, using \p Match_All matching.
 		 *
 		 * \param func The function to call with every matching entity and its component references.
 		 */
-		void forEach(const typename ident<std::function<void(Entity&, Components&...)>>::type& func);
+		void forEach(const typename ident<std::function<void(const Entity&, Components&...)>>::type& func);
 
 		virtual void forEach(const Function& func);
 

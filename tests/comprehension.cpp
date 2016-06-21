@@ -64,7 +64,7 @@ TEST_CASE("fizzbuzz", "[comprehensive][view]")
 		std::string result;
 
 		view.withComponents<Kunlaboro::Match_Any, NumberComponent, NameComponent>()
-		    .forEach([&result](Kunlaboro::Entity&, NumberComponent* number, NameComponent* name) {
+		    .forEach([&result](const Kunlaboro::Entity&, NumberComponent* number, NameComponent* name) {
 			if (name)
 				result += name->Name + " ";
 			if (number)
@@ -79,7 +79,7 @@ TEST_CASE("fizzbuzz", "[comprehensive][view]")
 		std::string result;
 
 		view.withComponents<Kunlaboro::Match_All, NumberComponent, NameComponent>()
-		    .forEach([&result](Kunlaboro::Entity&, NumberComponent& number, NameComponent& name) {
+		    .forEach([&result](const Kunlaboro::Entity&, NumberComponent& number, NameComponent& name) {
 			result += std::to_string(number.Number);
 			result += name.Name + " ";
 		});
@@ -93,7 +93,7 @@ TEST_CASE("fizzbuzz", "[comprehensive][view]")
 
 		view.withComponents<Kunlaboro::Match_Any, NumberComponent, NameComponent>()
 		    .where([](const Kunlaboro::Entity& ent) { return ent.getId().getIndex() % 2 == 0; })
-		    .forEach([&result](Kunlaboro::Entity&, NumberComponent* number, NameComponent* name) {
+		    .forEach([&result](const Kunlaboro::Entity&, NumberComponent* number, NameComponent* name) {
 			if (name)
 				result += name->Name + " ";
 			if (number)
@@ -159,8 +159,8 @@ TEST_CASE("Simple n-body simulation - 1000 particles", "[comprehensive][performa
 
 		for (int step = 0; step < IterationCount; ++step)
 		{
-			entityView.forEach([&gravityIterations, &velocityIterations, &particleList](Kunlaboro::Entity& ent, Position& pos, Velocity& vel) {
-				particleList.forEach([&gravityIterations, &ent, &pos, &vel](Kunlaboro::Entity& ent2, Position& pos2) {
+			entityView.forEach([&gravityIterations, &velocityIterations, &particleList](const Kunlaboro::Entity& ent, Position& pos, Velocity& vel) {
+				particleList.forEach([&gravityIterations, &ent, &pos, &vel](const Kunlaboro::Entity& ent2, Position& pos2) {
 					if (ent == ent2)
 						return;
 
@@ -200,8 +200,8 @@ TEST_CASE("Simple n-body simulation - 1000 particles", "[comprehensive][performa
 
 		for (int step = 0; step < IterationCount; ++step)
 		{
-			entityView.forEach([&gravityIterations, &velocityIterations, &particleList](Kunlaboro::Entity& ent, Position& pos, Velocity& vel) {
-				particleList.forEach([&gravityIterations, &ent, &pos, &vel](Kunlaboro::Entity& ent2, Position& pos2) {
+			entityView.forEach([&gravityIterations, &velocityIterations, &particleList](const Kunlaboro::Entity& ent, Position& pos, Velocity& vel) {
+				particleList.forEach([&gravityIterations, &ent, &pos, &vel](const Kunlaboro::Entity& ent2, Position& pos2) {
 					if (ent == ent2)
 						return;
 

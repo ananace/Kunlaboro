@@ -233,7 +233,7 @@ TEST_CASE("entity performance - 1 000 000", "[.performance][entity]")
 		SECTION("iteration - forEach")
 		{
 			auto view = Kunlaboro::EntityView(es);
-			view.forEach([](Kunlaboro::Entity& ent) {
+			view.forEach([](const Kunlaboro::Entity& ent) {
 				(void)ent.getId();
 			});
 		}
