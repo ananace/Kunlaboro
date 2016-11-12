@@ -30,13 +30,13 @@ namespace Kunlaboro
 		reprioritizeMessage(cId, mId, prio);
 	}
 	template<typename... Args>
-	inline void MessageSystem::sendMessage(const char* const message, Args... args) const
+	inline void MessageSystem::sendMessage(const char* const message, Args&&... args) const
 	{
 		auto mId = hash(message);
 		sendMessage<Args...>(mId, std::forward<Args>(args)...);
 	}
 	template<typename... Args>
-	inline void MessageSystem::sendMessageTo(const char* const message, ComponentId cId, Args... args) const
+	inline void MessageSystem::sendMessageTo(const char* const message, ComponentId cId, Args&&... args) const
 	{
 		auto mId = hash(message);
 		sendMessageTo<Args...>(mId, cId, std::forward<Args>(args)...);
@@ -117,7 +117,7 @@ namespace Kunlaboro
 		message.Callbacks.insert(newPos, *it);
 	}
 	template<typename... Args>
-	inline void MessageSystem::sendMessage(MessageId mId, Args... args) const
+	inline void MessageSystem::sendMessage(MessageId mId, Args&&... args) const
 	{
 		if (mMessages.count(mId) == 0)
 			return;
@@ -132,7 +132,7 @@ namespace Kunlaboro
 		}
 	}
 	template<typename... Args>
-	inline void MessageSystem::sendMessageTo(MessageId mId, ComponentId cId, Args... args) const
+	inline void MessageSystem::sendMessageTo(MessageId mId, ComponentId cId, Args&&... args) const
 	{
 		if (mMessages.count(mId) == 0)
 			return;

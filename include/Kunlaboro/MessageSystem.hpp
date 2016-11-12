@@ -2,6 +2,7 @@
 
 #include "ID.hpp"
 #include "Message.hpp"
+#include "detail/Delegate.hpp"
 
 #include <unordered_map>
 #include <deque>
@@ -141,7 +142,7 @@ namespace Kunlaboro
 		 *       preferrably through run/compile-time switch.
 		 */
 		template<typename... Args>
-		void sendMessage(const char* const message, Args... args) const;
+		void sendMessage(const char* const message, Args&&... args) const;
 		/** Send a local message to the given component, with name and arguments.
 		 *
 		 * \param message The name of the message to send.
@@ -152,7 +153,7 @@ namespace Kunlaboro
 		 *       preferrably through run/compile-time switch.
 		 */
 		template<typename... Args>
-		void sendMessageTo(const char* const message, ComponentId cId, Args... args) const;
+		void sendMessageTo(const char* const message, ComponentId cId, Args&&... args) const;
 
 		// TODO:
 		// template<typename... Args>
@@ -206,7 +207,7 @@ namespace Kunlaboro
 		 *       preferrably through run/compile-time switch.
 		 */
 		template<typename... Args>
-		void sendMessage(MessageId mId, Args... args) const;
+		void sendMessage(MessageId mId, Args&&... args) const;
 		/** Send a local message with the given ID and arguments.
 		 *
 		 * \param mId The ID of the message to send.
@@ -217,7 +218,7 @@ namespace Kunlaboro
 		 *       preferrably through run/compile-time switch.
 		 */
 		template<typename... Args>
-		void sendMessageTo(MessageId mId, ComponentId cId, Args... args) const;
+		void sendMessageTo(MessageId mId, ComponentId cId, Args&&... args) const;
 		// TODO:
 		// template<typename... Args>
 		// void messageSendTo(MessageId mId, EntityId eId, Args... args) const;
@@ -270,12 +271,12 @@ namespace Kunlaboro
 		template<typename... Args>
 		struct MessageCallback : public BaseMessageCallback
 		{
-			MessageCallback(ComponentId cId, float p, std::function<void(Args...)>&& func)
+			MessageCallback(ComponentId cId, float p, detail::Delegate<void(Args...)>&& func)
 				: BaseMessageCallback(cId, p)
 				, Func(func)
 			{ }
 
-			std::function<void(Args...)> Func;
+			detail::Delegate<void(Args...)> Func;
 		};
 
 

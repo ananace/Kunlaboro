@@ -49,6 +49,7 @@ set(Kunlaboro_HEADERS
 	include/Kunlaboro/Views.inl
 
 	include/Kunlaboro/detail/ComponentPool.hpp
+	include/Kunlaboro/detail/Delegate.hpp
 	include/Kunlaboro/detail/DynamicBitfield.hpp
 	include/Kunlaboro/detail/JobQueue.hpp
 )
