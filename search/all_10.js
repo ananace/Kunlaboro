@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['_7ecomponent',['~Component',['../class_kunlaboro_1_1_component.html#a8cd2419721575a77839d3f6325caf93f',1,'Kunlaboro::Component']]],
-  ['_7eentitysystem',['~EntitySystem',['../class_kunlaboro_1_1_entity_system.html#aea5755206b3e298850ee623af94884cb',1,'Kunlaboro::EntitySystem']]],
-  ['_7erequestlock',['~RequestLock',['../struct_kunlaboro_1_1_entity_system_1_1_frozen_data_1_1_request_lock.html#aa2b15d25d88052bfd1cc10d08e22de06',1,'Kunlaboro::EntitySystem::FrozenData::RequestLock']]]
+  ['parallel',['parallel',['../class_kunlaboro_1_1impl_1_1_base_view.html#a39678b0bbd927ca4b1074a3f6b6fa2bb',1,'Kunlaboro::impl::BaseView::parallel(bool parallell=true) const '],['../class_kunlaboro_1_1impl_1_1_base_view.html#a23a4fb440909fc94e8658cb34e03c098',1,'Kunlaboro::impl::BaseView::parallel(detail::JobQueue &amp;queue) const ']]],
+  ['predicate',['Predicate',['../class_kunlaboro_1_1impl_1_1_base_view.html#acf1c71ceb63cf48dda18d64d55344553',1,'Kunlaboro::impl::BaseView::Predicate()'],['../class_kunlaboro_1_1impl_1_1_base_iterator.html#a01a477ca4185930c6baa9a17eb4cc70e',1,'Kunlaboro::impl::BaseIterator::Predicate()'],['../class_kunlaboro_1_1_component_view.html#ab7d4e4dc45cc15356dc1a907198ff632',1,'Kunlaboro::ComponentView::Predicate()'],['../class_kunlaboro_1_1_entity_view.html#ae6fbe9d663f9dd24dc43b5ebad342581',1,'Kunlaboro::EntityView::Predicate()'],['../class_kunlaboro_1_1_typed_entity_view.html#a856d5bf09103506b2907f85cd3c5e94f',1,'Kunlaboro::TypedEntityView::Predicate()']]],
+  ['prime',['prime',['../struct_kunlaboro_1_1detail_1_1hash__internal_3_01uint64__t_01_4.html#a4b4faeb51bcfb978cf9c684cf3796726',1,'Kunlaboro::detail::hash_internal&lt; uint64_t &gt;::prime()'],['../struct_kunlaboro_1_1detail_1_1hash__internal_3_01uint32__t_01_4.html#af77705c1c623defc1895a4a3246043b0',1,'Kunlaboro::detail::hash_internal&lt; uint32_t &gt;::prime()']]]
 ];

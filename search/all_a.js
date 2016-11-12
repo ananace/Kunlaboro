@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['needsprocessing',['needsProcessing',['../struct_kunlaboro_1_1_entity_system_1_1_frozen_data.html#a2fb718d9c2533a23aee7756b081cb10b',1,'Kunlaboro::EntitySystem::FrozenData']]],
-  ['numcom',['numCom',['../class_kunlaboro_1_1_entity_system.html#a54227405eb74a7fb709b8f563d4cc523',1,'Kunlaboro::EntitySystem']]],
-  ['nument',['numEnt',['../class_kunlaboro_1_1_entity_system.html#abcea919d727cabd6107d6996eb852d0b',1,'Kunlaboro::EntitySystem']]]
+  ['jobqueue',['JobQueue',['../class_kunlaboro_1_1detail_1_1_job_queue.html',1,'Kunlaboro::detail']]],
+  ['jobqueue',['JobQueue',['../class_kunlaboro_1_1detail_1_1_job_queue.html#a45c340e953a27358e904809e629259ff',1,'Kunlaboro::detail::JobQueue::JobQueue(unsigned threadCount=0)'],['../class_kunlaboro_1_1detail_1_1_job_queue.html#acc2a36a504470936edb9747897bafd30',1,'Kunlaboro::detail::JobQueue::JobQueue(const JobQueue &amp;)=delete']]],
+  ['jobqueue_2ehpp',['JobQueue.hpp',['../_job_queue_8hpp.html',1,'']]]
 ];

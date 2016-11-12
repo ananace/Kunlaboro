@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['components',['components',['../struct_kunlaboro_1_1_entity_system_1_1_entity.html#aa42c8fc74d21938810bd70950b5cbe1e',1,'Kunlaboro::EntitySystem::Entity']]]
+  ['component',['Component',['../struct_kunlaboro_1_1_entity_system_1_1_component_attached_event.html#ab1fbc5c90b1d671ad779c51db48c4d25',1,'Kunlaboro::EntitySystem::ComponentAttachedEvent::Component()'],['../struct_kunlaboro_1_1_entity_system_1_1_component_detached_event.html#a98da7411167eb4883a8ad02cb1dee481',1,'Kunlaboro::EntitySystem::ComponentDetachedEvent::Component()'],['../struct_kunlaboro_1_1_entity_system_1_1_component_created_event.html#ad5909efcdc659231a2f082017281b5a1',1,'Kunlaboro::EntitySystem::ComponentCreatedEvent::Component()'],['../struct_kunlaboro_1_1_entity_system_1_1_component_destroyed_event.html#a90a645981ce5f7b1d8ee3ad1ca98b6d4',1,'Kunlaboro::EntitySystem::ComponentDestroyedEvent::Component()']]],
+  ['componentbits',['ComponentBits',['../struct_kunlaboro_1_1_entity_system_1_1_entity_data.html#afb430b7facf05143374c1e1ad0cda909',1,'Kunlaboro::EntitySystem::EntityData']]],
+  ['components',['Components',['../struct_kunlaboro_1_1_entity_system_1_1_entity_data.html#a79ef76c224144673436f62474fe6bd1f',1,'Kunlaboro::EntitySystem::EntityData::Components()'],['../struct_kunlaboro_1_1_entity_system_1_1_component_family.html#a042c4881b39b0638e974b17592b34d4a',1,'Kunlaboro::EntitySystem::ComponentFamily::Components()']]]
 ];

@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['addcomponent',['addComponent',['../class_kunlaboro_1_1_entity_system.html#adf34f442aa1d8edad044d024031fe74c',1,'Kunlaboro::EntitySystem::addComponent(EntityId eid, Component *c)'],['../class_kunlaboro_1_1_entity_system.html#ae43a7dd7a6bda17e6e5f3f15054dfde4',1,'Kunlaboro::EntitySystem::addComponent(EntityId eid, const std::string &amp;name)']]],
-  ['addedtoentity',['addedToEntity',['../class_kunlaboro_1_1_component.html#a278ebf59e162dcf7abc5babd1833083b',1,'Kunlaboro::Component']]],
-  ['addlocalcomponent',['addLocalComponent',['../class_kunlaboro_1_1_component.html#a22b0c198247382bbb78380fbddd1bdc5',1,'Kunlaboro::Component']]]
+  ['abort',['abort',['../class_kunlaboro_1_1detail_1_1_job_queue.html#a2af1f0385bd27f81e4f391befb3a81d2',1,'Kunlaboro::detail::JobQueue']]],
+  ['addcomponent',['addComponent',['../class_kunlaboro_1_1_entity.html#a650f9e536a8b64a4a1a365df16caaf92',1,'Kunlaboro::Entity']]],
+  ['addedtoentity',['addedToEntity',['../class_kunlaboro_1_1_messaging_component.html#aff5423a4a18ec4bb05872ffe1d1109a7',1,'Kunlaboro::MessagingComponent']]],
+  ['addref',['addRef',['../class_kunlaboro_1_1_base_component_handle.html#a88bc8582f095e39fbf47587eb2ec7042',1,'Kunlaboro::BaseComponentHandle']]],
+  ['attachcomponent',['attachComponent',['../class_kunlaboro_1_1_entity_system.html#a027a98c10426167435b33cc59d8b4178',1,'Kunlaboro::EntitySystem']]]
 ];

@@ -1,5 +1,11 @@
 var searchData=
 [
-  ['finalizeentity',['finalizeEntity',['../class_kunlaboro_1_1_entity_system.html#a0216ede7900049f6b2ae0b07a66b1670',1,'Kunlaboro::EntitySystem']]],
-  ['freeze',['freeze',['../class_kunlaboro_1_1_entity_system.html#afa9fd3ba6c295bd1f1ac6775e9d3c233',1,'Kunlaboro::EntitySystem']]]
+  ['emitevent',['emitEvent',['../class_kunlaboro_1_1_event_system.html#a8c13ad00174f65bdba0af65ae15fd2f2',1,'Kunlaboro::EventSystem::emitEvent(const Event &amp;ev) const '],['../class_kunlaboro_1_1_event_system.html#a4d54f905b6179b1f5b82dc438cfc84cf',1,'Kunlaboro::EventSystem::emitEvent(Args...args) const ']]],
+  ['end',['end',['../class_kunlaboro_1_1_component_view.html#a1b7bbce612739fdc008989996bbc8f99',1,'Kunlaboro::ComponentView::end()'],['../class_kunlaboro_1_1_entity_view.html#af4deb8034ac491f0dbc4dd84108d18b4',1,'Kunlaboro::EntityView::end()'],['../class_kunlaboro_1_1_typed_entity_view.html#a6efb3435b0f1a5b263671020dc73588e',1,'Kunlaboro::TypedEntityView::end()']]],
+  ['ensure',['ensure',['../class_kunlaboro_1_1detail_1_1_base_component_pool.html#a3a69686f57fd1f867d6d5a1afba53218',1,'Kunlaboro::detail::BaseComponentPool::ensure()'],['../class_kunlaboro_1_1detail_1_1_dynamic_bitfield.html#a26e9ba25ad05bc22612a0fa44ab8008b',1,'Kunlaboro::detail::DynamicBitfield::ensure()']]],
+  ['entity',['Entity',['../class_kunlaboro_1_1_entity.html#ac3ebe8d18a955fa42a4bd5efca784255',1,'Kunlaboro::Entity::Entity()'],['../class_kunlaboro_1_1_entity.html#afc6b6ed5bddd840554775c636426091a',1,'Kunlaboro::Entity::Entity(EntitySystem *sys, EntityId id)'],['../class_kunlaboro_1_1_entity.html#a6b9ccc0322d90e9decb0fe2a3fd9e757',1,'Kunlaboro::Entity::Entity(const Entity &amp;)=default'],['../class_kunlaboro_1_1_entity.html#ac53c4cc93820c542d0b5a83758eaa848',1,'Kunlaboro::Entity::Entity(Entity &amp;&amp;)=default']]],
+  ['entitygetlist',['entityGetList',['../class_kunlaboro_1_1_entity_system.html#aade294e7c699bb3cc72db9ba7de1a23f',1,'Kunlaboro::EntitySystem']]],
+  ['entitysystem',['EntitySystem',['../class_kunlaboro_1_1_entity_system.html#a06ab2c6aae8511cb9c305dbe063a18dc',1,'Kunlaboro::EntitySystem::EntitySystem()'],['../class_kunlaboro_1_1_entity_system.html#a146a95ebe46e81e3ed08aaf9bb9c8bf3',1,'Kunlaboro::EntitySystem::EntitySystem(const EntitySystem &amp;)=delete']]],
+  ['entityview',['EntityView',['../class_kunlaboro_1_1_entity_view.html#aef94c9ad9ef3f6d4f57415d271debf19',1,'Kunlaboro::EntityView']]],
+  ['eventsystem',['EventSystem',['../class_kunlaboro_1_1_event_system.html#a7d25892769e39e5d2d52fa65f6d781ad',1,'Kunlaboro::EventSystem::EventSystem(const EventSystem &amp;)=delete'],['../class_kunlaboro_1_1_event_system.html#a0f854a0f52c0970271cb7f55fd768b2e',1,'Kunlaboro::EventSystem::EventSystem(EventSystem &amp;&amp;)=delete']]]
 ];

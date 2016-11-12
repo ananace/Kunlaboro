@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['entitysystem_2ehpp',['EntitySystem.hpp',['../_entity_system_8hpp.html',1,'']]]
+  ['delegate_2ehpp',['Delegate.hpp',['../_delegate_8hpp.html',1,'']]],
+  ['dynamicbitfield_2ehpp',['DynamicBitfield.hpp',['../_dynamic_bitfield_8hpp.html',1,'']]]
 ];
