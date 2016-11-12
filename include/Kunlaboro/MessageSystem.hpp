@@ -219,9 +219,18 @@ namespace Kunlaboro
 		 */
 		template<typename... Args>
 		void sendMessageTo(MessageId mId, ComponentId cId, Args&&... args) const;
-		// TODO:
-		// template<typename... Args>
-		// void messageSendTo(MessageId mId, EntityId eId, Args... args) const;
+		/** Send a local message with the given ID and arguments.
+		*
+		* \param mId The ID of the message to send.
+		* \param eId The ID of the entity to receive the message.
+		*            All components on the given entity will receive the message.
+		* \param args The arguments of the message to send.
+		*
+		* \todo Check that the message can accept the given arguments,
+		*       preferrably through run/compile-time switch.
+		*/
+		template<typename... Args>
+		void sendMessageTo(MessageId mId, EntityId eId, Args&&... args) const;
 
 		/** Remove all messages requested by the given component ID.
 		 *

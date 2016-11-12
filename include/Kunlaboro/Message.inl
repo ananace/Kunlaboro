@@ -26,11 +26,12 @@ namespace Kunlaboro
 	{
 		getEntitySystem()->getMessageSystem().sendMessage(id, std::forward<Args>(args)...);
 	}
-	// template<typename... Args>
-	// void MessagingComponent::sendMessageTo(MessageId id, EntityId ent, Args... args) const
-	// {
-	//     getEntitySystem()->getMessageSystem().messageSend(id, std::forward<Args>(args)...);
-	// }
+
+	template<typename... Args>
+	void MessagingComponent::sendMessageTo(MessageId id, EntityId ent, Args... args) const
+	{
+	    getEntitySystem()->getMessageSystem().sendMessageTo(id, ent, std::forward<Args>(args)...);
+	}
 
 	template<typename... Args>
 	void MessagingComponent::sendMessageTo(MessageId id, ComponentId comp, Args... args) const

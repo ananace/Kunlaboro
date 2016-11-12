@@ -51,7 +51,7 @@ namespace Kunlaboro
 		auto& message = mMessages[mId];
 		message.Type = new MessageType<Args...>(
 			mId
-		);
+			);
 		message.Locality = locality;
 
 #ifdef _DEBUG
@@ -68,7 +68,7 @@ namespace Kunlaboro
 
 		auto& message = mMessages[mId];
 		auto* msgType = static_cast<MessageType<Args...>*>(message.Type);
-		
+
 		if (!msgType->isValid(func))
 			return;
 
@@ -85,7 +85,7 @@ namespace Kunlaboro
 				cId,
 				prio,
 				func
-			));
+				));
 	}
 	inline void MessageSystem::unrequestMessage(ComponentId cId, MessageId mId)
 	{
@@ -141,6 +141,25 @@ namespace Kunlaboro
 		if (message.Locality & Message_Local)
 		{
 			auto it = std::find_if(message.Callbacks.cbegin(), message.Callbacks.cend(), [cId](const BaseMessageCallback* cb) { return cb->Component == cId; });
+
+			if (it == message.Callbacks.cend())
+				return;
+
+			static_cast<MessageCallback<Args...>*>(*it)->Func(std::forward<Args>(args)...);
+		}
+	}
+	template<typename... Args>
+	inline void MessageSystem::sendMessageTo(MessageId mId, EntityId eId, Args&&... args) const
+	{
+		if (mMessages.count(mId) == 0)
+			return;
+
+		auto& message = mMessages.at(mId);
+		if (message.Locality & Message_Local)
+		{
+			auto it = std::find_if(message.Callbacks.cbegin(), message.Callbacks.cend(), [cId](const BaseMessageCallback* cb) {
+				return mES->isAttached(cb->Component, eId);
+			});
 
 			if (it == message.Callbacks.cend())
 				return;
