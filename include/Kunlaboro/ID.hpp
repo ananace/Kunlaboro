@@ -215,8 +215,19 @@ namespace Kunlaboro
 		idType mId;
 };
 
-#if 0
+#if !defined(KUNLABORO_32BIT)
+	/** The default entity ID type.
+	*
+	* \note 32 bits for index, meaning ~4.3 billion entities possible.
+	* \note 32 bits for generation, meaning ~4.3 billion entity slots can be reused before IDs become non-unique.
+	*/
 	typedef BaseEntityId<uint64_t, uint32_t, 32, uint32_t, 32> EntityId;
+	/** The default component ID type.
+	*
+	* \note 32 bits for index, meaning ~4.3 billion components possible.
+	* \note 24 bits for generation, meaning ~16.7 million component slots can be reused before component IDs become non-unique.
+	* \note 8 bits for family, meaning 256 distinct component types can exist.
+	*/
 	typedef BaseComponentId<uint64_t, uint32_t, 32, uint32_t, 24, uint8_t, 8> ComponentId;
 #else
 	/** The default entity ID type.
