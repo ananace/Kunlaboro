@@ -1,78 +1,70 @@
 #include <Kunlaboro/Component.hpp>
-#include <Kunlaboro/EntitySystem.hpp>
+#include <Kunlaboro/Entity.inl>
+#include <Kunlaboro/EntitySystem.inl>
+#include <Kunlaboro/EventSystem.inl>
+#include <Kunlaboro/MessageSystem.inl>
+#include <Kunlaboro/Message.inl>
+#include <Kunlaboro/Views.inl>
 #include "catch.hpp"
 
-#include <random>
-
-SCENARIO("Entities having their components messed with")
+class EntityMessagingTestComponent : public Kunlaboro::MessagingComponent
 {
-    class BasicComponent : public Kunlaboro::Component
-    {
-    public:
-        BasicComponent() : Kunlaboro::Component("Basic") { }
-        void addedToEntity() {
-            requestMessage("Ping", [](const Kunlaboro::Message& msg) {
-                msg.sender->sendGlobalMessage("Pong");
-            });
-        }
-    };
+public:
+	EntityMessagingTestComponent()
+		: mData(-1)
+	{
 
-    Kunlaboro::EntitySystem es;
-    
-    es.registerComponent<BasicComponent>("Basic");
-    es.registerTemplate("Basic", { "Basic" });
+	}
 
-    std::vector<Kunlaboro::EntityId> eids = {
-        es.createEntity("Basic"),
-        es.createEntity("Basic"),
-        es.createEntity("Basic"),
-        es.createEntity("Basic")
-    };
+	EntityMessagingTestComponent(int data)
+		: mData(data)
+	{
 
-    WHEN("Moving components in the middle of calls")
-    {
-        auto c1 = es.getAllComponentsOnEntity(eids[0])[0];
-        auto c2 = es.getAllComponentsOnEntity(eids[1])[0];
+	}
 
-        c1->requestMessage("Pong", [&](Kunlaboro::Message& msg) {
-            if (msg.sender == c1)
-                return;
+	void addedToEntity()
+	{
+		requestMessageId<float>("SetData", &EntityMessagingTestComponent::setData);
+	}
 
-            CHECK_NOTHROW(es.removeComponent(c1->getOwnerId(), c1));
-            CHECK_NOTHROW(es.addComponent(msg.sender->getOwnerId(), c1));
-            msg.handle(true);
-        });
-        c2->requestMessage("Pong", [&](Kunlaboro::Message& msg) {
-            if (msg.sender == c2)
-                return;
+	int getData() const { return mData; }
+	void setData(int data) { mData = data; }
 
-            CHECK_NOTHROW(es.removeComponent(c2->getOwnerId(), c2));
-            CHECK_NOTHROW(es.addComponent(msg.sender->getOwnerId(), c2));
-            msg.handle(true);
-        });
+private:
+	int mData;
+};
 
-        std::random_device dev;
-        std::uniform_int_distribution<int> dist(0, 10);
+TEST_CASE("entity creation", "[entity]")
+{
+	Kunlaboro::EntitySystem es;
 
-        for (uint16_t i = 0; i < 1000; ++i)
-        {
-            c1->changeRequestPriority("Pong", dist(dev));
-            c2->changeRequestPriority("Pong", dist(dev));
+	int i = 0;
+	auto func = [&i](const Kunlaboro::EntitySystem::EntityCreatedEvent& ev) {
+		++i;
+	};
+	es.getEventSystem().registerEvent<Kunlaboro::EntitySystem::EntityCreatedEvent>(func);
 
-            do
-            {
-                auto comps = es.getAllComponentsOnEntity(eids[dist(dev) % 4]);
-                if (comps.empty())
-                    continue;
+	auto ent = es.createEntity();
+	ent.addComponent<EntityMessagingTestComponent>(42);
 
-                comps[0]->sendGlobalMessage("Ping");
-            } while (false);
-        }
+	REQUIRE(ent.hasComponent<EntityMessagingTestComponent>());
+	REQUIRE(i == 1);
 
-        THEN("Entities should still be valid")
-        {
-            CHECK(c1->isValid());
-            CHECK(c2->isValid());
-        }
-    }
+	auto comp = ent.getComponent<EntityMessagingTestComponent>();
+
+	REQUIRE(comp->getData() == 42);
+}
+
+TEST_CASE("Message passing", "[entity][message]")
+{
+	Kunlaboro::EntitySystem es;
+	es.getMessageSystem().registerMessage<int>("SetData");
+
+	auto ent = es.createEntity();
+	ent.addComponent<EntityMessagingTestComponent>(42);
+
+	es.getMessageSystem().sendMessage("SetData", 5);
+
+	auto comp = ent.getComponent<EntityMessagingTestComponent>();
+	REQUIRE(comp->getData() == 5);
 }

@@ -1,12 +1,13 @@
-SET(SRCROOT "${PROJECT_SOURCE_DIR}/tests")
-
 SET(SRC
-    "${SRCROOT}/main.cpp"
+    main.cpp
 
-    "${SRCROOT}/component.cpp"
-    "${SRCROOT}/entity.cpp"
-    "${SRCROOT}/system.cpp"
-    "${SRCROOT}/threading.cpp"
+    component.cpp
+    comprehension.cpp
+    entity.cpp
+    messages.cpp
+    speed.cpp
+    system.cpp
+    threading.cpp
 )
 
 find_package (Threads)
@@ -19,9 +20,7 @@ add_executable(testsuite ${SRC})
 
 target_link_libraries(testsuite Kunlaboro ${CMAKE_THREAD_LIBS_INIT})
 
-add_custom_target(runtests ALL
-	DEPENDS testsuite
-	WORKING_DIRECTORY "${PROJECT_BINARY_DIR}/tests"
-	COMMAND ${CMAKE_COMMAND} -E echo_append "Running tests..."
+add_test(NAME testsuite
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMAND testsuite
 )

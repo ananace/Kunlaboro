@@ -1,213 +1,119 @@
-Kunlaboro [![Build Status](https://travis-ci.org/ace13/Kunlaboro.svg?branch=master)](https://travis-ci.org/ace13/Kunlaboro) [![Build status](https://ci.appveyor.com/api/projects/status/eqe00q7ej7vrj33m/branch/master?svg=true)](https://ci.appveyor.com/project/ace13/kunlaboro/branch/master)
+Kunlaboro [![Build Status](https://travis-ci.org/ace13/Kunlaboro.svg?branch=rewrite)](https://travis-ci.org/ace13/Kunlaboro) [![Build status](https://ci.appveyor.com/api/projects/status/eqe00q7ej7vrj33m/branch/rewrite?svg=true)](https://ci.appveyor.com/project/ace13/kunlaboro/branch/rewrite)
 =========
 
 [Source](https://github.com/ace13/Kunlaboro) | [Issues](https://github.com/ace13/Kunlaboro/issues) | [Documentation](https://ace13.github.io/Kunlaboro)
 
-So I see you've stumbled upon this little project of mine.
-Kunlaboro - which is esperanto and means *cooperation* - is a C++ Entity System designed around a heavily modified RDBMS Beta paradigm. It's licensed under the MIT license and you're welcome to use it basically wherever you want.
+Kunlaboro - which is esperanto and means *cooperation* - is a C++ Entity-Component System licensed under the MIT license.
 
-It is designed to have a reasonably cost-free message passing system to handle communication between components, while still allowing for direct member access when speed is neccessary.
-
-Feel free to provide constructive critisism through issues, pull requests, or just general comments.
+It is currently undergoing a complete rewrite to hold a higher performance - data-driven - approach to components, while still providing a high-level message passing system.
 
 Requirements
 ------------
 
-Kunlaboro is built using many C++11 features, therefore it requires a reasonably modern compiler to work properly.
+Kunlaboro is built using many C++11 and 14 features, therefore it requires a reasonably modern compiler to work properly.
 
-It's been mainly developed on Microsoft Visual Studio 2013 and uses Travis testing with both GCC and Clang, which are - as of writing this - version GCC-4.6.3 and Clang-3.4 (using libstdc++4.8 to solve a threading issue).
+Current development is done on Visual Studio 2015, with additional testing on GCC-4.9 and Clang-3.4. Other compilers that support C++14 will most likely also work.
 
-Code examples
+TODO
+----
+
+- ~~Low level, high performance, event system.~~
+  - ~~Events indexed by POD structs containing event data.~~
+  - ~~Fast iteration and calling of registered events.~~
+- ~~High level, acceptable performance, message passing system.~~
+  - ~~Messages indexed by hashed string values (32/64-bit).~~
+  - ~~Message passing done in an RPC-like way.~~
+  - ~~Global/Local message requests.~~
+- Functions for shrinking arrays, collecting garbage.
+  - Clear unused bitfield slots, reduce size on bit removal.
+  - ~~Run garbage collection on memory pools, on user request.~~
+- Better creation of POD components?
+  - Look into possibility of having true POD components.
+- ~~Improve job queue~~
+  - Allow for reusing queue without restarting threads.
+- Clean up code, forward declare more things.
+  - Include inline through headers.
+- More compile-time code.
+  - Use ID enums to make compile-time bitsets possible.
+
+Code Examples
 -------------
 
-A few quick code examples of Kunlaboro can be seen below, for more detailed information please consult the documentation.
+3D Particle system; **Note**: Uses true POD components, which is not supported at the moment.
 
-Simple printing component:
-```cpp
-#include <Kunlaboro/Kunlaboro.hpp>
-#include <iostream>
-
-using namespace std;
-
-class PrintComponent : public Kunlaboro::Component
+```c++
+struct Position : public Kunlaboro::Component
 {
-public:
-    PrintComponent() : Kunlaboro::Component("Print") { }
-
-    void printString(const Kunlaboro::Message& msg)
-    {
-        cout << boost::any_cast<std::string>(msg.payload) << endl;
-    }
-
-    void addedToEntity()
-    {
-        registerMessage("Print.PrintString", &PrintComponent::printString, true); // Local message
-        registerMessage("Print.PrintString", &PrintComponent::printString, false); // Global message
-    }
+	float X, Y, Z;
+};
+struct Velocity : public Kunlaboro::Component
+{
+	float dX, dY, dZ;
+};
+struct Friction : public Kunlaboro::Component
+{
+	float Friction;
+};
+struct Lifetime : public Kunlaboro::Component
+{
+	float Time;
 };
 
-int main()
-{
-    Kunlaboro::EntitySystem es;
-    es.registerComponent<PrintComponent>("Print");
-    es.registerTemplate("Printer", { "Print" });
-    // Note that both template and component names have to be unique
-
-    Kunlaboro::EntityId eId = es.createEntity("Printer");
-    /* When using this entity template the Entity System will basically be running this code:
-        Kunlaboro::EntityId eId = es.createEntity();
-        es.addComponent(eId, es.createComponent("Print"));
-        es.finalizeEntity(eId);
-    */
-
-    es.sendGlobalMessage("Print.PrintString", "Hello World!");
-    es.sendLocalMessage(eId, "Print.PrintString", "Hello Local World!");
-
-    return 0;
-}
-```
-
-More advanced printing component:
-```cpp
-#include <Kunlaboro/Kunlaboro.hpp>
-
-class TestComponent : public Kunlaboro::Component
+class ParticleSystem
 {
 public:
-    TestComponent() : Kunlaboro::Component("Test") { }
-};
+	ParticleSystem(Kunlaboro::EntitySystem& es)
+		: mES(es)
+	{ }
 
-int main()
-{
-    Kunlaboro::EntitySystem es;
-
-    es.registerComponent<TestComponent>("Test");
-
-    auto c1 = es.createComponent("Test");
-    c1.requestMessage("Information", [](const Kunlaboro::Message& msg) {
-    	std::cout << "Components can have their requests altered during runtime..." << std::endl;
-    });
-    
-    auto c2 = es.createComponent("Test");
-    c2.requestMessage("Information", [](const Kunlaboro::Message& msg) {
-		std::cout << "Allowing you to do some rather interesting things with them." << std::endl;
-    })
-
-    // This is technically not needed, since they end up in the order of their creation.
-    // But it helps illustrate the fact that this is possible to do.
-    c1.changeRequestPriority("Information", 0);
-    c2.changeRequestPriority("Information", 1); 
-
-    std::cout << "Did you know?" << std::endl;
-
-    es.sendGlobalMessage("Information");
-
-    return 0;
-}
-```
-
-Example of a more advanced application:
-```cpp
-#include <Kunlaboro/Kunlaboro.hpp>
-#include <tuple> // Using a 2D point class might be more effective
-
-class Physical : public Kunlaboro::Component
-{
-public:
-	Physical() : Kunlaboro::Component("Physical"), x(0), y(0), dX(0), dY(0) { }
-
-	void addedToEntity()
+	void update(float dt)
 	{
-		requestMessage("GetPosition", [this](Kunlaboro::Message& msg) {
-			msg.handle(std::make_tuple(x, y));
-		}, true);
-		requestMessage("SetPosition", [this](const Kunlaboro::Message& msg) {
-			auto pos = boost::any_cast<std::tuple<float, float> >(msg.payload);
-			setPosition(std::get<0>(pos), std::get<1>(pos));
-		}, true);
-		requestMessage("SetDelta", [this](const Kunlaboro::Message& msg) {
-			auto delta = boost::any_cast<std::tuple<float, float> >(msg.payload);
-			setDelta(std::get<0>(delta), std::get<1>(delta));
-		}, true);
+		mDT = dt;
 
-		requestMessage("Update", &Physical::update);
+		auto iter = Kunlaboro::EntityView(mES);
+		iter.withComponents<Kunlaboro::Match_All, Position, Velocity>.forEach(iterate);
+		iter.withComponents<Kunlaboro::Match_All, Velocity, Friction>.forEach(iterate);
+		iter.withComponents<Kunlaboro::Match_All, Lifetime>.forEach(iterate);
 	}
 
-	float getX() const { return x; }
-	float getY() const { return y; }
+	void addParticle(float x, float y, float z, float dx, float dy, float dz)
+	{
+		auto ent = mES.entityCreate();
+		ent.addComponent<Position>(x, y, z);
+		ent.addComponent<Velocity>(dx, dy, dz);
+	}
 
-	void setPosition(float newX, float newY) { x = newX; y = newY; }
-	void setDelta(float x, float y) { dX = x; dY = y; }
-
-    // Right now, Kunlaboro can only directly register functions that take Message references (const or not).
-    // I'm planning to create a variadic system that does type casting automatically in the future though.
-	void update(const Kunlaboro::Message&) { x += dX; y += dY; }
-
-private:
-	float x, y, dX, dY;
-};
-
-class Drawable : public Kunlaboro::Component
-{
-public:
-    Drawable() : Kunlaboro::Component("Graphics::Drawable"), phys(nullptr) { }
-
-    void addedToEntity() 
-    {
-    	// This could be delegated to functions instead of lambdas if wanted.
-    	// NOTE: Component requests default to being local.
-    	requestComponent("Physical", [this](const Kunlaboro::Message& msg) {
-    		phys = dynamic_cast<Physical>(msg.sender);
-
-    		// NOTE: And message requests default to being global.
-    		requestMessage("Update", [this](const Kunlaboro::Message&) {
-    			// Draw order sorting based off of Y position,
-    			// using direct pointer access.
-    			changeRequestPriority("Draw", phys->getY());
-    		});
-    	});
-
-    	requestMessage("Draw", &Drawable::Draw);
-    }
-
-    void draw(const Kunlaboro::Message&)
-    {
-    	// Ask for the position using message passing, maybe it's not physical.
-    	auto msg = sendQuestion("GetPosition");
-    	if (!msg.handled)
-    		return;
-
-    	auto pos = boost::any_cast<std::tuple<float, float> >(msg.payload);
-
-    	// Draw it here using the position
-    }
+	void addParticle(float x, float y, float z, float dx, float dy, float dz, float life)
+	{
+		auto ent = mES.entityCreate();
+		ent.addComponent<Position>(x, y, z);
+		ent.addComponent<Velocity>(dx, dy, dz);
+		ent.addComponent<Lifetime>(life);
+	}
 
 private:
-	Physical* phys;
+	void iterate(const Kunlaboro::Entity& ent, Position& pos, Velocity& vel)
+	{
+		pos.X += dX * mDT;
+		pos.Y += dY * mDT;
+		pos.Z += dZ * mDT;
+	}
+	void iterate(const Kunlaboro::Entity& ent, Velocity& vel, Friction& fric)
+	{
+		float frictionDelta = 1 - fric.Friction * mDT;
+
+		vel.dX *= frictionDelta;
+		vel.dY *= frictionDelta;
+		vel.dZ *= frictionDelta;
+	}
+	void iterate(const Kunlaboro::Entity& ent, Lifetime& time)
+	{
+		time.Time -= mDT;
+
+		if (time.Time <= 0)
+			ent.destroy();
+	}
+
+	float mDT;
 };
-
-int main()
-{
-    Kunlaboro::EntitySystem es;
-
-    // Registration
-    es.registerComponent<Physical>("Physical");
-    es.registerComponent<Drawable>("Drawable");
-    es.registerTemplate("Entity", { "Physical", "Drawable" });
-
-    // Creation
-    auto eid = es.createEntity("Entity");
-    es.sendLocalMessage(eid, "SetPosition", std::make_tuple(12.f, 15.f));
-    es.sendLocalMessage(eid, "SetDelta", std::make_tuple(1.f, 0.5f));
-
-    // Main loop
-    while (true)
-    {
-    	es.sendGlobalMessage("Update");
-
-    	es.sendGlobalMessage("Draw");
-    }
-
-    return 0;
-}
 ```
