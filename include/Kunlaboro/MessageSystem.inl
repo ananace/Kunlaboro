@@ -157,14 +157,13 @@ namespace Kunlaboro
 		auto& message = mMessages.at(mId);
 		if (message.Locality & Message_Local)
 		{
-			auto it = std::find_if(message.Callbacks.cbegin(), message.Callbacks.cend(), [cId](const BaseMessageCallback* cb) {
-				return mES->isAttached(cb->Component, eId);
-			});
+			for (auto& cb : message.Callbacks)
+			{
+				if (!mES->isAttached(cb->Component, eId))
+					continue;
 
-			if (it == message.Callbacks.cend())
-				return;
-
-			static_cast<MessageCallback<Args...>*>(*it)->Func(std::forward<Args>(args)...);
+				static_cast<MessageCallback<Args...>*>(*it)->Func(std::forward<Args>(args)...);
+			}
 		}
 	}
 }

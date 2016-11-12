@@ -237,6 +237,11 @@ namespace Kunlaboro
 		 * \param cId The ID of the component to remove all requests from.
 		 */
 		void unrequestAllMessages(ComponentId cId);
+		/** Remove all messages requested by the given component ID.
+		*
+		* \param cId The ID of the component to remove all requests from.
+		*/
+		void unrequestAllMessages(EntityId eId);
 
 		/** Hash a message string into a MessageId at compile time.
 		 *
