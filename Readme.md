@@ -1,4 +1,4 @@
-Kunlaboro [![Build Status](https://travis-ci.org/ace13/Kunlaboro.svg)](https://travis-ci.org/ace13/Kunlaboro) [![Build status](https://ci.appveyor.com/api/projects/status/eqe00q7ej7vrj33m/branch/master?svg=true)](https://ci.appveyor.com/project/ace13/kunlaboro/branch/master)
+Kunlaboro [![Build Status](https://travis-ci.org/ace13/Kunlaboro.svg?branch=master)](https://travis-ci.org/ace13/Kunlaboro) [![Build status](https://ci.appveyor.com/api/projects/status/eqe00q7ej7vrj33m/branch/master?svg=true)](https://ci.appveyor.com/project/ace13/kunlaboro/branch/master)
 =========
 
 [Source](https://github.com/ace13/Kunlaboro) | [Issues](https://github.com/ace13/Kunlaboro/issues) | [Documentation](https://ace13.github.io/Kunlaboro)
