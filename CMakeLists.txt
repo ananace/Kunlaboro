@@ -70,6 +70,7 @@ set(Kunlaboro_SOURCES
 
 source_group("Header Files\\detail" FILES
 	include/Kunlaboro/detail/ComponentPool.hpp
+	include/Kunlaboro/detail/Delegate.hpp
 	include/Kunlaboro/detail/DynamicBitfield.hpp
 	include/Kunlaboro/detail/JobQueue.hpp
 )
