@@ -162,7 +162,7 @@ namespace Kunlaboro
 				if (!mES->isAttached(cb->Component, eId))
 					continue;
 
-				static_cast<MessageCallback<Args...>*>(*it)->Func(std::forward<Args>(args)...);
+				static_cast<MessageCallback<Args...>*>(cb)->Func(std::forward<Args>(args)...);
 			}
 		}
 	}
