@@ -23,10 +23,9 @@ build:
     project: Kunlaboro.sln
 
 test_script:
-    - ps: |
-        .\\tests\\$($env:configuration)\\testsuite.exe -r junit > testresult.xml
-        $exit = $LASTEXITCODE
-        $url = "https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)"
-        $file = "testresult.xml"
-        (New-Object 'System.Net.WebClient').UploadFile($url, (Resolve-Path $file))
-        exit $exit
+    - cmd: .\\tests\\%CONFIGURATION%\\testsuite.exe -r junit > testresult.xml
+
+after_test:
+    - ps | 
+        $wc = New-Object 'System.Net.WebClient'
+        $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\testresult.xml)))
