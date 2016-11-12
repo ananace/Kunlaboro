@@ -26,6 +26,6 @@ test_script:
     - cmd: .\\tests\\%CONFIGURATION%\\testsuite.exe -r junit > testresult.xml
 
 after_test:
-    - ps | 
+    - ps: | 
         $wc = New-Object 'System.Net.WebClient'
         $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\testresult.xml)))
