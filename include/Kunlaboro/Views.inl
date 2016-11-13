@@ -295,7 +295,7 @@ namespace Kunlaboro
 			{
 				if (queue)
 					queue->submit([func, ent]() {
-						func(ent, std::move(*(ent.getComponent<Components>().get()))...);
+						func(ent, std::ref(*(ent.getComponent<Components>().get()))...);
 					});
 				else
 					func(ent, *(ent.getComponent<Components>().get())...);
