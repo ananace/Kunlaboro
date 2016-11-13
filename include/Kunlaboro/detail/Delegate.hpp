@@ -237,7 +237,7 @@ public:
 		return stub_ptr_;
 	}
 
-	explicit operator bool() const noexcept { return stub_ptr_; }
+	explicit operator bool() const noexcept { return stub_ptr_ != nullptr; }
 
 	R operator()(A... args) const
 	{

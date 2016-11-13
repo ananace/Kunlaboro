@@ -1,10 +1,11 @@
 #pragma once
 
+#include "Delegate.hpp"
+
 #include <atomic>
 #include <chrono>
 #include <deque>
 #include <condition_variable>
-#include <functional>
 #include <thread>
 #include <vector>
 
@@ -44,7 +45,7 @@ namespace Kunlaboro
 			void workThread();
 			void joinAll();
 
-			std::deque<std::function<void()>> mJobQueue;
+			std::deque<Delegate<void()>> mJobQueue;
 			std::vector<std::thread> mThreadPool;
 			std::mutex mMutex;
 			std::condition_variable mSignal;

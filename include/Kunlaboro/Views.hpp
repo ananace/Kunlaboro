@@ -3,6 +3,7 @@
 #include "ID.hpp"
 #include "Entity.hpp"
 
+#include "detail/Delegate.hpp"
 #include "detail/DynamicBitfield.hpp"
 
 #include <functional>
@@ -28,7 +29,7 @@ namespace Kunlaboro
 		class BaseView
 		{
 		public:
-			typedef std::function<bool(const ViewedType&)> Predicate;
+			typedef detail::Delegate<bool(const ViewedType&)> Predicate;
 
 			virtual ~BaseView();
 
@@ -67,7 +68,7 @@ namespace Kunlaboro
 		class BaseIterator : public std::iterator<std::input_iterator_tag, ViewedType>
 		{
 		public:
-			typedef std::function<bool(const ViewedType&)> Predicate;
+			typedef detail::Delegate<bool(const ViewedType&)> Predicate;
 			virtual ~BaseIterator() = default;
 
 			IteratorType& operator++();
@@ -108,9 +109,9 @@ namespace Kunlaboro
 		ComponentView(const EntitySystem& es);
 
 		/// The predicate function type.
-		typedef std::function<bool(const T&)> Predicate;
+		typedef detail::Delegate<bool(const T&)> Predicate;
 		/// The function-call function type.
-		typedef std::function<void(T&)> Function;
+		typedef detail::Delegate<void(T&)> Function;
 
 		struct Iterator : public impl::BaseIterator<Iterator, T>
 		{
@@ -149,8 +150,8 @@ namespace Kunlaboro
 	public:
 		EntityView(const EntitySystem& es);
 
-		typedef std::function<bool(const Entity&)> Predicate;
-		typedef std::function<void(const Entity&)> Function;
+		typedef detail::Delegate<bool(const Entity&)> Predicate;
+		typedef detail::Delegate<void(const Entity&)> Function;
 
 		struct Iterator : public impl::BaseIterator<Iterator, Entity>
 		{
@@ -210,13 +211,15 @@ namespace Kunlaboro
 		/** Iterates all entities, using either \p Match_Any or \p Match_All matching.
 		 *
 		 * \param func The function to call with every matching entity and its component pointers.
+		 * \todo Make these work with the new delegates
 		 */
-		void forEach(const typename ident<std::function<void(const Entity&, Components*...)>>::type& func);
+		void forEach(const std::function<void(const Entity&, Components*...)>& func);
 		/** Iterates all entities, using \p Match_All matching.
 		 *
 		 * \param func The function to call with every matching entity and its component references.
+		 * \todo Make these work with the new delegates
 		 */
-		void forEach(const typename ident<std::function<void(const Entity&, Components&...)>>::type& func);
+		void forEach(const std::function<void(const Entity&, Components&...)>& func);
 
 		virtual void forEach(const Function& func);
 
