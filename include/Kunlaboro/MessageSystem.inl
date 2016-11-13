@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MessageSystem.hpp"
+#include "EntitySystem.hpp"
 
 #include <algorithm>
 
